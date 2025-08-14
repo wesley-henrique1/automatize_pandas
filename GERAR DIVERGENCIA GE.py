@@ -1,0 +1,42 @@
+import BASE
+import pandas as pd
+import numpy as np
+
+def app():
+    df = pd.read_csv(BASE.path.p_1707_ger, header=None, names= BASE.col.c_1707_ger)
+    df_prod = pd.read_excel(BASE.path.p_8596, usecols= ['CODPROD', 'QTUNITCX', 'CAPACIDADE', 'PONTOREPOSICAO'])
+    df = df[df['RUA'].between(1, 39)]
+    df = df.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'inner')
+
+    col = ['ENDERECO', 'GERENCIAL']
+    for coluna in col:
+        df[coluna] = df[coluna].str.replace('.' , '')
+        df[coluna] = df[coluna].str.replace(',', '.').astype(float)
+    df['DIVERGENCIA'] = df['ENDERECO'].astype(int) - df['GERENCIAL'].astype(int)
+
+    df["TIPO_OP"] = np.where(df['DIVERGENCIA'] < 0,"END_MENOR"
+                    ,np.where(df['DIVERGENCIA'] > 0,"END_MAIOR"
+                    ,np.where(df['DIVERGENCIA'] == 0, "CORRETO","-")))
+    df['CAP_CONVERTIDA'] = df['CAPACIDADE'] * df['QTUNITCX']
+    df['AP_VS_CAP'] = np.where(df['PICKING'].astype(int) > df['CAPACIDADE'].astype(int) ,'AP_MAIOR'
+                    ,np.where(df['PICKING'].astype(int) < 0, "AP_NEGATIVO","CORRETO"))
+
+    df.to_excel(BASE.dest.destino_4, index= False)
+
+    x = df.groupby('TIPO_OP').agg(
+        qtde_itens = ('DESCRICAO', 'count')
+    )
+    y = df.groupby('AP_VS_CAP').agg(
+        qtde_itens = ('DESCRICAO', 'count')
+    )
+    print("=" * 60)
+    print("COMPARATIVO ENDEREÇADO VS GERENCIAL")
+    print("=" * 60)
+    print(x)
+    print("\n")
+    print(y)
+    print("=" * 60)
+
+if __name__ == '__main__':
+    app()
+    input("Aperte 'enter' para finalizar o processo...")
