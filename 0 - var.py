@@ -1,20 +1,10 @@
 import pandas as pd
-import BASE as bs
-import glob
-import os
-"""
-ler todos os arquivos da pasta e agrupar em um df
-"""
+import numpy as np
+from BASE import path
 
-arquivos= glob.glob(os.path.join(bs.path.p_1782_pasta, '*.xls'))
-total = len(arquivos)
 
-df = pd.DataFrame(columns= bs.col.c_1782_sug)
 
-for ir ,arquivo in enumerate(arquivos,1):
-    df_a = pd.read_excel(arquivo, header= None)
-    df = pd.concat([df, df_a], axis= 0, ignore_index= True)
-    
-    x = df.groupby(by= 'DEP').agg(
-        qtde_itens = ('DESCRIÇÃO', 'count')
-    ).reset_index()
+df_85 = pd.read_excel(path.p_8596)
+df_85 = df_85.dropna(subset=['RUA'])
+df_85 = df_85.loc[df_85['RUA'].between(1, 39)]
+df_85.to_excel(r"C:\wh_dev\teste_df.xlsx",engine='openpyxl', index= None)

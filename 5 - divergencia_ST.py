@@ -18,7 +18,7 @@ def app():
                     ,np.where(df['DIVERGENCIA'] > 0,"END_MAIOR"
                     ,np.where(df['DIVERGENCIA'] == 0, "CORRETO","-")))
     df['CAP_CONVERTIDA'] = df['CAPACIDADE'] * df['QTUNITCX']
-    df['AP_VS_CAP'] = np.where(df['PICKING'].astype(int) > df['CAPACIDADE'].astype(int) ,'AP_MAIOR'
+    df['AP_VS_CAP'] = np.where(df['PICKING'].astype(int) > df['CAP_CONVERTIDA'].astype(int) ,'AP_MAIOR'
                     ,np.where(df['PICKING'].astype(int) < 0, "AP_NEGATIVO","CORRETO"))
 
     df.to_excel(BASE.dest.destino_4, index= False)
