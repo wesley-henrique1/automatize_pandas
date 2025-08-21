@@ -1,10 +1,8 @@
+from BASE import *
 import pandas as pd
-import numpy as np
-from BASE import path
 
 
+df = pd.read_excel(path.p_8596)
+x = df.loc[df['RUA'].between(1,39)]
 
-df_85 = pd.read_excel(path.p_8596)
-df_85 = df_85.dropna(subset=['RUA'])
-df_85 = df_85.loc[df_85['RUA'].between(1, 39)]
-df_85.to_excel(r"C:\wh_dev\teste_df.xlsx",engine='openpyxl', index= None)
+x.to_excel(power_bi.b1_prod, index= False, sheet_name= "PROD")
