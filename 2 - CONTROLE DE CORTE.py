@@ -1,5 +1,5 @@
+from path_arquivos import *
 import pandas as pd
-import BASE as bs
 import numpy as np
 espaco = '='
 inicio = '07:30:00'
@@ -8,7 +8,7 @@ fim = '18:00:00'
 def app():
     try:
         print('Iniciando o controle de corte, aguarde...')
-        rel = pd.read_csv(bs.path.P_1767, header=None, names= bs.col.c_1767)
+        rel = pd.read_csv(ar_csv.ar_67, header=None, names= col_name.c67)
 
         rel['hora'] = rel['hr'].astype(str) + ':' + rel['min'].astype(str)
         rel['data'] = pd.to_datetime(rel['data'], format= '%d/%m/%y')
@@ -77,7 +77,7 @@ def app():
         print(f"DIVERGENCIA:\n", var_div)
         rel.drop(columns=['hora',], inplace= True)
         try:
-            with pd.ExcelWriter(bs.dest.destino_1) as writer:
+            with pd.ExcelWriter(output.corte) as writer:
                 var_dia.to_excel(writer, sheet_name="rel_dia", index= False)
                 var_noite.to_excel(writer, sheet_name="rel_noite", index= False)
                 var_div.to_excel(writer, sheet_name="rel_div", index= False)

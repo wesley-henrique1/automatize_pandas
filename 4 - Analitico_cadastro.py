@@ -1,12 +1,12 @@
+from path_arquivos import *
 import pandas as pd
 import numpy as np
-import BASE as bs
 
 try:
     print("ANALITICO CADASTRO")
     print("=" * 70)
     print("\n iniciando as tratativa da base de dados...")
-    df_96 = pd.read_excel(bs.path.p_8596, usecols= ['CODPROD', 'DESCRICAO', 'OBS2', 'QTUNITCX', 'LASTROPAL', 'ALTURAPAL', 'QTTOTPAL','ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM', 'CAPACIDADE', 'ABASTECEPALETE', 'RUA', 'PREDIO', 'NIVEL', 'APTO'])
+    df_96 = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'DESCRICAO', 'OBS2', 'QTUNITCX', 'LASTROPAL', 'ALTURAPAL', 'QTTOTPAL','ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM', 'CAPACIDADE', 'ABASTECEPALETE', 'RUA', 'PREDIO', 'NIVEL', 'APTO'])
 
 except PermissionError as e:
     print(f"Arquivos aberto, favor fechar. {e}")
@@ -25,7 +25,7 @@ try:
     altura_arm_limpa = df_96['ALTURAARM'].fillna(0)
     df_96['P+L?']= np.where(altura_arm_limpa == 0,0,(167 - x_limpo) / altura_arm_limpa).astype(int)
 
-    df_96.to_excel(bs.dest.destino_3, index= False, sheet_name= "validação_PROD")
+    df_96.to_excel(output.baixa, index= False, sheet_name= "validação_PROD")
     print("Processo finalizado com sucesso...")
 except Exception as e:
     print(f"Erro na tratativa do dataFrame 8596")

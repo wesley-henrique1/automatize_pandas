@@ -1,11 +1,11 @@
+from path_arquivos import *
 import pandas as pd
-import BASE as bs
 import numpy as np
 
 col_96 = ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', ]
 col_286 = ['Código', 'Estoque', 'Qtde Pedida', 'Bloqueado(Qt.Bloq.-Qt.Avaria)', 'Qt.Avaria', 'Custo real', 'Disponível']
-df_8596 = pd.read_excel(bs.path.p_8596, usecols= col_96)
-df_286 = pd.read_excel(bs.path.p_286, usecols= col_286)
+df_8596 = pd.read_excel(ar_xlsx.ar_96, usecols= col_96)
+df_286 = pd.read_excel(ar_xls.ar_86, usecols= col_286)
 final = [105,106,107,108,64,63,61,62]
 
 def app():
@@ -26,7 +26,7 @@ def app():
     df_hora_extra = df.loc[(df['OBS2'] != 'FL') & (df['Estoque'] == 0) & (df['Qtde Pedida'] == 0)]
 
 
-    with pd.ExcelWriter(bs.dest.destino_2) as feijao:
+    with pd.ExcelWriter(output.FL) as feijao:
         df_os_esquecidos.to_excel(feijao, sheet_name= "FL_ATIVOS", index= False)
         df_fantasminha.to_excel(feijao, sheet_name= "FL_END", index= False)
         df_hora_extra.to_excel(feijao, sheet_name= "INATIVOS", index= False)

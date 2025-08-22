@@ -1,14 +1,14 @@
+from path_arquivos import *
 import glob
 import pandas as pd
 import os
 import warnings
-import BASE as bs
 
 # Desativa warnings indesejados
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Configuração do caminho
-caminho_pasta = bs.path.p_8041_pasta
+caminho_pasta = pasta.p_41
 def processar_e_exibir():
     print("="*60)
     print("ANÁLISE DE CORTES - RELATÓRIO NO TERMINAL")

@@ -1,10 +1,10 @@
-import BASE
+from path_arquivos import *
 import pandas as pd
 import numpy as np
 
 def app():
-    df = pd.read_csv(BASE.path.p_1707_ger, header=None, names= BASE.col.c_1707_ger)
-    df_prod = pd.read_excel(BASE.path.p_8596, usecols= ['CODPROD', 'QTUNITCX', 'CAPACIDADE', 'PONTOREPOSICAO'])
+    df = pd.read_csv(ar_csv.ar_07, header=None, names= col_name.c07)
+    df_prod = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'QTUNITCX', 'CAPACIDADE', 'PONTOREPOSICAO'])
     df = df[df['RUA'].between(1, 39)]
     df = df.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'inner')
 
@@ -21,7 +21,7 @@ def app():
     df['AP_VS_CAP'] = np.where(df['PICKING'].astype(int) > df['CAP_CONVERTIDA'].astype(int) ,'AP_MAIOR'
                     ,np.where(df['PICKING'].astype(int) < 0, "AP_NEGATIVO","CORRETO"))
 
-    df.to_excel(BASE.dest.destino_4, index= False)
+    df.to_excel(output.divergencia, index= False)
 
     x = df.groupby('TIPO_OP').agg(
         qtde_itens = ('DESCRICAO', 'count')
