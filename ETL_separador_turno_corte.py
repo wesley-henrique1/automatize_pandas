@@ -1,4 +1,4 @@
-from path_arquivos import *
+from OUTROS.path_arquivos import *
 import pandas as pd
 import numpy as np
 espaco = '='
@@ -78,9 +78,6 @@ def app():
         rel.drop(columns=['hora',], inplace= True)
         try:
             with pd.ExcelWriter(output.corte) as writer:
-                var_dia.to_excel(writer, sheet_name="rel_dia", index= False)
-                var_noite.to_excel(writer, sheet_name="rel_noite", index= False)
-                var_div.to_excel(writer, sheet_name="rel_div", index= False)
                 rel.to_excel(writer, sheet_name='extrato', index= False)
                 ex_dia.to_excel(writer, sheet_name= 'ex_dia', index= False)
                 ex_noite.to_excel(writer, sheet_name= 'ex_noite', index= False)

@@ -1,4 +1,4 @@
-from path_arquivos import *
+from OUTROS.path_arquivos import *
 import pandas as pd
 import numpy as np
 
