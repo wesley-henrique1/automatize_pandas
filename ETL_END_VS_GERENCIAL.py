@@ -3,10 +3,12 @@ import pandas as pd
 import numpy as np
 
 def app():
+    df_f18 = pd.read_excel(ar_xls.fl_18, usecols= ['Código', 'Estoque'])
     df = pd.read_csv(ar_csv.ar_07, header=None, names= col_name.c07)
     df_prod = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'QTUNITCX', 'CAPACIDADE', 'PONTOREPOSICAO'])
     df = df[df['RUA'].between(1, 39)]
     df = df.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'inner')
+    df = df.merge(df_f18, left_on= 'COD', right_on='Código', how= 'left')
 
     col = ['ENDERECO', 'GERENCIAL']
     for coluna in col:
