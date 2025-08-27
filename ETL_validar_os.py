@@ -1,22 +1,32 @@
 from OUTROS.path_arquivos import *
 import pandas as pd
 
-df = pd.read_excel(ar_xlsx.ar_28)
-df_func = pd.read_excel(ar_xlsx.ar_func, sheet_name= 'FUNCIONARIOS')
+try:
+    df_28 = pd.read_excel(ar_xlsx.ar_28, usecols= ['CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.'])
+    df_28 = df_28.loc[(df_28['NIVEL'].between(2,8)) & (df_28['Tipo O.S.'] == '58 - Transferencia de Para Vertical')]
+    df_28[['CODFUNCESTORNO', 'CODFUNCOS']] = df_28[['CODFUNCESTORNO', 'CODFUNCOS']].fillna(0).astype(int)
+    df_28['ID_COD'] = df_28['ENDERECO_ORIG'].astype(str) + " - " + df_28['CODPROD'].astype(str)
 
-df[['CODFUNCOS','CODFUNCESTORNO']] = df[['CODFUNCOS', 'CODFUNCESTORNO']].fillna(0).astype(float)
-df = df.loc[(df['NIVEL'].between(2,8)) & ((df['Tipo O.S.'] == '58 - Transferencia de Para Vertical'))].copy()
+    df_aereo = pd.read_csv(ar_csv.ar_end, header= None, names= col_name.cEnd)
+    df_aereo = df_aereo[['COD_END', 'COD', 'QTDE', 'ENTRADA', 'SAIDA']]
+    df_aereo['ID_COD'] = df_aereo['COD_END'].astype(str) + " - " + df_aereo['COD'].astype(str)
 
-df_fim_mesa = df.merge(df_func, how= 'left', left_on='CODFUNCOS', right_on='MATRICULA').drop('MATRICULA', axis= 1)
-df_fim_mesa['TIPO'] = df_fim_mesa['TIPO'].fillna(value= 'func')
-df_fim_mesa = df_fim_mesa.loc[(df_fim_mesa['CODFUNCOS'] != 0) & (df_fim_mesa['CODFUNCESTORNO'] == 0)]
-df_fim_mesa = df_fim_mesa.loc[(df_fim_mesa['TIPO'] != 'ABASTECEDOR') & (df_fim_mesa['TIPO'] != 'EMPILHADOR')]
-df_fim_mesa = df_fim_mesa[['CODPROD', 'DESCRICAO', 'RUA', 'PREDIO', 'NIVEL', 'APTO', 'RUA_1', 'PREDIO_1', 'NIVEL_1','APTO_1', 'FUNCOSFIM']]
+    df_func = pd.read_excel(ar_xlsx.ar_func, sheet_name= 'FUNCIONARIOS')
+    df = df_28.merge(df_aereo, left_on= 'ID_COD', right_on= 'ID_COD', how= 'left').fillna(0).drop(['COD_END', 'COD'],axis= 1)
+except Exception as e:
+    print(f"Erro na leitura dos dataframes\n{e}")
 
-df_pd = df.loc[(df['CODFUNCOS'] == 0) & (df['CODFUNCESTORNO'] == 0)]
+try:
+    
+    print(df)
+    pass
+except Exception as e:
+    pass
 
-df_pd = df_pd[['CODPROD', 'DESCRICAO', 'RUA', 'PREDIO', 'NIVEL', 'APTO', 'RUA_1', 'PREDIO_1', 'NIVEL_1','APTO_1','POSICAO', 'FUNCGER']]
 
-with pd.ExcelWriter(output.val_baixa) as writer:
-    df_pd.to_excel(writer, index= False, sheet_name= 'PEDENTES')
-    df_fim_mesa.to_excel(writer, index= False, sheet_name= 'FIM_MESA')
+
+
+
+# with pd.ExcelWriter(output.val_baixa) as writer:
+#     .to_excel(writer, index= False, sheet_name= 'PEDENTES')
+#     .to_excel(writer, index= False, sheet_name= 'FIM_MESA')

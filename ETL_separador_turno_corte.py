@@ -64,10 +64,10 @@ def app():
         var_div['mes'] = var_div['data_turno'].dt.month_name('pt_BR')
         var_div['ano'] = var_div['data_turno'].dt.year
         var_div['data_turno'] = var_div['data_turno'].dt.strftime("%d-%m-%Y")
+        
+        var_dia['vl_corte'] = var_dia['vl_corte'].astype(str).str.replace('.', ',', regex= False)
+        var_noite['vl_corte'] = var_noite['vl_corte'].astype(str).str.replace('.', ',', regex= False)
 
-        var_dia['vl_corte'] = var_dia['vl_corte'].apply(str).str.replace('.', ',', regex= False)
-        var_noite['vl_corte'] = var_noite['vl_corte'].apply(str).str.replace('.', ',', regex= False)
-  
         print(f"=" * 70)
         print(f"Relatorio de corte:")
         print(f"DIA:\n", var_dia)

@@ -5,12 +5,13 @@ import numpy as np
 def app():
     try:
         df_prod = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'QTUNITCX', 'CAPACIDADE', 'PONTOREPOSICAO','QTTOTPAL'])
-        df_f18 = pd.read_excel(ar_xls.fl_18, usecols= ['Código', 'Estoque'])
-        df = pd.read_csv(ar_csv.ar_07, header=None, names= col_name.c07)
+        # df_f18 = pd.read_excel(ar_xls.fl_18, usecols= ['Código', 'Estoque'])
+        df_07 = pd.read_csv(ar_csv.ar_07, header=None, names= col_name.c07)
+        df_end = pd.read_csv(ar_csv.ar_end, header= None, names= col_name.cEnd)
 
-        df = df[df['RUA'].between(1, 39)]
+        df = df_07[df_07['RUA'].between(1, 39)]
         df = df.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'inner').drop(columns= 'CODPROD')
-        df = df.merge(df_f18, left_on= 'COD', right_on='Código', how= 'left').drop(columns= 'Código')
+        # df = df.merge(df_f18, left_on= 'COD', right_on='Código', how= 'left').drop(columns= 'Código')
         col = ['ENDERECO', 'GERENCIAL']
         for coluna in col:
             df[coluna] = df[coluna].str.replace('.' , '')
