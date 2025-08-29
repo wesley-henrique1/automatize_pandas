@@ -5,13 +5,18 @@ import numpy as np
 def app():
     try:
         df_prod = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'QTUNITCX', 'CAPACIDADE', 'PONTOREPOSICAO','QTTOTPAL'])
-        # df_f18 = pd.read_excel(ar_xls.fl_18, usecols= ['Código', 'Estoque'])
-        df_07 = pd.read_csv(ar_csv.ar_07, header=None, names= col_name.c07)
         df_end = pd.read_csv(ar_csv.ar_end, header= None, names= col_name.cEnd)
+        grupo = df_end.groupby('COD').agg(
+        ENTRADA = ('ENTRADA', 'sum'),
+        SAIDA = ('SAIDA', 'sum'),
+        QTDE = ('COD_END', 'count')
+        ).reset_index()
+        df_07 = pd.read_csv(ar_csv.ar_07, header=None, names= col_name.c07)
+        df_07 = df_07[df_07['RUA'].between(1, 39)]
 
-        df = df_07[df_07['RUA'].between(1, 39)]
-        df = df.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'inner').drop(columns= 'CODPROD')
-        # df = df.merge(df_f18, left_on= 'COD', right_on='Código', how= 'left').drop(columns= 'Código')
+        df = df_07.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'inner').drop(columns= 'CODPROD')
+        df = df.merge(grupo, left_on= 'COD', right_on= 'COD', how= 'left')
+        df[['ENTRADA', 'SAIDA', 'QTDE']] = df[['ENTRADA', 'SAIDA', 'QTDE']].fillna(0).astype(int)
         col = ['ENDERECO', 'GERENCIAL']
         for coluna in col:
             df[coluna] = df[coluna].str.replace('.' , '')
@@ -19,7 +24,7 @@ def app():
     except Exception as e:
         print(f'Erro na tratativa dos DATAFRAME. {e}')
 
-
+    df['ENDERECO'] = df['ENDERECO'] + df['ENTRADA']
     df['DIVERGENCIA'] = df['ENDERECO'].astype(int) - df['GERENCIAL'].astype(int)
     df["TIPO_OP"] = np.where(df['DIVERGENCIA'] < 0,"END_MENOR"
                     ,np.where(df['DIVERGENCIA'] > 0,"END_MAIOR"
