@@ -1,20 +1,34 @@
 from path_arquivos import *
 import pandas as pd
+import glob
+import os
 
-try:
-    df = pd.read_csv(ar_csv.ar_end, header= None,  usecols= [0,1,2,3,4, 6, 7, 18,19])
-    df.columns = ['COD_END', 'RUA', 'PREDIO', 'NIVEL', 'APTO', 'COD', 'DESC', 'ENTREDA', 'SAIDA']
-except Exception as e:
-    print("algo deu erro, não sei onde")
+def app():
+    lista_cheio = glob.glob(os.path.join(pasta.p_cheio, "cheio*.xlsx"))
+    tt_cheio = len(lista_cheio)
 
-try:   
-    cheio = df.loc[df['COD'] != 0]
-    cheio = cheio.loc[(cheio['ENTREDA'] == 0) & (cheio['SAIDA'] == 0)]
-    vazio = df.loc[df['COD'] == 0]
-except Exception as e:
-    print("deu erro na etapa de tratamento")
+    def processar_arquivos(lista_de_arquivos):
+        lista_de_dfs = []
 
+        for arquivo in lista_de_arquivos:
+            try:
+                print(f"Lendo arquivo: {os.path.basename(arquivo)}")
+                x = pd.read_excel(arquivo, header=2, sheet_name='RELATORIO')
+                lista_de_dfs.append(x)
+            except Exception as e:
+                print(f"❌ Erro ao ler o arquivo '{os.path.basename(arquivo)}': {e}")
+                continue
 
-with pd.ExcelWriter(output.cheio_vazio) as caminho:
-    cheio.to_excel(caminho, index= False, sheet_name= "CHEIO")
-    vazio.to_excel(caminho, index= False, sheet_name= "VAZIO")
+        if lista_de_dfs:
+            df_final = pd.concat(lista_de_dfs, ignore_index=True)
+            return df_final
+        else:
+            print("Nenhum DataFrame foi lido. Retornando DataFrame vazio.")
+            return pd.DataFrame()
+        
+    df_cheio = processar_arquivos(lista_cheio)
+
+if __name__ == '__main__':
+    app()
+    print('fim do processo, verifique o arquivo')
+    input("\nPressione Enter para sair...")
