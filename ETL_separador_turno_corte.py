@@ -51,6 +51,8 @@ def app():
         max_ex_dia= df_dia['data'].max()
         ex_dia = df_dia.loc[df_dia['data'] == max_ex_dia]
         var_dia['data'] = var_dia['data'].dt.strftime("%d-%m-%Y")
+        var_dia['vl_corte'] = var_dia['vl_corte'].astype(str).str.replace('.', ',', regex= False)
+
         print(f"=" * 70)
         print(f"Relatorio de corte:")
         print(f"DIA:\n", var_dia)
@@ -75,6 +77,8 @@ def app():
         max_ex_noite = df_noite['data_turno'].max()
         var_noite['data_turno'] = var_noite['data_turno'].dt.strftime("%d-%m-%Y")     
         ex_noite = df_noite.loc[df_noite['data_turno'] == max_ex_noite]
+        var_noite['vl_corte'] = var_noite['vl_corte'].astype(str).str.replace('.', ',', regex= False)
+
         print(f"=" * 70)
         print(f"NOITE:\n",var_noite)
     except Exception as e:
@@ -102,8 +106,8 @@ def app():
         exit()
 
     try:
-        var_dia['vl_corte'] = var_dia['vl_corte'].astype(str).str.replace('.', ',', regex= False)
-        var_noite['vl_corte'] = var_noite['vl_corte'].astype(str).str.replace('.', ',', regex= False)
+        # var_dia['vl_corte'] = var_dia['vl_corte'].astype(str).str.replace('.', ',', regex= False)
+        # var_noite['vl_corte'] = var_noite['vl_corte'].astype(str).str.replace('.', ',', regex= False)
         rel.drop(columns=['hora',], inplace= True)
 
         with pd.ExcelWriter(output.corte) as writer:

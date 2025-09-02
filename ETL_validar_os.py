@@ -15,7 +15,7 @@ def validar_erro(e):
         return f"Ocorreu um erro inesperado: {e}"
 def app():
     try:
-        df_28 = pd.read_excel(ar_xlsx.ar_28, usecols= ['CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.', 'FUNCOSFIM','FUNCGER'])
+        df_28 = pd.read_excel(ar_xlsx.ar_28, usecols= ['NUMOS','CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.', 'FUNCOSFIM','FUNCGER'])
         df_28 = df_28.loc[(df_28['NIVEL'].between(2,8)) & (df_28['Tipo O.S.'] == '58 - Transferencia de Para Vertical')]
         df_28[['CODFUNCESTORNO', 'CODFUNCOS']] = df_28[['CODFUNCESTORNO', 'CODFUNCOS']].fillna(0).astype(int)
         df_28['ID_COD'] = df_28['ENDERECO_ORIG'].astype(str) + " - " + df_28['CODPROD'].astype(str)
@@ -33,11 +33,10 @@ def app():
 
     try:
         df_pd = df.loc[(df['CODFUNCOS'] == 0) & (df['CODFUNCESTORNO'] == 0)]
-        df_pd = df_pd[['CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL',
+        df_pd = df_pd[['NUMOS','CODPROD', 'DESCRICAO', 'RUA', 'PREDIO', 'NIVEL',
         'APTO', 'RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1','FUNCGER']]
         df_fim = df.loc[(df['TIPO'] != 'EMPILHADOR') & (df['TIPO'] != 'ABASTECEDOR') & (df['CODFUNCOS'] > 0) & (df['CODFUNCESTORNO'] == 0) & (df['QTDE'] == 0)]    
-        print(df_fim)
-        df_fim = df_fim[['CODPROD', 'DESCRICAO', 'RUA', 'PREDIO', 'NIVEL',
+        df_fim = df_fim[['NUMOS','CODPROD', 'DESCRICAO', 'RUA', 'PREDIO', 'NIVEL',
         'APTO', 'RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1','FUNCOSFIM']]
     except Exception as e:
         error = validar_erro(e)
@@ -55,4 +54,4 @@ def app():
 
 if __name__ == "__main__":
     app()
-'input("\nPressione Enter para sair...")'
+    input("\nPressione Enter para sair...")

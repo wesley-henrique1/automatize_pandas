@@ -16,7 +16,7 @@ def processar_e_exibir():
     print(f"Pasta analisada: {caminho_pasta}")
     print("-"*60)
     
-    arquivos_excel = glob.glob(os.path.join(caminho_pasta, '*8.xls*'))
+    arquivos_excel = glob.glob(os.path.join(caminho_pasta, '*9.xls*'))
     total_arquivos = len(arquivos_excel)
     
     if total_arquivos == 0:
