@@ -1,6 +1,8 @@
 from OUTROS.path_arquivos import *
 import pandas as pd
 import numpy as np
+import glob
+import os
 
 def validar_erro(e):
     print("=" * 60)
@@ -15,6 +17,51 @@ def validar_erro(e):
     else:
         return f"Ocorreu um erro inesperado: {e}"  
 def app():
+
+    try:
+        arquivos_excel = glob.glob(os.path.join(pasta.p_41, '*9.xls*'))
+        total_arquivos = len(arquivos_excel)
+
+        if total_arquivos == 0:
+            print("Nenhum arquivo Excel encontrado na pasta especificada.")
+            return
+        
+        for i, arquivo in enumerate(arquivos_excel, 1):
+            nome_arquivo = os.path.basename(arquivo)
+            print(f"{i}. Processando: {nome_arquivo}")
+            try:
+                df = pd.read_excel(arquivo)
+                
+                # Verifica colunas necessárias
+                if 'NUMPED' not in df.columns:
+                    print("   AVISO: Coluna 'NUMPED' não encontrada\n")
+                    continue
+                                
+                cont_nunique = df['NUMPED'].nunique()
+                cont = df['NUMPED'].count()
+
+                group = df.groupby('RUA').agg(
+                    QTDE_ITENS = ('PRODUTO', 'count')
+                ).reset_index()
+
+            
+            # Exibe resultados formatados
+                print("\n   RESUMO:")
+                print(f"   - Pedidos únicos: {cont_nunique}")
+                print(f"   - Total de pedidos: {cont}")
+                print("\nTOP 5 POR RUA:")
+                print(group.sort_values(by='QTDE_ITENS', ascending= False).head(5))
+                print("-"*60)
+                
+            except Exception as e:
+                error = validar_erro(e)
+                print(error)
+                continue
+    except Exception as e:
+        error = validar_erro(e)
+        print(error)
+        exit()
+
     try:
         print('Iniciando o controle de corte, aguarde...')
         rel = pd.read_csv(ar_csv.ar_67, header=None, names= col_name.c67)
@@ -42,7 +89,7 @@ def app():
         ).reset_index()
     except Exception as e:
         error = validar_erro(e)
-        print(error)
+        print(F"ETAPA_1: {error}")
         exit()
     try:
         var_dia['dia'] = var_dia['data'].dt.day_name('pt_BR')
@@ -51,14 +98,14 @@ def app():
         max_ex_dia= df_dia['data'].max()
         ex_dia = df_dia.loc[df_dia['data'] == max_ex_dia]
         var_dia['data'] = var_dia['data'].dt.strftime("%d-%m-%Y")
-        var_dia['vl_corte'] = var_dia['vl_corte'].astype(str).str.replace('.', ',', regex= False)
+        var_dia['vl_corte'] = var_dia['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
 
         print(f"=" * 70)
         print(f"Relatorio de corte:")
         print(f"DIA:\n", var_dia)
     except Exception as e:
         error = validar_erro(e)
-        print(error)
+        print(F"ETAPA_DIA: {error}")
         exit()
 
     try:
@@ -77,13 +124,13 @@ def app():
         max_ex_noite = df_noite['data_turno'].max()
         var_noite['data_turno'] = var_noite['data_turno'].dt.strftime("%d-%m-%Y")     
         ex_noite = df_noite.loc[df_noite['data_turno'] == max_ex_noite]
-        var_noite['vl_corte'] = var_noite['vl_corte'].astype(str).str.replace('.', ',', regex= False)
+        var_noite['vl_corte'] = var_noite['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
 
         print(f"=" * 70)
         print(f"NOITE:\n",var_noite)
     except Exception as e:
         error = validar_erro(e)
-        print(error)
+        print(F"ETAPA_NOITE: {error}")
         exit()
 
     try:
@@ -102,7 +149,7 @@ def app():
         print(f"DIVERGENCIA:\n", var_div)
     except Exception as e:
         error = validar_erro(e)
-        print(error)
+        print(F"ETAPA_DIVER: {error}")
         exit()
 
     try:
