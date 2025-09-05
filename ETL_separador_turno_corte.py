@@ -1,8 +1,10 @@
 from OUTROS.path_arquivos import *
 import pandas as pd
 import numpy as np
+import warnings
 import glob
 import os
+warnings.simplefilter(action='ignore', category=UserWarning)
 
 def validar_erro(e):
     print("=" * 60)
@@ -59,7 +61,7 @@ def app():
                 continue
     except Exception as e:
         error = validar_erro(e)
-        print(error)
+        print(F"ETAPA_PEDIDO: {error}")
         exit()
 
     try:
@@ -164,8 +166,9 @@ def app():
             print('fim do processo, verifique o arquivo controle_corte.xlsx')
     except Exception as e:
         error = validar_erro(e)
-        print(error)
+        print(F"ETAPA_FINAL: {error}")
         exit()
+
 if __name__ == "__main__":
     app()
     input("\nPressione Enter para sair...")

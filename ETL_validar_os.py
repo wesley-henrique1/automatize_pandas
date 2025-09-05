@@ -19,10 +19,13 @@ def app():
         df_28 = df_28.loc[(df_28['NIVEL'].between(2,8)) & (df_28['Tipo O.S.'] == '58 - Transferencia de Para Vertical')]
         df_28[['CODFUNCESTORNO', 'CODFUNCOS']] = df_28[['CODFUNCESTORNO', 'CODFUNCOS']].fillna(0).astype(int)
         df_28['ID_COD'] = df_28['ENDERECO_ORIG'].astype(str) + " - " + df_28['CODPROD'].astype(str)
+
         df_aereo = pd.read_csv(ar_csv.ar_end, header= None, names= col_name.cEnd)
         df_aereo = df_aereo[['COD_END', 'COD', 'QTDE', 'ENTRADA', 'SAIDA']]
         df_aereo['ID_COD'] = df_aereo['COD_END'].astype(str) + " - " + df_aereo['COD'].astype(str)
+
         df_func = pd.read_excel(ar_xlsx.ar_func, sheet_name= 'FUNCIONARIOS', usecols= ['MATRICULA', 'TIPO'])
+        
         df = df_28.merge(df_aereo, left_on= 'ID_COD', right_on= 'ID_COD', how= 'left').fillna(0).drop(['COD_END', 'COD'],axis= 1)
         df = df.merge(df_func, left_on= 'CODFUNCOS', right_on= 'MATRICULA', how= 'left').drop(columns=['MATRICULA'])
         df['TIPO'] = df['TIPO'].fillna("FUNC")
