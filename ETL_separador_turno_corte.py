@@ -69,7 +69,7 @@ def app():
         rel = pd.read_csv(ar_csv.ar_67, header=None, names= col_name.c67)
 
         rel['hora'] = rel['hr'].astype(str) + ':' + rel['min'].astype(str)
-        rel['data'] = pd.to_datetime(rel['data'], format= '%d/%m/%y')
+        rel['data'] = pd.to_datetime(rel['data'], format= '%d/%m/%y').sort_index(axis= 0, ascending= True)
         rel['hora'] = pd.to_datetime(rel['hora'], format= '%H:%M').dt.strftime('%H:%M')
         rel['vl_corte'] = rel['vl_corte'].astype(str)
         rel['vl_corte'] = rel['vl_corte'].str.replace('.', '', regex=False)
