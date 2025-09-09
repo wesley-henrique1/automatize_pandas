@@ -25,7 +25,7 @@ def app():
         colunas_float = [ 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM']
         df_96[colunas_int] = df_96[colunas_int].fillna(0).astype(int)  
         df_96[colunas_float] = df_96[colunas_float].fillna(0).astype(float) 
-        df = df_96[df_96["RUA"].between(1,39)]
+        df = df_96[df_96["RUA"].between(1,39)].copy()
 
     except PermissionError as e:
         print(f"Arquivos aberto, favor fechar. {e}")

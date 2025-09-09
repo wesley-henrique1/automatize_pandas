@@ -19,17 +19,22 @@ def app():
     try:
         print("=" * 60)
         print("Processo iniciado, favor aguarde...\n")
+        df_bloq = pd.read_excel(ar_xls.ar_86, usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)'])
         df_prod = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'QTUNITCX', 'CAPACIDADE', 'PONTOREPOSICAO','QTTOTPAL'])
+
         df_end = pd.read_csv(ar_csv.ar_end, header= None, names= col_name.cEnd)
         grupo = df_end.groupby('COD').agg(
         ENTRADA = ('ENTRADA', 'sum'),
         SAIDA = ('SAIDA', 'sum'),
         QTDE = ('COD_END', 'count')
         ).reset_index()
+
         df_07 = pd.read_csv(ar_csv.ar_07, header=None, names= col_name.c07)
         df_07 = df_07[df_07['RUA'].between(1, 39)]
+
         df = df_07.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'inner').drop(columns= 'CODPROD')
         df = df.merge(grupo, left_on= 'COD', right_on= 'COD', how= 'left')
+        df= df.merge(df_bloq, left_on= 'COD', right_on= 'Código').drop(columns= 'Código')
         df[['ENTRADA', 'SAIDA', 'QTDE']] = df[['ENTRADA', 'SAIDA', 'QTDE']].fillna(0).astype(int)
 
         col = ['ENDERECO', 'GERENCIAL']
