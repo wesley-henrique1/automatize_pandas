@@ -27,10 +27,9 @@ def app():
         if total_arquivos == 0:
             print("Nenhum arquivo Excel encontrado na pasta especificada.")
             return
-        
+        print("Iniciando contagem de pedidos, aguarde...")
         for i, arquivo in enumerate(arquivos_excel, 1):
             nome_arquivo = os.path.basename(arquivo)
-            print(f"{i}. Processando: {nome_arquivo}")
             try:
                 df = pd.read_excel(arquivo)
                 
@@ -40,25 +39,12 @@ def app():
                     continue
                                 
                 cont_nunique = df['NUMPED'].nunique()
-                cont = df['NUMPED'].count()
-
-                group = df.groupby('RUA').agg(
-                    QTDE_ITENS = ('PRODUTO', 'count')
-                ).reset_index()
-
-            
-            # Exibe resultados formatados
-                print("\n   RESUMO:")
-                print(f"   - Pedidos únicos: {cont_nunique}")
-                print(f"   - Total de pedidos: {cont}")
-                print("\nTOP 5 POR RUA:")
-                print(group.sort_values(by='QTDE_ITENS', ascending= False).head(5))
-                print("-"*60)
-                
+                print(f"{nome_arquivo}: {cont_nunique}")
             except Exception as e:
                 error = validar_erro(e)
                 print(error)
                 continue
+        print(f"total arquivos: {i}")
     except Exception as e:
         error = validar_erro(e)
         print(F"ETAPA_PEDIDO: {error}")
