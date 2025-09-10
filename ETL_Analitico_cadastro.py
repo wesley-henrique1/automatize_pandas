@@ -20,7 +20,7 @@ def app():
         print("ANALITICO CADASTRO")
         print("=" * 70)
         print("\n iniciando as tratativa da base de dados...")
-        df_96 = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'DESCRICAO', 'OBS2', 'QTUNITCX', 'LASTROPAL', 'ALTURAPAL', 'QTTOTPAL','ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM', 'CAPACIDADE', 'ABASTECEPALETE', 'RUA', 'PREDIO', 'NIVEL', 'APTO'])
+        df_96 = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'DESCRICAO', 'OBS2', 'QTUNITCX', 'LASTROPAL', 'ALTURAPAL', 'QTTOTPAL','ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM', 'CAPACIDADE', 'ABASTECEPALETE', 'RUA', 'PREDIO', 'NIVEL', 'APTO','PRAZOVAL'])
         colunas_int = ['CODPROD','QTUNITCX', 'LASTROPAL', 'QTTOTPAL', 'ALTURAPAL', 'CAPACIDADE']
         colunas_float = [ 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM']
         df_96[colunas_int] = df_96[colunas_int].fillna(0).astype(int)  
@@ -28,8 +28,11 @@ def app():
         df = df_96[df_96["RUA"].between(1,39)].copy()
 
     except PermissionError as e:
-        print(f"Arquivos aberto, favor fechar. {e}")
+        error = validar_erro(e)
+        print(error)
+
     try:
+        df['FLEG_VAL'] = np.where(df['PRAZOVAL'] == 0,"NÃO","SIM")
         df['CAP_CONVERTIDA'] = df['CAPACIDADE'] * df['QTUNITCX']
         concat = df['RUA'].astype(str) + "-" + df['PREDIO'].astype(str)
         df['CONTAGEM'] = concat.map(concat.value_counts())
@@ -39,10 +42,25 @@ def app():
         altura_arm_limpa = df['ALTURAARM'].fillna(0)
         df['P+L?']= np.where(altura_arm_limpa == 0,0,(167 - x_limpo) / altura_arm_limpa).astype(int)
 
+    except Exception as e:
+        error = validar_erro(e)
+        print(error)
+
+    try:
+        dropar = ['ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM']
+        df.drop(columns=dropar, inplace= True)
+
+        antigo = ['CODPROD', 'DESCRICAO', 'ABASTECEPALETE', ]
+        novo = ['COD', 'DESC', 'FLEG_ABST']
+        dic_zip = dict(zip(antigo, novo))
+        df.rename(columns=dic_zip, inplace= True)
+        print(df.columns)
         df.to_excel(output.baixa, index= False, sheet_name= "validação_PROD")
         print("Processo finalizado com sucesso...")
     except Exception as e:
-        print(f"Erro na tratativa do dataFrame 8596")
+        error = validar_erro(e)
+        print(error)
+
 
 if __name__ == '__main__':
     app()
