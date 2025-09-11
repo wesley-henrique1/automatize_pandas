@@ -63,7 +63,7 @@ def app():
         rel['qtde_corte'] = rel['qtde_corte'].astype(str)
         rel['qtde_corte'] = rel['qtde_corte'].str.replace('.', '', regex=False)
         rel['qtde_corte'] = rel['qtde_corte'].str.replace(',', '.').astype(float)
-
+        rel = rel.sort_values(by="data", ascending= False, axis= 0)
         inicio = '07:30:00'
         fim = '18:00:00'
         dia = rel['hora'].between(inicio, fim)
@@ -85,6 +85,7 @@ def app():
         var_dia['ano'] = var_dia['data'].dt.year
         max_ex_dia= df_dia['data'].max()
         ex_dia = df_dia.loc[df_dia['data'] == max_ex_dia]
+        var_dia = var_dia.sort_values(by="data", ascending= False, axis= 0)
         var_dia['data'] = var_dia['data'].dt.strftime("%d-%m-%Y")
         var_dia['vl_corte'] = var_dia['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
 
@@ -110,6 +111,7 @@ def app():
         var_noite['mes'] = var_noite['data_turno'].dt.month_name('pt_BR')
         var_noite['ano'] = var_noite['data_turno'].dt.year
         max_ex_noite = df_noite['data_turno'].max()
+        var_noite = var_noite.sort_values(by="data", ascending= False, axis= 0)
         var_noite['data_turno'] = var_noite['data_turno'].dt.strftime("%d-%m-%Y")     
         ex_noite = df_noite.loc[df_noite['data_turno'] == max_ex_noite]
         var_noite['vl_corte'] = var_noite['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
@@ -141,8 +143,6 @@ def app():
         exit()
 
     try:
-        # var_dia['vl_corte'] = var_dia['vl_corte'].astype(str).str.replace('.', ',', regex= False)
-        # var_noite['vl_corte'] = var_noite['vl_corte'].astype(str).str.replace('.', ',', regex= False)
         rel.drop(columns=['hora',], inplace= True)
 
         with pd.ExcelWriter(output.corte) as writer:
