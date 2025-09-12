@@ -36,7 +36,7 @@ def app():
         print(error)
 
     try:
-        df['TIPO_OP'] = np.where(df['QTDE'].astype(float) >= df['QT'].astype(float), "baixa", "retorno")
+        df['TIPO_OP'] = np.where(df['QT'].astype(float) >= df['QTDE'].astype(float), "baixa", "retorno")
 
         df_pd = df.loc[(df['CODFUNCOS'] == 0) & (df['CODFUNCESTORNO'] == 0)]
         df_pd = df_pd[['NUMOS','CODPROD', 'DESCRICAO', 'RUA', 'PREDIO', 'NIVEL',
