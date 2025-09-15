@@ -1,13 +1,8 @@
 from OUTROS.path_arquivos import *
 import pandas as pd
 import numpy as np
-
-# PATH DAS BASES
-p_sug = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\Wesley Henrique\CALIBRAÇÃO FILIAL 11\RUA 13 FINI\SUGESTAO.txt'
-p_movi = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\Wesley Henrique\CALIBRAÇÃO FILIAL 11\RUA 13 FINI\MOVI.txt'
-p_acesso = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\Wesley Henrique\CALIBRAÇÃO FILIAL 11\RUA 13 FINI\acesso.xlsx'
-p_prod = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\Wesley Henrique\CALIBRAÇÃO FILIAL 11\RUA 13 FINI\PROD.xlsx'
-p_output = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\Wesley Henrique\CALIBRAÇÃO FILIAL 11\RUA 13 FINI\MAPA.xlsx'
+import glob
+import os
 
 def validar_erro(e):
     print("=" * 60)
@@ -22,34 +17,54 @@ def validar_erro(e):
     else:
         return f"Ocorreu um erro inesperado: {e}"
 
-def app():    
-    try:
-        df_sug = pd.read_csv(p_sug, header= None, names= col_name.c82)
-        df_movi = pd.read_csv(p_movi, header= None, names= col_name.cMovi)
-        df_acesso = pd.read_excel(p_acesso, usecols= ['CODPROD', 'QTOS'])
-        df_prod = pd.read_excel(p_prod, usecols= ['CODPROD','OBS2', 'QTUNITCX', 'QTTOTPAL'])
+def app():
+    try: #"""LEITURA DOS DATAFRAMES"""
+        def directory(files, argumento):
+            directory = glob.glob(os.path.join(files, argumento))
+            lista = []
+            for arquivo in directory:
+                x = pd.read_csv(arquivo, header= None)
+                lista.append(x)
+            df_temp = pd.concat(lista, axis= 0, ignore_index= True)
+            return df_temp
+        
+        df_sug = directory(pasta.p_82, 'DEP*.txt')
+        df_mov = directory(pasta.p_82, 'MOV*.txt')
+        df_prod = pd.read_excel(ar_xlsx.ar_96, usecols=['CODPROD','DESCRICAO', 'QTUNITCX', 'QTTOTPAL', 'OBS2','RUA', 'PREDIO', 'APTO'])
+        df_acesso = pd.read_excel(ar_xlsx.ar_60, usecols= ['CODPROD','QTOS', 'QT'])
+
     except Exception as e:
-        error = validar_erro(e)
-        print(error)
-        exit()
+        erro = validar_erro(e)
+        print("ETAPA 1: \n", erro)
 
-    try:   
-        df_movi = df_movi[['COD', 'MOVI', 'CLASSE']]
-        df_geral = df_sug.merge(df_prod, left_on='COD', right_on='CODPROD', how= 'left').drop(columns= 'CODPROD')
-        df_geral = df_geral.merge(df_movi, left_on= 'COD', right_on='COD', how= 'left')
-        df_geral = df_geral.merge(df_acesso, left_on= 'COD', right_on= 'CODPROD', how= 'left').drop(columns= 'CODPROD')
+    try:# """TRATATIVAS DOS DF"""
+        df_sug.columns = col_name.c82
+        df_mov.columns = col_name.cMov
 
-        df_geral['PL_ATUAL'] = (df_geral['CAP'].astype(int) / df_geral['QTTOTPAL'].astype(int)).round(2)
-        df_geral['PL_SUG'] = (df_geral['COM FATOR'].astype(int) / df_geral['QTTOTPAL'].astype(int)).round(2)
-        var = df_geral[['COD', 'DESCRIÇÃO', 'CAP','QTTOTPAL', 'PL_ATUAL','PL_SUG']]
+        df_prod = df_prod.loc[df_prod['RUA'].between(1,39)]
+        df_prod['OBS2'] = df_prod['OBS2'].fillna("Ativos")
+        df_prod["PROD"] = df_prod['CODPROD'].astype(str)
+
+        df_acesso = df_acesso.groupby('CODPROD').agg(
+            ACESSO = ("QTOS", "sum")
+        ).reset_index()
+
+        df = df_sug.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'left')
+
     except Exception as e:
-        error = validar_erro(e)
-        print(error)
-        exit()
+        erro = validar_erro(e)
+        print("ETAPA 2: \n", erro)
 
-    with pd.ExcelWriter(p_output) as dest:
-        df_geral.to_excel(dest, index= False, sheet_name= 'relatorio')
+    try:# """ETAPA FINAL SALVAR OS DATAFRAMES"""
+        directory = files_bi.bi_acesso
+        file_sug = os.path.join(directory, "DIM_SUGESTÃO.xlsx")
+        file_mov = os.path.join(directory, "DIM_MOVIMENTAR.xlsx")
+        file_prod = os.path.join(directory, "DIM_PRODUTO.xlsx")
 
-if __name__ == "__main__":
-    app()
-    input("\nPressione Enter para sair...")
+        df_sug.to_excel(file_sug, index=False, sheet_name="DIM_SUG")
+        df_mov.to_excel(file_mov, index=False, sheet_name="DIM_MOVI")  
+        df_prod.to_excel(file_prod, index=False, sheet_name="DIM_PROD")  
+
+    except Exception as e:
+        erro = validar_erro(e)
+        print("ETAPA FINAL: \n", erro)
