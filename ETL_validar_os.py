@@ -33,7 +33,7 @@ def app():
         df['TIPO'] = df['TIPO'].fillna("FUNC")    
     except Exception as e:
         error = validar_erro(e)
-        print(error)
+        print(f"Etapa 1: {error}")
 
     try:
         df['TIPO_OP'] = np.where(df['QT'].astype(float) >= df['QTDE'].astype(float), "baixa", "retorno")
@@ -48,7 +48,7 @@ def app():
         df_fim = df_fim.sort_values(by=['RUA', 'PREDIO'], ascending= True, axis= 0)  
     except Exception as e:
         error = validar_erro(e)
-        print(error)
+        print(f"Etapa 2: {error}")
 
     try:
         with pd.ExcelWriter(output.val_baixa) as destino:
@@ -56,7 +56,7 @@ def app():
             df_fim.to_excel(destino, index= False, sheet_name= 'FIM_MESA')
     except Exception as e:
         error = validar_erro(e)
-        print(error)
+        print(f"Etapa 3: {error}")
 
 if __name__ == "__main__":
     app()
