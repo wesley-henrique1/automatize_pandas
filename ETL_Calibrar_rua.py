@@ -4,6 +4,7 @@ import numpy as np
 import glob
 import os
 
+print("Iniciando processo, favor aguarde...")
 def validar_erro(e):
     print("=" * 60)
     if isinstance(e, KeyError):
@@ -33,8 +34,6 @@ def app():
         df_prod = pd.read_excel(ar_xlsx.ar_96, usecols=['CODPROD','DESCRICAO', 'QTUNITCX', 'QTTOTPAL', 'OBS2','RUA', 'PREDIO', 'APTO'])
         df_acesso = pd.read_excel(ar_xlsx.ar_60, usecols= ['CODPROD','QTOS', 'QT'])
         df_estoque = pd.read_excel(ar_xls.ar_86, usecols=['Código', 'Estoque', 'Custo ult. ent.'])
-
-        
 
     except Exception as e:
         erro = validar_erro(e)
@@ -103,10 +102,15 @@ def app():
         df_prod.to_excel(file_prod, index=False, sheet_name="DIM_PROD")  
         df_acesso.to_excel(file_acesso, index=False, sheet_name="DIM_ACESSO")
         df_estoque.to_excel(file_estoque, index=False, sheet_name="DIM_GER")  
-        df_final.to_excel(file_estoque, index=False, sheet_name="FATO_GERAL")  
+        df_final.to_excel(file_final, index=False, sheet_name="FATO_GERAL")  
 
 
 
     except Exception as e:
         erro = validar_erro(e)
         print("ETAPA FINAL: \n", erro)
+
+if __name__ == "__main__":
+    app = app()
+    print("Processo finalizado com sucesso!!...\n")
+    input("\nPressione Enter para sair...")
