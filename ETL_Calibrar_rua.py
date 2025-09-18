@@ -33,8 +33,9 @@ def app():
         df_mov = directory(pasta.p_82, 'MOV*.txt')
         df_prod = pd.read_excel(ar_xlsx.ar_96, usecols=['CODPROD','DESCRICAO', 'QTUNITCX', 'QTTOTPAL', 'OBS2','RUA', 'PREDIO', 'APTO'])
         df_acesso = pd.read_excel(ar_xlsx.ar_60, usecols= ['CODPROD','QTOS', 'QT'])
-        df_estoque = pd.read_excel(ar_xls.ar_86, usecols=['Código', 'Estoque', 'Custo ult. ent.'])
-
+        df_estoque = pd.read_excel(ar_xls.ar_86, usecols=['Código', 'Estoque', 'Custo ult. ent.','Qtde Pedida','Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria'])
+        print(df_estoque.columns)
+        print("\nleitura dos DATAFRAMES finalizado...\n")
     except Exception as e:
         erro = validar_erro(e)
         print("ETAPA 1: \n", erro)
@@ -49,6 +50,12 @@ def app():
         df_prod["PRODUTO"] = df_prod['CODPROD'].astype(str)
 
         df_estoque = df_estoque.fillna(0)
+        rename = {
+            "Qtde Pedida" : "PEDIDO_COMP"
+            ,"Bloqueado(Qt.Bloq.-Qt.Avaria)" : "BLOQUEADO"
+            ,"Qt.Avaria" : "AVARIA"
+        }
+        df_estoque = df_estoque.rename(columns=rename)
 
         df_acesso = df_acesso.groupby('CODPROD').agg(
         ACESSO = ("QTOS", "sum")
@@ -69,7 +76,7 @@ def app():
         df['CONTAGEM'] = concat.map(concat.value_counts())
         df['STATUS_PROD'] = np.where(df['CONTAGEM'] > 3, "DIV", np.where(df['CONTAGEM'] > 2,"VAL", "INT"))
 
-        drop_col = ['UNID.','DESCRIÇÃO', '%_x',  'CODPROD_x','RUA_y', 'PREDIO_y', 'APTO_y','Código', 'CODPROD_y', 'ACESSO','DESCRICAO','EMBALAGEM_y', 'UNID','%_y', '%_ACUM','NIVEL']
+        drop_col = ['UNID.','DESCRIÇÃO', '%_x',  'CODPROD_x','RUA_y', 'PREDIO_y', 'APTO_y','Código', 'CODPROD_y', 'ACESSO','DESCRICAO','EMBALAGEM_y', 'UNID','%_y', '%_ACUM','NIVEL','PEDIDO_COMP', 'BLOQUEADO','AVARIA']
         df_final = df.drop(columns=drop_col)
 
         dic_rename = {
@@ -83,10 +90,12 @@ def app():
 
         nova_ordem = ['COD', 'DESC','EMB', 'OBS2', 'QTUNITCX','QTTOTPAL', 'RUA', 'PREDIO', 'APTO', 'TIPO', 'MÊS 1', 'MÊS 2', 'MÊS 3', 'CAP', '1 DIA', 'COM FATOR', 'VARIAÇÃO','Estoque', 'CUSTO_ULT','MOVI', 'CLASSE', 'PL_SUG', 'PL_CAP', 'CONTAGEM', 'STATUS_PROD', 'CUSTO_TT','PRODUTO']
         df_final = df_final[nova_ordem]
+        print("\nTratamento finalizado...\n")
 
     except Exception as e:
         erro = validar_erro(e)
         print("ETAPA 2: \n", erro)
+        
 
     try:# """ETAPA FINAL SALVAR OS DATAFRAMES"""
         directory = files_bi.bi_acesso

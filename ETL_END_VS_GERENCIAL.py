@@ -35,7 +35,7 @@ def app():
         df = df_07.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'inner').drop(columns= 'CODPROD')
         df = df.merge(grupo, left_on= 'COD', right_on= 'COD', how= 'left')
         df= df.merge(df_bloq, left_on= 'COD', right_on= 'Código').drop(columns= 'Código')
-        df[['ENTRADA', 'SAIDA', 'QTDE']] = df[['ENTRADA', 'SAIDA', 'QTDE']].fillna(0).astype(int)
+        df[['ENTRADA', 'SAIDA', 'QTDE']] = df[['ENTRADA', 'SAIDA', 'QTDE']].fillna(0).astype(float)
 
         col = ['ENDERECO', 'GERENCIAL']
         for coluna in col:
@@ -48,7 +48,8 @@ def app():
 
     try:
         df['ENDERECO'] = df['ENDERECO'] + df['ENTRADA']
-        df['DIVERGENCIA'] = df['ENDERECO'].astype(int) - df['GERENCIAL'].astype(int)
+        df['DIVERGENCIA'] = df['EN' \
+        'DERECO'].astype(float) - df['GERENCIAL'].astype(float)
         df["TIPO_OP"] = np.where(df['DIVERGENCIA'] < 0,"END_MENOR"
                         ,np.where(df['DIVERGENCIA'] > 0,"END_MAIOR"
                         ,np.where(df['DIVERGENCIA'] == 0, "CORRETO","-")))
