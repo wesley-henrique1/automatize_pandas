@@ -36,6 +36,12 @@ def app():
         print(f"Etapa 1: {error}")
 
     try:
+
+        df['QT'] = df['QT'].astype(str).str.replace(".", "")
+        df['QT'] = df['QT'].astype(str).str.replace(",", ".")
+        df['QTDE'] = df['QTDE'].astype(str).str.replace(".", "")
+        df['QTDE'] = df['QTDE'].astype(str).str.replace(",", ".")
+
         df['TIPO_OP'] = np.where(df['QT'].astype(float) >= df['QTDE'].astype(float), "baixa", "retorno")
 
         df_pd = df.loc[(df['CODFUNCOS'] == 0) & (df['CODFUNCESTORNO'] == 0)]

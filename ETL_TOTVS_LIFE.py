@@ -4,6 +4,7 @@ import pandas as pd
 def app(): 
     try:
         # ETAPA 1; LEITURA DOS DATAFRAMES
+        caminho = r'c:\WS_OLIVEIRA\BASE_DADOS\TOTVS\shelf_life.xls'
         pass    
     except Exception as e:
         pass
