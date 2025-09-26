@@ -35,20 +35,19 @@ def app():
         df = df_07.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'inner').drop(columns= 'CODPROD')
         df = df.merge(grupo, left_on= 'COD', right_on= 'COD', how= 'left')
         df= df.merge(df_bloq, left_on= 'COD', right_on= 'Código').drop(columns= 'Código')
-        df[['ENTRADA', 'SAIDA', 'QTDE']] = df[['ENTRADA', 'SAIDA', 'QTDE']].fillna(0).astype(float)
+    except Exception as e:
+        erro = validar_erro(e)
+        print(f"Etapa extração: {erro}")
+        exit()
 
-        col = ['ENDERECO', 'GERENCIAL','ENTRADA','PICKING','CAPACIDADE','QTUNITCX']
+    try:
+        col = ['ENDERECO', 'GERENCIAL','PICKING','CAPACIDADE','QTUNITCX','ENTRADA', 'SAIDA', 'QTDE']
         for coluna in col:
             df[coluna] = df[coluna].astype(str)
             df[coluna] = df[coluna].str.replace('.' , '')
             df[coluna] = df[coluna].str.replace(',', '.')
-            df[coluna] = df[coluna].astype(float)
-    except Exception as e:
-        erro = validar_erro(e)
-        print(f"Etapa 1: {erro}")
-        exit()
+            df[coluna] = df[coluna].fillna(0).astype(float)
 
-    try:
         df['ENDERECO'] = df['ENDERECO'] + df['ENTRADA']
         df['DIVERGENCIA'] = df['ENDERECO'].astype(float) - df['GERENCIAL'].astype(float)
         df["TIPO_OP"] = np.where(df['DIVERGENCIA'] < 0,"END_MENOR"
@@ -56,10 +55,12 @@ def app():
                         ,np.where(df['DIVERGENCIA'] == 0, "CORRETO","-")))
         df['CAP_CONVERTIDA'] = df['CAPACIDADE'] * df['QTUNITCX']
 
+
         df['AP_VS_CAP'] = np.where(df['PICKING'].astype(int) > df['CAP_CONVERTIDA'].astype(int),'AP_MAIOR'
                         ,np.where(df['PICKING'].astype(int) < 0, "AP_NEGATIVO","CORRETO"))
         df['PENDENCIA'] = np.where(df['QTDE_O.S'] > 0, 'FOLHA', 'INVENTARIO')
         df['RUA'] = df['RUA'].astype(int)
+
 
         df.to_excel(output.divergencia, index= False, sheet_name= 'DIVERGENCIA')
     except Exception as e:
