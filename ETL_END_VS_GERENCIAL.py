@@ -19,75 +19,99 @@ def app():
     try:
         print("=" * 60)
         print("Processo iniciado, favor aguarde...\n")
+
+        end_ger = pd.read_csv(ar_csv.ar_07, header= None, names= col_name.c07)  
         df_bloq = pd.read_excel(ar_xls.ar_86, usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)'])
-        df_prod = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'QTUNITCX', 'CAPACIDADE', 'PONTOREPOSICAO','QTTOTPAL'])
-
         df_end = pd.read_csv(ar_csv.ar_end, header= None, names= col_name.cEnd)
-        grupo = df_end.groupby('COD').agg(
-        ENTRADA = ('ENTRADA', 'sum'),
-        SAIDA = ('SAIDA', 'sum'),
-        QTDE = ('COD_END', 'count')
-        ).reset_index()
-
-        df_07 = pd.read_csv(ar_csv.ar_07, header=None, names= col_name.c07)
-        df_07 = df_07[df_07['RUA'].between(1, 39)]
-
-        df = df_07.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'inner').drop(columns= 'CODPROD')
-        df = df.merge(grupo, left_on= 'COD', right_on= 'COD', how= 'left')
-        df= df.merge(df_bloq, left_on= 'COD', right_on= 'Código').drop(columns= 'Código')
+        df_prod = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'QTUNITCX','QTTOTPAL'])
     except Exception as e:
         erro = validar_erro(e)
         print(f"Etapa extração: {erro}")
-        exit()
+        
+    try:
+        dic_end_ger = {'COD' : "CODPROD"}
+        end_ger = end_ger.rename(columns= dic_end_ger)
+        end_ger['RUA'] = end_ger['RUA'].fillna(0).astype(int)
+
+        dic_bloq = {'Código' : "CODPROD", 'Bloqueado(Qt.Bloq.-Qt.Avaria)' : "BLOQ"}
+        df_bloq = df_bloq.rename(columns= dic_bloq)
+        df_bloq['CODPROD'] = df_bloq['CODPROD'].fillna(0).astype(int)
+
+        dic_end = {"COD" : "CODPROD"}
+        df_end = df_end.rename(columns= dic_end)
+        df_end = df_end[['CODPROD','ENTRADA', 'SAIDA', 'DISP','QTDE']]
+
+        df_prod['CODPROD'] = df_prod['CODPROD'].fillna(0).astype(int)
+
+        df = end_ger.loc[end_ger['RUA'].between(1, 39)]
+        df = df.merge(df_bloq, left_on='CODPROD',right_on='CODPROD', how= 'left')
+        df = df.merge(df_end, left_on='CODPROD',right_on='CODPROD', how= 'left')
+        df = df.merge(df_prod, left_on='CODPROD',right_on='CODPROD', how= 'left')
+        drop_col = ['EMBALAGEM']
+        df.drop(columns= drop_col, inplace= True)
+
+        col_ajuste = ['ENDERECO', 'GERENCIAL','PICKING','CAP','QTUNITCX','ENTRADA', 'SAIDA', 'QTDE']
+        for col in col_ajuste:
+            df[col] = df[col].fillna(0).astype(str)
+            df[col] = df[col].str.replace(".", "")
+            df[col] = df[col].str.replace(",", ".")
+            df[col] = df[col].fillna(0).astype(float)
+
+        df['DIF_UN'] = df['ENDERECO'].astype(float) - df['GERENCIAL'].astype(float)
+        df['DIF_CX'] = df['DIF_UN'] * df['QTUNITCX'].astype(int)
+        df['ENDERECO'] = df['ENDERECO'] + df['ENTRADA']
+        df['CAP_CONVERTIDA'] = df['CAP'] * df['QTUNITCX']
+        df['PENDENCIA'] = np.where(df['QTDE_O.S'] > 0, 'FOLHA', 'INVENTARIO')
+
+        cond_dif = [
+            df['DIF_CX'] == 0,
+            # POSITIVO
+            (df['DIF_CX'] > 0) & (df['DIF_CX'] < 5),
+            (df['DIF_CX'] >= 5) & (df['DIF_CX'] < 10),
+            df['DIF_CX'] >= 10,
+            # NEGATIVO
+            (df['DIF_CX'] < 0) & (df['DIF_CX'] > -5),
+            (df['DIF_CX'] <= -5) & (df['DIF_CX'] > -10),
+            df['DIF_CX'] <= -10
+        ]
+        result_dif = ['0', '1', '2', '3', '-1', '-2', '-3',]
+
+        cond_op = [
+            df['DIF_UN'] < 0,
+            df['DIF_UN'] > 0,
+            df['DIF_UN'] == 0,
+        ]
+        result_op = ["END_MENOR", "END_MAIOR", "CORRETO"]
+
+        cond_ap = [
+            df['PICKING'].astype(int) > df['CAP_CONVERTIDA'].astype(int),
+            df['PICKING'].astype(int) < 0,
+            df['PICKING'].astype(int) == 0
+        ]
+        result_ap = [
+            'AP_MAIOR',
+            "AP_NEGATIVO",
+            "CORRETO"
+        ]
+
+        df['CATEGORIA_DIF'] = np.select(cond_dif, result_dif, default= "-").astype(int)
+        df["TIPO_OP"] = np.select(cond_op, result_op, default= "-")
+        df['AP_VS_CAP'] = np.select(cond_ap, result_ap, default= "-")
+    except Exception as e:
+        erro = validar_erro(e)
+        print(f"Etapa tratamento: {erro}")
 
     try:
-        col = ['ENDERECO', 'GERENCIAL','PICKING','CAPACIDADE','QTUNITCX','ENTRADA', 'SAIDA', 'QTDE']
-        for coluna in col:
-            df[coluna] = df[coluna].astype(str)
-            df[coluna] = df[coluna].str.replace('.' , '')
-            df[coluna] = df[coluna].str.replace(',', '.')
-            df[coluna] = df[coluna].fillna(0).astype(float)
-
-        df['ENDERECO'] = df['ENDERECO'] + df['ENTRADA']
-        df['DIVERGENCIA'] = df['ENDERECO'].astype(float) - df['GERENCIAL'].astype(float)
-        df["TIPO_OP"] = np.where(df['DIVERGENCIA'] < 0,"END_MENOR"
-                        ,np.where(df['DIVERGENCIA'] > 0,"END_MAIOR"
-                        ,np.where(df['DIVERGENCIA'] == 0, "CORRETO","-")))
-        df['CAP_CONVERTIDA'] = df['CAPACIDADE'] * df['QTUNITCX']
-
-
-        df['AP_VS_CAP'] = np.where(df['PICKING'].astype(int) > df['CAP_CONVERTIDA'].astype(int),'AP_MAIOR'
-                        ,np.where(df['PICKING'].astype(int) < 0, "AP_NEGATIVO","CORRETO"))
-        df['PENDENCIA'] = np.where(df['QTDE_O.S'] > 0, 'FOLHA', 'INVENTARIO')
-        df['RUA'] = df['RUA'].astype(int)
-
-
         df.to_excel(output.divergencia, index= False, sheet_name= 'DIVERGENCIA')
     except Exception as e:
         erro = validar_erro(e)
-        print(f"Etapa 2: {erro}")
-        exit()
+        print(f"Etapa carga: {erro}")
 
     try:
-        end_menor = df.loc[df['TIPO_OP'] == 'END_MENOR']
-        end_maior = df.loc[df['TIPO_OP'] == 'END_MAIOR']
-
-        menor = end_menor.groupby('RUA').agg(
-            qtde_itens = ('TIPO_OP', 'count')
-        ).reset_index().sort_values('qtde_itens', ascending= False, axis= 0)
-        maior = end_maior.groupby('RUA').agg(
-            qtde_itens = ('TIPO_OP', 'count')
-        ).reset_index().sort_values('qtde_itens', ascending= False, axis= 0)
-
-        print("###### DEMONSTRATIVO ######\n")
-        print('ENDEREÇADO MENOR QUE GERENCIAL')
-        print(menor)
-        print("\nENDEREÇADO MAIOR QUE GERENCIAL")
-        print(maior)
+        pass
     except Exception as e:
         erro = validar_erro(e)
-        print(f"Etapa 3: {erro}")
-        exit()
+        print(f"Etapa demonstrativos: {erro}")
 
 if __name__ == '__main__':
     app()
