@@ -44,12 +44,15 @@ def app():
 
         df_fim = merge.merge(aereo, left_on='ID_END', right_on='ID_END', how= 'inner')
         df_fim = df_fim[['CODPROD', 'DESCRICAO', 'NUMBONUS', 'RUA', 'PREDIO', 'NIVEL', 'APTO', 'DTVALIDADE','DT.VALIDADE','PROBLEMA']]
+
+
+        df_filtrado = df_fim.drop_duplicates(subset=['CODPROD', 'DTVALIDADE'], keep='first')
     except Exception as e:
         error = validar_erro(e)
         print(F"TRATAMENTO: {error}")
 
     try:
-        df_fim.to_excel(output.totvs_life, sheet_name="DIVERGENCIA", index=False)
+        df_filtrado.to_excel(output.totvs_life, sheet_name="DIVERGENCIA", index=False)
     except Exception as e:
         error = validar_erro(e)
         print(F"CARGA: {error}")

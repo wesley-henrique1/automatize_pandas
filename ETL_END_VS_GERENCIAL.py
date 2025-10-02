@@ -40,12 +40,24 @@ def app():
         dic_end = {"COD" : "CODPROD"}
         df_end = df_end.rename(columns= dic_end)
         df_end = df_end[['CODPROD','ENTRADA', 'SAIDA', 'DISP','QTDE']]
+        col_ajuste = ['CODPROD','ENTRADA', 'SAIDA', 'DISP','QTDE']
+        for col in col_ajuste:
+            df_end[col] = df_end[col].fillna(0).astype(str)
+            df_end[col] = df_end[col].str.replace(".", "")
+            df_end[col] = df_end[col].str.replace(",", ".")
+            df_end[col] = df_end[col].fillna(0).astype(float)
+        grupo_end = df_end.groupby('CODPROD').agg(
+            SAIDA = ('SAIDA', 'sum'),
+            ENTRADA = ('ENTRADA', 'sum'),
+            DISP = ('DISP', 'sum'),
+            QTDE = ('QTDE', 'sum'),
+        ).reset_index()
 
         df_prod['CODPROD'] = df_prod['CODPROD'].fillna(0).astype(int)
 
         df = end_ger.loc[end_ger['RUA'].between(1, 39)]
         df = df.merge(df_bloq, left_on='CODPROD',right_on='CODPROD', how= 'left')
-        df = df.merge(df_end, left_on='CODPROD',right_on='CODPROD', how= 'left')
+        df = df.merge(grupo_end, left_on='CODPROD',right_on='CODPROD', how= 'left')
         df = df.merge(df_prod, left_on='CODPROD',right_on='CODPROD', how= 'left')
         drop_col = ['EMBALAGEM']
         df.drop(columns= drop_col, inplace= True)
@@ -58,7 +70,7 @@ def app():
             df[col] = df[col].fillna(0).astype(float)
 
         df['DIF_UN'] = df['ENDERECO'].astype(float) - df['GERENCIAL'].astype(float)
-        df['DIF_CX'] = df['DIF_UN'] * df['QTUNITCX'].astype(int)
+        df['DIF_CX'] = (df['DIF_UN'] / df['QTUNITCX'].astype(int)).round(1)
         df['ENDERECO'] = df['ENDERECO'] + df['ENTRADA']
         df['CAP_CONVERTIDA'] = df['CAP'] * df['QTUNITCX']
         df['PENDENCIA'] = np.where(df['QTDE_O.S'] > 0, 'FOLHA', 'INVENTARIO')
@@ -102,6 +114,8 @@ def app():
         print(f"Etapa tratamento: {erro}")
 
     try:
+        df[['RUA', 'PREDIO']] = df[['RUA', 'PREDIO']].astype(int)
+        df = df.sort_values(by=['RUA', 'PREDIO'], ascending= True)
         df.to_excel(output.divergencia, index= False, sheet_name= 'DIVERGENCIA')
     except Exception as e:
         erro = validar_erro(e)
