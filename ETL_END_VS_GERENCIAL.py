@@ -1,6 +1,7 @@
 from OUTROS.path_arquivos import *
 import pandas as pd
 import numpy as np
+import os
 
 def validar_erro(e):
     print("=" * 60)
@@ -116,16 +117,14 @@ def app():
     try:
         df[['RUA', 'PREDIO']] = df[['RUA', 'PREDIO']].astype(int)
         df = df.sort_values(by=['RUA', 'PREDIO'], ascending= True)
-        df.to_excel(output.divergencia, index= False, sheet_name= 'DIVERGENCIA')
+
+        path_div = os.path.join(files_bi.bi_str, "FATO_DIVERGENCIA.xlsx")
+        df.to_excel(path_div, index= False, sheet_name= 'DIVERGENCIA')
     except Exception as e:
         erro = validar_erro(e)
         print(f"Etapa carga: {erro}")
 
-    try:
-        pass
-    except Exception as e:
-        erro = validar_erro(e)
-        print(f"Etapa demonstrativos: {erro}")
+
 
 if __name__ == '__main__':
     app()
