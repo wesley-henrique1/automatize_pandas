@@ -30,6 +30,15 @@ def app():
         print(f"Etapa extração: {erro}")
         
     try:
+        def ajuste_col(df_original, col):
+            df_copia = df_original.copy() 
+            for i in col:
+                df_copia[i] = df_copia[i].fillna(0).astype(str)
+                df_copia[i] = df_copia[i].str.replace(".", "")
+                df_copia[i] = df_copia[i].str.replace(",", ".")
+                df_copia[i] = df_copia[i].fillna(0).astype(float)
+            return df_copia
+        
         dic_end_ger = {'COD' : "CODPROD"}
         end_ger = end_ger.rename(columns= dic_end_ger)
         end_ger['RUA'] = end_ger['RUA'].fillna(0).astype(int)
@@ -41,12 +50,16 @@ def app():
         dic_end = {"COD" : "CODPROD"}
         df_end = df_end.rename(columns= dic_end)
         df_end = df_end[['CODPROD','ENTRADA', 'SAIDA', 'DISP','QTDE']]
+
+        
         col_ajuste = ['CODPROD','ENTRADA', 'SAIDA', 'DISP','QTDE']
-        for col in col_ajuste:
-            df_end[col] = df_end[col].fillna(0).astype(str)
-            df_end[col] = df_end[col].str.replace(".", "")
-            df_end[col] = df_end[col].str.replace(",", ".")
-            df_end[col] = df_end[col].fillna(0).astype(float)
+        df_end = ajuste_col(df_end, col_ajuste)
+        
+        # for col in col_ajuste:
+        #     df_end[col] = df_end[col].fillna(0).astype(str)
+        #     df_end[col] = df_end[col].str.replace(".", "")
+        #     df_end[col] = df_end[col].str.replace(",", ".")
+        #     df_end[col] = df_end[col].fillna(0).astype(float)
         grupo_end = df_end.groupby('CODPROD').agg(
             SAIDA = ('SAIDA', 'sum'),
             ENTRADA = ('ENTRADA', 'sum'),

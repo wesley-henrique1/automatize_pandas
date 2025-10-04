@@ -4,7 +4,8 @@ import numpy as np
 import glob
 import os
 
-print("Iniciando processo, favor aguarde...")
+print("Iniciando processo, favor aguarde...\n")
+print("=" * 60)
 def validar_erro(e):
     print("=" * 60)
     if isinstance(e, KeyError):
@@ -34,16 +35,19 @@ def app():
         df_prod = pd.read_excel(ar_xlsx.ar_96, usecols=['CODPROD','DESCRICAO', 'QTUNITCX', 'QTTOTPAL', 'OBS2','RUA', 'PREDIO', 'APTO'])
         df_acesso = pd.read_excel(ar_xlsx.ar_60, usecols= ['CODPROD','QTOS', 'QT'])
         df_estoque = pd.read_excel(ar_xls.ar_86, usecols=['Código', 'Estoque', 'Custo ult. ent.','Qtde Pedida','Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria'])
-        print(df_estoque.columns)
         print("\nleitura dos DATAFRAMES finalizado...\n")
     except Exception as e:
         erro = validar_erro(e)
         print("ETAPA 1: \n", erro)
 
     try:# """TRATATIVAS DOS DF"""
-        
         df_sug.columns = col_name.c82
+        df_sug = df_sug.drop_duplicates(subset=['COD'], keep='first')
+        df_sug.replace([np.inf, -np.inf], 0, inplace=True) 
+
         df_mov.columns = col_name.cMovi
+        df_mov = df_mov.drop_duplicates(subset=['COD'], keep='first')
+        df_mov.replace([np.inf, -np.inf], 0, inplace=True) 
 
         df_prod = df_prod.loc[df_prod['RUA'].between(1,39)]
         df_prod['OBS2'] = df_prod['OBS2'].fillna("Ativos")
@@ -69,12 +73,13 @@ def app():
         concat = df['RUA_x'].astype(str) + "-" + df['PREDIO_x'].astype(str)
 
         df[['COM FATOR', 'QTTOTPAL', 'CAP']] = df[['COM FATOR', 'QTTOTPAL','CAP']].fillna(0)
-        df['PL_SUG'] = (df['COM FATOR'].astype(int) / df['QTTOTPAL'].astype(int)).round(2)
-        df['PL_CAP'] = (df['CAP'].astype(int) / df['QTTOTPAL'].astype(int)).round(2)
-        df['Custo ult. ent.'] = df['Custo ult. ent.'].astype(float).round(2)
-        df['CUSTO_TT'] = (df['Estoque'].astype(float) * df['Custo ult. ent.']).round(2)
+        df['PL_SUG'] = (df['COM FATOR'].astype(int) / df['QTTOTPAL'].astype(int)).fillna(0).round(2)
+        df['PL_CAP'] = (df['CAP'].astype(int) / df['QTTOTPAL'].astype(int)).fillna(0).round(2)
+        df['Custo ult. ent.'] = df['Custo ult. ent.'].astype(float).fillna(0).round(2)
+        df['CUSTO_TT'] = (df['Estoque'].astype(float) * df['Custo ult. ent.']).fillna(0).round(2)
         df['CONTAGEM'] = concat.map(concat.value_counts())
         df['STATUS_PROD'] = np.where(df['CONTAGEM'] > 3, "DIV", np.where(df['CONTAGEM'] > 2,"VAL", "INT"))
+        df.replace([np.inf, -np.inf], 0, inplace=True) 
 
         drop_col = ['UNID.','DESCRIÇÃO', '%_x',  'CODPROD_x','RUA_y', 'PREDIO_y', 'APTO_y','Código', 'CODPROD_y', 'ACESSO','DESCRICAO','EMBALAGEM_y', 'UNID','%_y', '%_ACUM','NIVEL','PEDIDO_COMP', 'BLOQUEADO','AVARIA']
         df_final = df.drop(columns=drop_col)
@@ -90,7 +95,7 @@ def app():
 
         nova_ordem = ['COD', 'DESC','EMB', 'OBS2', 'QTUNITCX','QTTOTPAL', 'RUA', 'PREDIO', 'APTO', 'TIPO', 'MÊS 1', 'MÊS 2', 'MÊS 3', 'CAP', '1 DIA', 'COM FATOR', 'VARIAÇÃO','Estoque', 'CUSTO_ULT','MOVI', 'CLASSE', 'PL_SUG', 'PL_CAP', 'CONTAGEM', 'STATUS_PROD', 'CUSTO_TT','PRODUTO']
         df_final = df_final[nova_ordem]
-        print("\nTratamento finalizado...\n")
+        print("ratamento finalizado...\n")
 
     except Exception as e:
         erro = validar_erro(e)
