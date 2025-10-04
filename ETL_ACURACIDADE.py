@@ -50,16 +50,10 @@ def app():
         dic_end = {"COD" : "CODPROD"}
         df_end = df_end.rename(columns= dic_end)
         df_end = df_end[['CODPROD','ENTRADA', 'SAIDA', 'DISP','QTDE']]
-
         
         col_ajuste = ['CODPROD','ENTRADA', 'SAIDA', 'DISP','QTDE']
         df_end = ajuste_col(df_end, col_ajuste)
         
-        # for col in col_ajuste:
-        #     df_end[col] = df_end[col].fillna(0).astype(str)
-        #     df_end[col] = df_end[col].str.replace(".", "")
-        #     df_end[col] = df_end[col].str.replace(",", ".")
-        #     df_end[col] = df_end[col].fillna(0).astype(float)
         grupo_end = df_end.groupby('CODPROD').agg(
             SAIDA = ('SAIDA', 'sum'),
             ENTRADA = ('ENTRADA', 'sum'),
@@ -77,11 +71,7 @@ def app():
         df.drop(columns= drop_col, inplace= True)
 
         col_ajuste = ['ENDERECO', 'GERENCIAL','PICKING','CAP','QTUNITCX','ENTRADA', 'SAIDA', 'QTDE']
-        for col in col_ajuste:
-            df[col] = df[col].fillna(0).astype(str)
-            df[col] = df[col].str.replace(".", "")
-            df[col] = df[col].str.replace(",", ".")
-            df[col] = df[col].fillna(0).astype(float)
+        df = ajuste_col(df, col_ajuste)
 
         df['DIF_UN'] = df['ENDERECO'].astype(float) - df['GERENCIAL'].astype(float)
         df['DIF_CX'] = (df['DIF_UN'] / df['QTUNITCX'].astype(int)).round(1)
@@ -120,17 +110,16 @@ def app():
             "CORRETO"
         ]
 
-        df['CATEGORIA_DIF'] = np.select(cond_dif, result_dif, default= "-").astype(int)
+        df['CATEGORIA_DIF'] = np.select(cond_dif, result_dif, default= "99").astype(int)
         df["TIPO_OP"] = np.select(cond_op, result_op, default= "-")
         df['AP_VS_CAP'] = np.select(cond_ap, result_ap, default= "-")
+        df[['RUA', 'PREDIO']] = df[['RUA', 'PREDIO']].astype(int)
     except Exception as e:
         erro = validar_erro(e)
         print(f"Etapa tratamento: {erro}")
 
     try:
-        df[['RUA', 'PREDIO']] = df[['RUA', 'PREDIO']].astype(int)
         df = df.sort_values(by=['RUA', 'PREDIO'], ascending= True)
-
         path_div = os.path.join(files_bi.bi_str, "FATO_DIVERGENCIA.xlsx")
         df.to_excel(path_div, index= False, sheet_name= 'DIVERGENCIA')
     except Exception as e:

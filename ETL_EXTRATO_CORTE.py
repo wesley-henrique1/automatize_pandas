@@ -23,15 +23,22 @@ def app():
         print('\nIniciando o controle de corte, aguarde...\n')
         rel = pd.read_csv(ar_csv.ar_67, header=None, names= col_name.c67)
 
+        def ajuste_col(df_original, col):
+            df_copia = df_original.copy() 
+            for i in col:
+                df_copia[i] = df_copia[i].fillna(0).astype(str)
+                df_copia[i] = df_copia[i].str.replace(".", "", regex=False)
+                df_copia[i] = df_copia[i].str.replace(",", ".")
+                df_copia[i] = df_copia[i].fillna(0).astype(float)
+            return df_copia
+        
         rel['hora'] = rel['hr'].astype(str) + ':' + rel['min'].astype(str)
         rel['data'] = pd.to_datetime(rel['data'], format= '%d/%m/%y').sort_index(axis= 0, ascending= True)
         rel['hora'] = pd.to_datetime(rel['hora'], format= '%H:%M').dt.strftime('%H:%M')
-        rel['vl_corte'] = rel['vl_corte'].astype(str)
-        rel['vl_corte'] = rel['vl_corte'].str.replace('.', '', regex=False)
-        rel['vl_corte'] = rel['vl_corte'].str.replace(',', '.').astype(float)
-        rel['qtde_corte'] = rel['qtde_corte'].astype(str)
-        rel['qtde_corte'] = rel['qtde_corte'].str.replace('.', '', regex=False)
-        rel['qtde_corte'] = rel['qtde_corte'].str.replace(',', '.').astype(float)
+
+        col_ajustar = ['vl_corte', 'qtde_corte']
+        rel = ajuste_col(rel, col_ajustar)
+
         rel = rel.sort_values(by="data", ascending= True, axis= 0)
         inicio = '07:30:00'
         fim = '18:00:00'
