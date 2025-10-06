@@ -18,11 +18,12 @@ def app():
     try:
         print("=" * 60)
         print("Processo iniciado, favor aguarde...\n")
-        df_8596 = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', ])
-        df_286 = pd.read_excel(ar_xls.ar_86, usecols= ['Código', 'Estoque', 'Qtde Pedida', 'Bloqueado(Qt.Bloq.-Qt.Avaria)', 'Qt.Avaria', 'Custo real', 'Disponível'])
+        col_96 = ['CODPROD', 'DESCRICAO','OBS2', 
+        'RUA', 'PREDIO', 'APTO', ]
+        col_86 = ['Código', 'Estoque', 'Qtde Pedida', 'Bloqueado(Qt.Bloq.-Qt.Avaria)', 'Qt.Avaria', 'Custo real', 'Disponível']
+        df_8596 = pd.read_excel(ar_xlsx.ar_96, usecols= col_96)
+        df_286 = pd.read_excel(ar_xls.ar_86, usecols= col_86)
 
-        df = df_8596.merge(df_286, left_on= 'CODPROD', right_on= 'Código', how= 'inner')
-        df = df[df['RUA'].between(1, 40)]
     except Exception as e:
         error = validar_erro(e)
         print(error)
@@ -30,6 +31,8 @@ def app():
         
 
     try:
+        df = df_8596.merge(df_286, left_on= 'CODPROD', right_on= 'Código', how= 'inner')
+        df = df[df['RUA'].between(1, 40)]
         df['BLOQ + AV'] = df['Bloqueado(Qt.Bloq.-Qt.Avaria)'] + df['Qt.Avaria']
         df['BLOQ?'] = np.where(df['BLOQ + AV'] >= df['Estoque'], 'S', 'N')
         df['total_custo'] = df['Custo real'] * df['Disponível']
@@ -45,6 +48,12 @@ def app():
         df_fantasminha = df.loc[(df['OBS2'] == 'FL') & (df['Estoque'] == 0)]
         df_hora_extra = df.loc[(df['OBS2'] != 'FL') & (df['Estoque'] == 0) & (df['Qtde Pedida'] == 0)]
     
+    except Exception as e:
+        error = validar_erro(e)
+        print(error)
+        exit()
+
+    try:
         with pd.ExcelWriter(output.FL) as feijao:
             df_os_esquecidos.to_excel(feijao, sheet_name= "FL_ATIVOS", index= False)
             df_fantasminha.to_excel(feijao, sheet_name= "FL_END", index= False)

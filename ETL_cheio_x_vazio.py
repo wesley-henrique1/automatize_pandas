@@ -17,7 +17,7 @@ def validar_erro(e):
         return f"Ocorreu um erro inesperado: {e}"
 def app():
     try:
-        arquivos = glob.glob(os.path.join(pasta.p_cheio_vazio, "*-09*.xls*"))
+        arquivos = glob.glob(os.path.join(pasta.p_cheio_vazio, "*.xls*"))
         lista = []
     except Exception as e:
         error = validar_erro(e)
