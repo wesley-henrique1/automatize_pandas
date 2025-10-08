@@ -52,8 +52,13 @@ def app():
                 for file in files:
                     name_file = os.path.basename(file)
                     lista_name.append(name_file)
-                    
-                    df_var = pd.read_excel(file)
+                    try:
+                        df_var = pd.read_excel(file)
+                    except Exception as e:
+                        error = validar_erro(e)
+                        print(F"Extração: {error}")
+                        continue
+
                     if 'NUMPED' not in df_var.columns:
                         print(f"   AVISO: Coluna 'NUMPED' não encontrada no arquivo {name_file}\n")
                         continue
@@ -73,6 +78,7 @@ def app():
                 df_consolidado = df_consolidado.drop_duplicates(subset= None, keep= 'first')
                 
                 print(f"lista de arquivos: \n{tt}")
+                print(f"lista de arquivos: \n{lista_files}")
                 
             except Exception as e:
                 error = validar_erro(e)

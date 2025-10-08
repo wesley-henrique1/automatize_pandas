@@ -114,19 +114,22 @@ def app():
         df["TIPO_OP"] = np.select(cond_op, result_op, default= "-")
         df['AP_VS_CAP'] = np.select(cond_ap, result_ap, default= "-")
         df[['RUA', 'PREDIO']] = df[['RUA', 'PREDIO']].astype(int)
+        df_prod = df_prod.drop_duplicates(subset=None, keep='first')
+        df = df.sort_values(by=['RUA', 'PREDIO'], ascending= True)
     except Exception as e:
         erro = validar_erro(e)
         print(f"Etapa tratamento: {erro}")
 
     try:
-        df = df.sort_values(by=['RUA', 'PREDIO'], ascending= True)
         path_div = os.path.join(files_bi.bi_str, "FATO_DIVERGENCIA.xlsx")
+        path_prod = os.path.join(files_bi.bi_str, "DIM_PROD.xlsx")
+
         df.to_excel(path_div, index= False, sheet_name= 'DIVERGENCIA')
+        df_prod.to_excel(path_prod, index= False, sheet_name= 'DIM_PROD')
+
     except Exception as e:
         erro = validar_erro(e)
         print(f"Etapa carga: {erro}")
-
-
 
 if __name__ == '__main__':
     app()
