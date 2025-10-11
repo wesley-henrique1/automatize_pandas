@@ -5,7 +5,7 @@
 ### Módulos de Acesso e Desempenho (ETL_ACESSO.py)
 * 1 - **Cálculo e Análise de Curva ABC (Giro de Estoque)**
 * 2 - Análise de Posição de Estoque por Acessos
-* 3 - Análise de Movimentação de Caixa Fechada (com processamento em Pandas) <pd>
+* <PD> 3 - Análise de Movimentação de Caixa Fechada (com processamento em Pandas)
 * 4 - Análise de Ocupação do Picking
 * 5 - Sugestão de Capacidade (Dimensionamento)
 * 6 - Custo de Estoque por Localização (Rua)

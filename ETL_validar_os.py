@@ -49,7 +49,7 @@ def app():
         'APTO', 'RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1','FUNCGER','TIPO_OP']].copy()
         df_pd = df_pd.sort_values(by=['RUA', 'PREDIO'], ascending= True, axis= 0)
 
-        df_fim = df.loc[(df['TIPO'] != 'EMPILHADOR') & (df['TIPO'] != 'ABASTECEDOR') & (df['CODFUNCOS'] > 0) & (df['CODFUNCESTORNO']== 0) & (df['QTDE'].astype(float) == 0)]
+        df_fim = df.loc[(df['TIPO'] != 'RECEBIMENTO') & (df['TIPO'] != 'EMPILHADOR') & (df['TIPO'] != 'ABASTECEDOR') & (df['CODFUNCOS'] > 0) & (df['CODFUNCESTORNO']== 0) & (df['QTDE'].astype(float) == 0)]
         df_fim = df_fim[['NUMOS','CODPROD', 'DESCRICAO', 'RUA', 'PREDIO', 'NIVEL','APTO', 'RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1','FUNCOSFIM','TIPO_OP']].copy()
         df_fim = df_fim.sort_values(by=['RUA', 'PREDIO'], ascending= True, axis= 0)  
     except Exception as e:
