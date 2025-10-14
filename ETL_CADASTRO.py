@@ -41,8 +41,10 @@ def app():
         df['volume_master'] = df['ALTURAARM'].astype(float) * df['LARGURAARM'].astype(float) * df['COMPRIMENTOARM'].astype(float) 
         df['volume_venda'] = (df['ALTURAM3'].astype(float) * df['LARGURAM3'].astype(float) * df['COMPRIMENTOM3'].astype(float)) * df['extrator']
         df['CONT_AP'] = concat.map(concat.value_counts())
-        df['STATUS_PROD'] = np.where(df['CONT_AP'] > 3, "DIV", 
-            np.where(df['CONT_AP'] > 2,"VAL", "INT"))
+        
+        list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
+        df['STATUS_PROD'] = np.where((df['CONT_AP'] <= 2) & (df['PK_END'].isin(list_int)), "INT", 
+            np.where(df['CONT_AP'] > 3,"DIV", "VAL"))
 
         df["VAR_CAP"] = np.where((df['CAP'] > df['QTTOTPAL']) & (df['STATUS_PROD'] != "INT"), "DIVERGENCIA", "NORMAL")
         df['VAR_ABST'] =    np.where((df['FLEG_ABST'] == 'SIM') & (df['STATUS_PROD'] == "INT"), "NORMAL",
