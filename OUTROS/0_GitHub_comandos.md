@@ -1,5 +1,5 @@
 
-""""""""""""""""""""""""""""""""""""""""""""""""" configura projetos """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+#### configura projetos 
 
 git = 
     O git no início é o comando principal, a "porta de entrada" para todas as operações do Git.
@@ -9,7 +9,6 @@ git =
 git init = 
     Este comando cria um novo repositório local do Git no diretório em que você está. Ele inicializa o controle de versão para o seu projeto, criando uma pasta oculta chamada .git. É nessa pasta que o Git armazena todo o histórico de alterações do seu projeto.
 
-
 git branch = 
     Este comando é usado para gerenciar branches no seu repositório local. Uma branch é como um "caminho" separado para desenvolver novas funcionalidades ou corrigir bugs sem alterar a branch principal do projeto.
     Quando usado sem argumentos, ele lista todas as branches existentes e mostra qual delas é a atual (com um asterisco *).
@@ -17,7 +16,7 @@ git branch =
     Quando usado com um nome, ele cria uma nova branch que aponta para o mesmo commit da sua branch atual.
     " git branch <nome_do_branch> "
 
-    git branch -m <novo-nome> = 
+    git branch -m <novo_nome> = 
         Este comando renomeia uma branch localmente. A flag -m serve para mover ou renomear. É um comando rápido e fácil para ajustar o nome de uma branch antes de enviá-la para um repositório remoto.
 
     git branch -d <nome-da-branch-para-apagar> =
@@ -26,7 +25,30 @@ git branch =
     git branch -D <nome-da-branch-para-apagar> = 
         Este comando apaga a branch localmente, mesmo que ela não tenha sido mesclada. Ele ignora o aviso de segurança e é usado quando você tem certeza de que quer apagar a branch e todos os commits dela.
 
-git remote add <apelido> <URL_do_repositório_remoto> = 
+git config = 
+    é a ferramenta principal no Git para visualizar, definir e modificar as configurações de como o Git opera, tanto no seu repositório atual quanto globalmente na sua máquina.
+
+        git config <escopos> user.name "Seu Nome Completo": Seu nome, anexado a todos os seus commits.
+        git config <escopos> user.email "seu.email@exemplo.com": Seu e-mail, usado para identificar sua autoria.
+        OBS: Se ja estiver um usario cadastrado os comando ira subistituir o atual 
+
+    O git config pode salvar as configurações em três escopos diferentes, afetando a prioridade e o alcance:
+
+    Local: git config user.name ...	
+        *Onde é Salvo*= no arquivo.git/config dentro do repositório.	
+        *Alcance*= Apenas no repositório atual.
+    
+    Global:	git config --global user.name ...	
+        *Onde é Salvo*= No seu diretório de usuário (ex: ~/.gitconfig).	
+        *Alcance*= Todos os seus repositórios na sua máquina.
+    
+    Sistema	git config --system user.name ...	
+        *Onde é Salvo*= Arquivos de configuração globais do sistema. 
+        *Alcance*= Todos os usuários da máquina (menos comum).
+
+
+
+git remote add <apelido>  <URL_do_repositório_remoto> = 
     Este comando cria uma "conexão" nomeada para um repositório remoto. Ele pega a URL do repositório remoto e a associa a um apelido (o nome que você quiser dar).
 
         remote: indica que você está trabalhando com repositórios externos.
@@ -45,7 +67,7 @@ git remote add <apelido> <URL_do_repositório_remoto> =
     É um arquivo de texto simples que lista arquivos e diretórios que o Git deve ignorar, ou seja, não rastrear. Isso é fundamental para evitar que arquivos desnecessários, como chaves de API, arquivos de cache, pastas de módulos (node_modules), arquivos de log ou executáveis, sejam adicionados ao seu repositório. 
 
 
-""""""""""""""""""""""""""""""""""""""""""""""""""" FLUXO PROJETO ""'"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+#### FLUXO PROJETO 
 
 git add <arquivo> = 
     Este comando adiciona um arquivo específico do seu diretório de trabalho para a área de preparação (também conhecida como staging area ou index). A área de preparação é um local intermediário onde o Git "prepara" as mudanças que você quer incluir no próximo commit.
@@ -116,7 +138,7 @@ git pull <repositório-remoto> <nome-da-branch> =
 
     Em resumo, o git pull atualiza o seu repositório local com tudo o que há de novo no repositório remoto. É o comando que você usa para pegar as alterações de outros colaboradores.
 
-"""""""""""""""""""""""""""""""""''''""""""""""" movimentação """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+#### movimentação 
 
 git checkout <nome-da-branch> =
     Este é o uso mais comum. Ele te leva para a branch que você especificar, atualizando todos os arquivos no seu diretório de trabalho para refletir o estado daquela branch.
@@ -135,7 +157,7 @@ git switch <nome-da-branch> =
     Muda o seu diretório de trabalho para a branch especificada. É uma alternativa mais moderna e intuitiva ao git checkout quando você quer apenas alternar entre branches.
 
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""" CORINGAS """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+#### CORINGAS
 
 git clone <URL_do_repositório_remoto> = 
     Este comando cria uma cópia exata e completa de um repositório Git, incluindo todos os arquivos, pastas, branches e todo o histórico de commits. A cópia é salva em uma nova pasta na sua máquina.

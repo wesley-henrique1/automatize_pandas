@@ -50,14 +50,15 @@ def app():
         df['VAR_ABST'] =    np.where((df['FLEG_ABST'] == 'SIM') & (df['STATUS_PROD'] == "INT"), "NORMAL",
                             np.where((df['FLEG_ABST']== 'NÃO') & (df['STATUS_PROD'] == "DIV"), "NORMAL",
                             "DIVERGENCIA"))
-
-        df['VAR_CUBAGEM'] = np.where(df['volume_master'] < df['volume_venda'], "DIVERGENCIA", "NORMAL")   
+        df["CAMP_CAP"] = np.where((df['CAP'] > df['QTTOTPAL']), "SIM", "NÃO")
+        df['VAR_CUBAGEM'] = np.where(df['volume_master'] < df['volume_venda'], "DIVERGENCIA", "NORMAL")
+        df['temp'] = df['QTTOTPAL'] * 2  
     except Exception as e:
         error = validar_erro(e)
         print(f"ETAPA 3: {error}\n")
 
     try:# ETAPA 4: GERANDO O ARQUIVO FINAL
-        drop_col = ['PKESTRU', 'PK_END', 'CARACTERISTICA', 'PULMAO','TIPO_1', 'PRAZOVAL', 'PERCTOLERANCIAVAL', 'DTULTENT','USAWMS', 'REVENDA', 'TIPOPROD','CODFORNEC', 'FORNECEDOR', 'TIPO', 'PONTOREPOSICAO','CODAUXILIAR', 'EMBALAGEM', 'EMBALAGEMMASTER', 'QTUNITCX', 'CODSEC','SECAO', 'LASTROPAL', 'ALTURAPAL', 'QTTOTPAL', 'ALTURAM3', 'LARGURAM3','COMPRIMENTOM3', 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM','PESOBRUTOMASTER', 'PESOLIQMASTER', 'PESOBRUTO', 'PESOLIQ','OBS2', 'CODAUXILIAR2','volume_venda', 'volume_master','CODFILIAL']
+        drop_col = ['PKESTRU', 'PK_END', 'CARACTERISTICA', 'PULMAO','TIPO_1', 'PRAZOVAL', 'PERCTOLERANCIAVAL', 'DTULTENT','USAWMS', 'REVENDA', 'TIPOPROD','CODFORNEC', 'FORNECEDOR', 'TIPO', 'PONTOREPOSICAO','CODAUXILIAR', 'EMBALAGEM', 'EMBALAGEMMASTER', 'QTUNITCX', 'CODSEC','SECAO', 'LASTROPAL', 'ALTURAPAL', 'ALTURAM3', 'LARGURAM3','COMPRIMENTOM3', 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM','PESOBRUTOMASTER', 'PESOLIQMASTER', 'PESOBRUTO', 'PESOLIQ','OBS2', 'CODAUXILIAR2','volume_venda', 'volume_master','CODFILIAL']
         df = df.drop(columns=drop_col)
 
         df.to_excel(output.var_cadastro, index= False, sheet_name= "DIV_CADASTRO")
