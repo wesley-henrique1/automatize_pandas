@@ -65,10 +65,10 @@ def app():
         ACESSO = ("QTOS", "sum")
         ).reset_index()
 
-        df = df_sug.merge(df_prod, left_on= 'COD', right_on= 'CODPROD', how= 'left')
-        df = df.merge(df_estoque, left_on='COD', right_on='Código', how='left')
-        df = df.merge(df_acesso, left_on='COD', right_on='CODPROD', how= 'left')
-        df = df.merge(df_mov, left_on='COD', right_on='COD', how="left")
+        df = df_prod.merge(df_sug, left_on= 'CODPROD', right_on= 'COD', how= 'left')
+        df = df.merge(df_estoque, left_on='CODPROD', right_on='Código', how='left')
+        df = df.merge(df_acesso, left_on='CODPROD', right_on='CODPROD', how= 'left')
+        df = df.merge(df_mov, left_on='CODPROD', right_on='COD', how="left")
 
         concat = df['RUA_x'].astype(str) + "-" + df['PREDIO_x'].astype(str)
 
@@ -81,7 +81,7 @@ def app():
         df['STATUS_PROD'] = np.where(df['CONTAGEM'] > 3, "DIV", np.where(df['CONTAGEM'] > 2,"VAL", "INT"))
         df.replace([np.inf, -np.inf], 0, inplace=True) 
 
-        drop_col = ['UNID.','DESCRIÇÃO', '%_x',  'CODPROD_x','RUA_y', 'PREDIO_y', 'APTO_y','Código', 'CODPROD_y', 'ACESSO','DESCRICAO','EMBALAGEM_y', 'UNID','%_y', '%_ACUM','NIVEL','PEDIDO_COMP', 'BLOQUEADO','AVARIA']
+        drop_col = ['UNID.','DESCRIÇÃO', '%_x',  'COD','RUA_y', 'PREDIO_y', 'APTO_y','Código', 'ACESSO','DESCRICAO','EMBALAGEM_y', 'UNID','%_y', '%_ACUM','NIVEL','PEDIDO_COMP', 'BLOQUEADO','AVARIA']
         df_final = df.drop(columns=drop_col)
 
         dic_rename = {
