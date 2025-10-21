@@ -6,6 +6,15 @@ import os
 
 print("Iniciando processo, favor aguarde...\n")
 print("=" * 60)
+def directory(files, argumento):
+    directory = glob.glob(os.path.join(files, argumento))
+    lista = []
+    for arquivo in directory:
+        x = pd.read_csv(arquivo, header= None)
+        lista.append(x)
+    df_temp = pd.concat(lista, axis= 0, ignore_index= True)
+    return df_temp
+
 def validar_erro(e):
     print("=" * 60)
     if isinstance(e, KeyError):
@@ -21,14 +30,6 @@ def validar_erro(e):
 
 def app():
     try: #"""LEITURA DOS DATAFRAMES"""
-        def directory(files, argumento):
-            directory = glob.glob(os.path.join(files, argumento))
-            lista = []
-            for arquivo in directory:
-                x = pd.read_csv(arquivo, header= None)
-                lista.append(x)
-            df_temp = pd.concat(lista, axis= 0, ignore_index= True)
-            return df_temp
 
         df_sug = directory(pasta.p_82, 'DEP*.txt')
         df_mov = directory(pasta.p_82, 'MOV*.txt')
