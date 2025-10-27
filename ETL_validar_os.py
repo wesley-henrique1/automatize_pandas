@@ -26,11 +26,11 @@ def app():
         df_aereo = df_aereo[['COD_END', 'COD', 'QTDE', 'ENTRADA', 'SAIDA']]
         df_aereo['ID_COD'] = df_aereo['COD_END'].astype(str) + " - " + df_aereo['COD'].astype(str)
 
-        df_func = pd.read_excel(ar_xlsx.ar_func, sheet_name= 'FUNCIONARIOS', usecols= ['MATRICULA', 'TIPO'])
+        df_func = pd.read_excel(ar_xlsx.ar_func, sheet_name= 'FUNC', usecols= ['ID_NOME', 'SETOR'])
         
         df = df_28.merge(df_aereo, left_on= 'ID_COD', right_on= 'ID_COD', how= 'left').infer_objects(copy=False).fillna(0).drop(['COD_END', 'COD'],axis= 1)
-        df = df.merge(df_func, left_on= 'CODFUNCOS', right_on= 'MATRICULA', how= 'left').drop(columns=['MATRICULA'])
-        df['TIPO'] = df['TIPO'].fillna("FUNC")    
+        df = df.merge(df_func, left_on= 'CODFUNCOS', right_on= 'ID_NOME', how= 'left').drop(columns=['ID_NOME'])
+        df['SETOR'] = df['SETOR'].fillna("FUNC")    
     except Exception as e:
         error = validar_erro(e)
         print(f"Etapa 1: {error}")
@@ -49,7 +49,7 @@ def app():
         'APTO', 'RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1','FUNCGER','TIPO_OP']].copy()
         df_pd = df_pd.sort_values(by=['RUA', 'PREDIO'], ascending= True, axis= 0)
 
-        df_fim = df.loc[(df['TIPO'] != 'RECEBIMENTO') & (df['TIPO'] != 'EMPILHADOR') & (df['TIPO'] != 'ABASTECEDOR') & (df['CODFUNCOS'] > 0) & (df['CODFUNCESTORNO']== 0) & (df['QTDE'].astype(float) == 0)]
+        df_fim = df.loc[(df['SETOR'] != 'RECEBIMENTO') & (df['SETOR'] != 'EMPILHADOR') & (df['SETOR'] != 'ABASTECEDOR') & (df['CODFUNCOS'] > 0) & (df['CODFUNCESTORNO']== 0) & (df['QTDE'].astype(float) == 0)]
         df_fim = df_fim[['NUMOS','CODPROD', 'DESCRICAO', 'RUA', 'PREDIO', 'NIVEL','APTO', 'RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1','FUNCOSFIM','TIPO_OP']].copy()
         df_fim = df_fim.sort_values(by=['RUA', 'PREDIO'], ascending= True, axis= 0)  
     except Exception as e:

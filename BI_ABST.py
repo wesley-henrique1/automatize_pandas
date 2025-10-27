@@ -17,21 +17,45 @@ def validar_erro(e):
     else:
         return f"Ocorreu um erro inesperado: {e}"
 
+def organizar_df(df_original, col, id):
+    df = df_original
+    df[col] = pd.to_datetime(df[col]).dt.normalize()
+    df['MES'] = df[col].dt.month
+
+    if id == 1:
+        df = df[['NUMOS', 'DATA', 'CODROTINA', 'POSICAO', 'CODFUNCGER', 'FUNCGER','DTFIMOS', 'CODFUNCOS', 'FUNCOSFIM', 'Tipo O.S.', 'TIPOABAST', 'MES']].copy()
+        df = df.loc[(df['CODROTINA'] == 1709) | (df['CODROTINA'] == 1723)]
+        return df
+    elif id ==2: 
+        df = df[['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR','EMPILHADOR', 'MES']].copy()
+        df = df.drop_duplicates(subset=['NUMOS'])
+        return df
+        
 def app():
     try:
-        print("EXTRAÇÃO")
+        print("\nEXTRAÇÃO...\n")
         cons28 = pd.read_excel(bi_abst.cons_28)
         cons64 = pd.read_excel(bi_abst.cons_64)
         funcionario = pd.read_excel(ar_xlsx.ar_func, sheet_name='FUNC')
+        m_atual28 = pd.read_excel(bi_abst.m_atual28)
+        m_atual64 = pd.read_excel(bi_abst.m_atual64)
     except Exception as e:
         erros = validar_erro(e)
         print(f"EXTRAÇÃO: {erros}")
 
     try:
-        print("TRATAMENTO")
-        cons28['DATA'] = pd.to_datetime(cons28['DATA']).dt.normalize()
-        cons28['MES'] = cons28['DATA'].dt.month
-        cons28 = cons28.loc[(cons28['MES'] != 10) & ((cons28['CODROTINA'] == 1709) | (cons28['CODROTINA'] == 1723))]
+        print("\nTRATAMENTO...\n")
+        func = funcionario[['ID_NOME', 'NOME', 'AREA', 'NAME', 'SETOR']].copy()
+        func = func.loc[func['AREA'] == 'EXPEDICAO']
+
+        m_atual28 = organizar_df(m_atual28,'DATA',1)
+        m_atual64 = organizar_df(m_atual64, 'DATAGERACAO', 2)
+
+        cons28 = organizar_df(cons28,'DATA',1)
+        cons28 = cons28.loc[cons28['MES'] != 10]
+        cons64 = organizar_df(cons64, 'DATAGERACAO', 2)
+        cons64 = cons64.loc[cons64['MES'] != 10]
+
 
         grop28 = cons28.groupby(['DATA','CODFUNCOS','FUNCOSFIM']).agg(
             QTDE_OS = ("NUMOS", 'nunique'),
@@ -40,37 +64,33 @@ def app():
             OS_58 = ("Tipo O.S.", lambda x: (x == '58 - Transferencia de Para Vertical').sum())
         ).reset_index()
 
-        cons64['DATAGERACAO'] = pd.to_datetime(cons64['DATAGERACAO']).dt.normalize()
-        cons64 = cons64.drop_duplicates(subset=['NUMOS'])
-        cons64['MES'] = cons64['DATAGERACAO'].dt.month
-        cons64 = cons64.loc[cons64['MES'] != 10]
-
         grop64 = cons64.groupby(['DATAGERACAO','CODEMPILHADOR']).agg(
             OS_RECEB = ("NUMOS", 'nunique')
         ).reset_index()
 
+        df_os_geral = func.merge(grop28, left_on='ID_NOME', right_on='CODFUNCOS', how= 'left')
+        df_os_geral = df_os_geral.merge(grop64, left_on=['ID_NOME', 'DATA'], right_on= ['CODEMPILHADOR','DATAGERACAO'], how='left').drop(columns=['DATAGERACAO','CODEMPILHADOR', 'CODFUNCOS', 'FUNCOSFIM'])
 
+        df_os_geral = df_os_geral.fillna(0)
+        df_os_geral = df_os_geral.loc[df_os_geral['DATA'] != 0]
+        df_os_geral['DATA'] = pd.to_datetime(df_os_geral['DATA']).dt.normalize()
+        df_os_geral['MES'] = df_os_geral['DATA'].dt.month
+        df_os_geral = df_os_geral.loc[df_os_geral['MES'] == 8]
 
-
-
-
-
-
-
-
-
-        df = funcionario['ID_NOME', 'NOME', 'AREA', 'NAME', 'SETOR'].copy()
-
+        bonus = cons64.groupby(['NUMBONUS','DTLANC']).agg(
+            TOTAL_OS = ("NUMOS", "nunique")
+        ).reset_index().sort_values(by='DTLANC', ascending= False)
         
-        
+
     except Exception as e:
         erros = validar_erro(e)
         print(f"TRATAMENTO: {erros}")
 
     try:
         print("CARGA")
-
-        # cons28.to_excel(bi_abst.cons_28, index= False, sheet_name= "8628")
+        bonus.to_excel(bi_abst.dim_bonus, index= False, sheet_name= "DIM_BONUS")
+        df_os_geral.to_excel(bi_abst.acum_os, index= False, sheet_name= "FATO_OS")
+        cons28.to_excel(bi_abst.cons_28, index= False, sheet_name= "8628")
         cons64.to_excel(bi_abst.cons_64, index= False, sheet_name= "8664")
     except Exception as e:
         erros = validar_erro(e)
