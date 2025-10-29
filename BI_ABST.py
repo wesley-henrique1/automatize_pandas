@@ -4,6 +4,7 @@ import numpy as pn
 import glob
 import os
 a = 0
+
 def validar_erro(e):
     print("=" * 60)
     if isinstance(e, KeyError):
@@ -31,12 +32,12 @@ def organizar_df(df_original, col, id):
         df = df.drop_duplicates(subset=['NUMOS'])
         return df
         
-def app():
+class main:
     try:
         print("\nEXTRAÇÃO...\n")
         cons28 = pd.read_excel(bi_abst.cons_28)
         cons64 = pd.read_excel(bi_abst.cons_64)
-        funcionario = pd.read_excel(ar_xlsx.ar_func, sheet_name='FUNC')
+        func = pd.read_excel(bi_abst.func, sheet_name='FUNC')
         m_atual28 = pd.read_excel(bi_abst.m_atual28)
         m_atual64 = pd.read_excel(bi_abst.m_atual64)
     except Exception as e:
@@ -44,59 +45,112 @@ def app():
         print(f"EXTRAÇÃO: {erros}")
 
     try:
-        print("\nTRATAMENTO...\n")
-        func = funcionario[['ID_NOME', 'NOME', 'AREA', 'NAME', 'SETOR']].copy()
-        func = func.loc[func['AREA'] == 'EXPEDICAO']
+        print("\nTRATAMENTO...")
 
-        m_atual28 = organizar_df(m_atual28,'DATA',1)
-        m_atual64 = organizar_df(m_atual64, 'DATAGERACAO', 2)
+        try:
+            func = func.loc[func['AREA'] == 'EXPEDICAO']
+        except Exception as e:
+            erros = validar_erro(e)
+            print("\nTRATAMENTO_func: \n")
 
-        cons28 = organizar_df(cons28,'DATA',1)
-        cons28 = cons28.loc[cons28['MES'] != 10]
-        cons64 = organizar_df(cons64, 'DATAGERACAO', 2)
-        cons64 = cons64.loc[cons64['MES'] != 10]
+        try:
+            m_atual28 = organizar_df(m_atual28,'DATA',1)
+            cons28 = organizar_df(cons28,'DATA',1)
+            cons28 = cons28.loc[cons28['MES'] != 10]
+            cons28 = pd.concat([cons28, m_atual28], ignore_index= True)
 
+            m_atual64 = organizar_df(m_atual64, 'DATAGERACAO', 2)
+            cons64 = organizar_df(cons64, 'DATAGERACAO', 2)
+            cons64 = cons64.loc[cons64['MES'] != 10]
+            cons64 = pd.concat([cons64, m_atual64], ignore_index= True)
 
-        grop28 = cons28.groupby(['DATA','CODFUNCOS','FUNCOSFIM']).agg(
-            QTDE_OS = ("NUMOS", 'nunique'),
-            OS_50 = ("Tipo O.S.", lambda x: (x == '50 - Movimentação De Para').sum()),
-            OS_61 = ("Tipo O.S.", lambda x: (x == '61 - Movimentação De Para Horizontal').sum()),
-            OS_58 = ("Tipo O.S.", lambda x: (x == '58 - Transferencia de Para Vertical').sum())
-        ).reset_index()
+            grop28 = cons28.groupby(['DATA','CODFUNCOS','FUNCOSFIM']).agg(
+                QTDE_OS = ("NUMOS", 'nunique'),
+                OS_50 = ("Tipo O.S.", lambda x: (x == '50 - Movimentação De Para').sum()),
+                OS_61 = ("Tipo O.S.", lambda x: (x == '61 - Movimentação De Para Horizontal').sum()),
+                OS_58 = ("Tipo O.S.", lambda x: (x == '58 - Transferencia de Para Vertical').sum())
+            ).reset_index()
+            grop28['50_61'] = grop28['OS_50'] + grop28['OS_61']
+            grop64 = cons64.groupby(['DATAGERACAO','CODEMPILHADOR']).agg(
+                OS_RECEB = ("NUMOS", 'nunique')
+            ).reset_index()
+        except Exception as e:
+            erros = validar_erro(e)
+            print("\nTRATAMENTO_28-64: \n")
 
-        grop64 = cons64.groupby(['DATAGERACAO','CODEMPILHADOR']).agg(
-            OS_RECEB = ("NUMOS", 'nunique')
-        ).reset_index()
+        try:
+            os_temp28 = cons28[['NUMOS', 'DATA']].copy()
+            os_temp64 = cons64[['NUMOS','DATAGERACAO']].copy()
+            os_temp64 = os_temp64.rename(columns={'DATAGERACAO' : 'DATA'})
+            os_geral = pd.concat([os_temp28,os_temp64], ignore_index= True)
+            os_geral = os_geral.groupby('DATA').agg(
+                TOTAL_OS = ('NUMOS', 'nunique')
+            ).reset_index()
+        except Exception as e:
+            erros = validar_erro(e)
+            print("\nTRATAMENTO_os_geral: \n")
 
-        df_os_geral = func.merge(grop28, left_on='ID_NOME', right_on='CODFUNCOS', how= 'left')
-        df_os_geral = df_os_geral.merge(grop64, left_on=['ID_NOME', 'DATA'], right_on= ['CODEMPILHADOR','DATAGERACAO'], how='left').drop(columns=['DATAGERACAO','CODEMPILHADOR', 'CODFUNCOS', 'FUNCOSFIM'])
+        try:
+            os_fim = func.merge(grop28, left_on='ID_FUNC', right_on='CODFUNCOS', how= 'left')
+            os_fim = os_fim.merge(grop64, left_on=['ID_FUNC', 'DATA'], right_on= ['CODEMPILHADOR','DATAGERACAO'], how='left').drop(columns=['DATAGERACAO','CODEMPILHADOR', 'CODFUNCOS', 'FUNCOSFIM'])
+            os_fim = os_fim.fillna(0)
+            os_fim = os_fim.loc[os_fim['DATA'] != 0]
+        except Exception as e:
+            erros = validar_erro(e)
+            print("\nTRATAMENTO_os_fim: \n")
 
-        df_os_geral = df_os_geral.fillna(0)
-        df_os_geral = df_os_geral.loc[df_os_geral['DATA'] != 0]
-        df_os_geral['DATA'] = pd.to_datetime(df_os_geral['DATA']).dt.normalize()
-        df_os_geral['MES'] = df_os_geral['DATA'].dt.month
-        df_os_geral = df_os_geral.loc[df_os_geral['MES'] == 8]
+        try:
+            os_temp28 = cons28[['NUMOS', 'DATA']].copy()
+            os_temp64 = cons64[['NUMOS','DATAGERACAO']].copy()
+            os_temp64 = os_temp64.rename(columns={'DATAGERACAO' : 'DATA'})
+            os_geral = pd.concat([os_temp28,os_temp64], ignore_index= True)
+            os_geral = os_geral.groupby('DATA').agg(
+                TOTAL_OS = ('NUMOS', 'nunique')
+            ).reset_index()
 
-        bonus = cons64.groupby(['NUMBONUS','DTLANC']).agg(
-            TOTAL_OS = ("NUMOS", "nunique")
-        ).reset_index().sort_values(by='DTLANC', ascending= False)
-        
+            ped_28 = cons28.loc[cons28['POSICAO'] == "P"]
+            ped_28 = ped_28.groupby(['CODFUNCGER','DATA']).agg(
+                TOTAL_PD = ('NUMOS', 'nunique')
+            ).reset_index()
+
+            cons64['CODEMPILHADOR'] = cons64['CODEMPILHADOR'].fillna(0)
+            cons64['CODFUNCGER'] =1
+            ped_64 = cons64.loc[cons64['CODEMPILHADOR'] == 0]
+            ped_64 = ped_64.rename(columns= {'DTLANC':'DATA'})
+            ped_64 = ped_64.groupby(['CODFUNCGER','DATA']).agg(
+                TOTAL_PD = ('NUMOS', 'nunique')
+            ).reset_index()
+
+            pd_geral = pd.concat([ped_28,ped_64], ignore_index= True)        
+        except Exception as e:
+            erros = validar_erro(e)
+            print("\nTRATAMENTO_os_pedencia: \n")
+
+        try:
+            bonus = cons64.groupby(['DTLANC']).agg(
+                TOTAL_BONUS = ("NUMBONUS", "nunique")
+            ).reset_index().sort_values(by='DTLANC', ascending= False)
+        except Exception as e:
+            erros = validar_erro(e)
+            print("\nTRATAMENTO_bonus: \n")
 
     except Exception as e:
         erros = validar_erro(e)
         print(f"TRATAMENTO: {erros}")
 
     try:
-        print("CARGA")
-        bonus.to_excel(bi_abst.dim_bonus, index= False, sheet_name= "DIM_BONUS")
-        df_os_geral.to_excel(bi_abst.acum_os, index= False, sheet_name= "FATO_OS")
+        print("\nCARGA...")
         cons28.to_excel(bi_abst.cons_28, index= False, sheet_name= "8628")
         cons64.to_excel(bi_abst.cons_64, index= False, sheet_name= "8664")
+        os_geral.to_excel(bi_abst.os_geral, index= False, sheet_name= "OS_GERAL")
+        os_fim.to_excel(bi_abst.os_fim, index= False, sheet_name= "OS_FIM")
+        pd_geral.to_excel(bi_abst.os_pd, index= False, sheet_name= "OS_PD")
+        bonus.to_excel(bi_abst.dim_bonus, index= False, sheet_name= "BONUS")       
     except Exception as e:
         erros = validar_erro(e)
         print(f"CARGA {erros}")
 
 
 if __name__ == "__main__":
-    app()
+    main()
     input("\nPressione Enter para finalizar...")

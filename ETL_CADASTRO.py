@@ -47,6 +47,7 @@ def app():
             np.where(df['CONT_AP'] > 3,"DIV", "VAL"))
 
         df["VAR_CAP"] = np.where((df['CAP'] > df['QTTOTPAL']) & (df['STATUS_PROD'] != "INT"), "DIVERGENCIA", "NORMAL")
+
         df['VAR_ABST'] =    np.where((df['FLEG_ABST'] == 'SIM') & (df['STATUS_PROD'] == "INT"), "NORMAL",
                             np.where((df['FLEG_ABST']== 'NÃO') & (df['STATUS_PROD'] == "DIV"), "NORMAL",
                             "DIVERGENCIA"))
@@ -57,7 +58,7 @@ def app():
         print(f"ETAPA 3: {error}\n")
 
     try:# ETAPA 4: GERANDO O ARQUIVO FINAL
-        drop_col = ['PKESTRU', 'PK_END', 'CARACTERISTICA', 'PULMAO','TIPO_1', 'PRAZOVAL', 'PERCTOLERANCIAVAL', 'DTULTENT','USAWMS', 'REVENDA', 'TIPOPROD','CODFORNEC', 'FORNECEDOR', 'TIPO', 'PONTOREPOSICAO','CODAUXILIAR', 'EMBALAGEM', 'EMBALAGEMMASTER', 'QTUNITCX', 'CODSEC','SECAO', 'LASTROPAL', 'ALTURAPAL', 'ALTURAM3', 'LARGURAM3','COMPRIMENTOM3', 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM','PESOBRUTOMASTER', 'PESOLIQMASTER', 'PESOBRUTO', 'PESOLIQ','OBS2', 'CODAUXILIAR2','volume_venda', 'volume_master','CODFILIAL']
+        drop_col = ['PKESTRU', 'PK_END', 'CARACTERISTICA', 'PULMAO','TIPO_1', 'PRAZOVAL', 'PERCTOLERANCIAVAL', 'DTULTENT','USAWMS', 'REVENDA', 'TIPOPROD','CODFORNEC', 'FORNECEDOR', 'TIPO','CODAUXILIAR', 'EMBALAGEM', 'EMBALAGEMMASTER', 'QTUNITCX', 'CODSEC','SECAO', 'LASTROPAL', 'ALTURAPAL', 'ALTURAM3', 'LARGURAM3','COMPRIMENTOM3', 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM','PESOBRUTOMASTER', 'PESOLIQMASTER', 'PESOBRUTO', 'PESOLIQ','OBS2', 'CODAUXILIAR2','volume_venda', 'volume_master','CODFILIAL']
         df = df.drop(columns=drop_col)
 
         df.to_excel(output.var_cadastro, index= False, sheet_name= "DIV_CADASTRO")
