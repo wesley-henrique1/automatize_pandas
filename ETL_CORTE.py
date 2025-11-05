@@ -36,6 +36,37 @@ def correcao(df, dt):
     var['vl_corte'] = var['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
     var = var.sort_values(by=dt, ascending= True, axis= 0)
     return var
+def loop_apre(df1, id):
+    if id == 1:
+        df1 = df1.sort_values(by= 'data', ascending= False)
+        print(f"\n{"Relatorio corte":-^88}\n")
+        print(f"{"DIA":-^88}\n",
+            f"{"DATA":<12} {"VL_CORTE":<12} {"QTDE_CORTE":<10} {"QTDE_ITEM":<12} {"DIA":<14} {"MÊS":<14} {"ANO":<4}")
+        for x in df1.itertuples():
+            print(f"|{x.data:<12} {x.vl_corte:<12} {x.qtde_corte:<10} {x.qtde_item:<12} {x.dia:<14} {x.mes:<14} {x.ano:<4}|")
+        print("-" * 88)
+        print("\n")
+
+    elif id == 2:
+        print(f"{"NOITE":-^88}\n",
+            f"{"DATA":<12} {"VL_CORTE":<12} {"QTDE_CORTE":<10} {"QTDE_ITEM":<12} {"DIA":<14} {"MÊS":<14} {"ANO":<4}")
+        for x in df1.itertuples():
+            print(f"|{x.data_turno:<12} {x.vl_corte:<12} {x.qtde_corte:<10} {x.qtde_item:<12} {x.dia:<14} {x.mes:<14} {x.ano:<4}|")
+        print("-" * 88)
+        print("\n")
+
+
+    elif id == 3:
+        print(f"{"DIVERGENCIA":-^88}\n",
+            f"{"DATA":<14} {"QTDE_PEDIDOS":<14} {"PED_IMPERFEITO":<14} {"DIA":<14} {"MÊS":<14} {"ANO":<4}")
+        
+        for x in df1.itertuples():
+            data_formatada = x.data_turno.strftime('%d-%m-%Y')
+            print(f"|{data_formatada:<14} {x.Qtde_pedido:<14} {x.ped_imperfeito:<14} {x.dia:<14} {x.mes:<14} {x.ano:<4}|")
+        print("-" * 88)
+        print("\n")
+
+
 
 def app():
     
@@ -56,21 +87,18 @@ def app():
                 col_ajustar = ['vl_corte', 'qtde_corte']
                 df_corte = ajuste_col(df_corte, col_ajustar)
                 df_corte = df_corte.sort_values(by="data", ascending= True, axis= 0)
-
             except Exception as e:
                 error = validar_erro(e)
                 print(F"\nCortes geral: {error}")
 
             try:
                 df_dia = df_corte.loc[df_corte['hora'].between("07:30:00", "18:00:00")].copy()
-
                 var_dia = df_dia.groupby('data').agg(
                             vl_corte=('vl_corte', 'sum'),
                             qtde_corte=('qtde_corte', 'count'),
                             qtde_item=('desc', 'nunique')
                         ).reset_index()
                 var_dia = correcao(var_dia, 'data')
-                       
             except Exception as e:
                 error = validar_erro(e)
                 print(F"\nCortes dias: {error}")
@@ -86,7 +114,6 @@ def app():
                     qtde_item=('desc', 'nunique')
                 ).reset_index()
                 var_noite = correcao(var_noite, 'data_turno')
-                
             except Exception as e:
                 error = validar_erro(e)
                 print(F"\nCorte noite: {error}")
@@ -101,54 +128,66 @@ def app():
                 
                 for file in files:
                     name_file = os.path.basename(file)
-                    print(name_file)
-                    valor_existe = (df_consolidado['Nome arquivo'] == name_file).any()
+                    valor_existe = (df_consolidado['Nome_arquivo'] == name_file).any()
                     if valor_existe:
                         continue
                     lista_name.append(name_file)
-
                     try:
                         df_var = pd.read_excel(file)
-
                         if 'NUMPED' not in df_var.columns:
-                            print(f"   AVISO: Coluna 'NUMPED' não encontrada no arquivo {name_file}\n")
+                            print(f"AVISO: Coluna 'NUMPED' não encontrada no arquivo {name_file}\n")
                             continue
                         pedido = df_var['NUMPED'].nunique()
                         produto = df_var['PRODUTO'].nunique()
 
                         df_pedidos = pd.DataFrame({
-                            "Nome arquivo" :  [name_file]
+                            "Nome_arquivo" :  [name_file]
                             ,"Qtde_pedido"  : [pedido]
                             ,"Qtde_produto" : [produto]
                         })
                         lista_files.append(df_pedidos)
-                        tt = len(lista_name)
-                        print(f"arquivos: \n{tt}")
-
+                        contagem_name = len(lista_name)
+                        print(f"Contagem de arquivos:{contagem_name}\n")
                     except Exception as e:
                         error = validar_erro(e)
                         print(F"Extração: {error}")
                         continue
+                if not lista_files:
+                    print("lista vazia")
+                    df_consolidado['DATA'] = pd.to_datetime(df_consolidado['DATA'], format='%d-%m-%Y')
                 
-                df_consolidado = pd.concat(lista_files, ignore_index= True)
-                df_consolidado = df_consolidado.drop_duplicates(subset= None, keep= 'first')
-                df_consolidado['DATA_BRUTA'] = df_consolidado['Nome arquivo'].str.extract(r'(\d{2}[-_]\d{2})')
-                df_consolidado['DATA_COMPLETA'] = df_consolidado['DATA_BRUTA'].str.replace('_', '-') + '-2025'
-                df_consolidado['DATA'] = pd.to_datetime(df_consolidado['DATA_COMPLETA'], format='%d-%m-%Y')
-                df_consolidado.drop(columns=['DATA_BRUTA', 'DATA_COMPLETA'], inplace=True)
+                else:
+                    df_consolidado = pd.concat(lista_files, ignore_index= True)
+                    df_consolidado = df_consolidado.drop_duplicates(subset= None, keep= 'first')
+                    df_consolidado['DATA_BRUTA'] = df_consolidado['Nome_arquivo'].str.extract(r'(\d{2}[-_]\d{2})')
+                    df_consolidado['DATA_COMPLETA'] = df_consolidado['DATA_BRUTA'].str.replace('_', '-') + '-2025'
+                    df_consolidado['DATA'] = pd.to_datetime(df_consolidado['DATA_COMPLETA'], format='%d-%m-%Y')
+                    df_consolidado.drop(columns=['DATA_BRUTA', 'DATA_COMPLETA'], inplace=True)
             except Exception as e:
                 error = validar_erro(e)
-                print(F"\nPedidos | divergencia: {error}")
+                print(F"\nPedidos: {error}")
+            
+            try:
+                df_div = df_corte[['data','desc','hora', 'n_ped']].copy()
+                df_div['data'] = pd.to_datetime(df_div['data'], format= '%d/%m/%Y')
+                df_div["data_turno"] = df_div['data'].copy()
+                df_div.loc[df_div['hora'] < "07:30:00", 'data_turno'] -= pd.Timedelta(days=1)
+                var_div = df_div.groupby('data_turno').agg(
+                    ped_imperfeito=('n_ped', 'nunique')
+                ).reset_index()
+                var_div['dia'] = var_div['data_turno'].dt.day_name('pt_BR')
+                var_div['mes'] = var_div['data_turno'].dt.month_name('pt_BR')
+                var_div['ano'] = var_div['data_turno'].dt.year
+                var_div['data_turno'] = pd.to_datetime(var_div['data_turno'], format='%d-%m-%Y')
+                var_div = var_div.merge(df_consolidado, left_on= 'data_turno', right_on= 'DATA', how= 'left').drop(columns= {'Nome_arquivo', 'Qtde_produto'})
+            except Exception as e:
+                error = validar_erro(e)
+                print(F"\nDivergencia: {error}")
     except Exception as e:
         error = validar_erro(e)
         print(F"\nTratamento: {error}")
 
     try:
-        print("="*60)
-        print("\nRelatorio de corte\n")
-        print(f"DIA:\n {var_dia}")
-        print(f"NOITE:\n {var_noite}")
-
         max_ex_dia= df_dia['data'].max() 
         max_ex_noite = df_noite['data_turno'].max()
 
@@ -159,11 +198,29 @@ def app():
             df_corte.to_excel(writer, sheet_name='extrato', index= False)
             ex_dia.to_excel(writer, sheet_name= 'ex_dia', index= False)
             ex_noite.to_excel(writer, sheet_name= 'ex_noite', index= False)
-            df_consolidado.to_excel(writer, sheet_name= 'acumulado_ped', index= False)
-            print('\nfim do processo, verifique o arquivo controle_corte.xlsx')
+
+        df_consolidado.to_excel(ar_xlsx.acum_41, sheet_name= 'acumulado_ped', index= False)
     except Exception as e:
         error = validar_erro(e)
         print(F"Carga: {error}")
+
+    try:
+        print("-" * 88)
+        print('\nfim do processo, verifique o arquivo controle_corte.xlsx')
+        loop_apre(var_dia, 1)
+        loop_apre(var_noite, 2)
+        loop_apre(var_div, 3)
+
+        try:
+            print(f"{contagem_name} arquivos consolidados com sucesso.\n")
+        except Exception as e:
+            print("AVISO: Nenhum novo arquivo foi consolidado nesta execução.\n")
+
+        print("-" * 88)    
+    except Exception as e:
+        error = validar_erro(e)
+        print(F"Apresentação: {error}")
+
 
 if __name__ == "__main__":
     app()

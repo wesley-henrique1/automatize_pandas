@@ -116,7 +116,7 @@ def app():
         print(F"ETAPA_DIVER: {error}")
 
     try:
-        arquivos_excel = glob.glob(os.path.join(pasta.p_41, '*10.xls*'))
+        arquivos_excel = glob.glob(os.path.join(pasta.p_41, '*11.xls*'))
         total_arquivos = len(arquivos_excel)
 
         if total_arquivos == 0:

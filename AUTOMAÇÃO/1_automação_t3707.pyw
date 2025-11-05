@@ -76,13 +76,13 @@ class Aplicacao:
                 pc.copy(codprod)
                 pag.hotkey("ctrl", "v")
                 pag.press('enter')
-                time.sleep(0.06)
+                time.sleep(0.05)
 
                 pc.copy(codend)
                 pag.hotkey("ctrl", "v")
                 for _ in range(3):
                     pag.press('enter')
-                    time.sleep(0.1)
+                    time.sleep(1)
                 
                 self.fila.put(("contador", (i, total_prod)))
                 print(f"Processado: {i}/{total_prod}")
@@ -110,7 +110,7 @@ class Aplicacao:
         self.botao.place(relx=0.050, rely=0.030, relwidth=0.250, relheight=0.050)
 
         self.contador = tk.Label(self.root, text="Contador: 0/0")
-        self.contador.place(relx=0.650, rely=0.030, relwidth=0.260, relheight=0.050)
+        self.contador.place(relx=0.650, rely=0.030, relheight=0.050)
 
         self.observacao = tk.Label(self.root, text="ATENÇÃO: \n", bg="#ffffff", 
                                  fg="#DE2326", font=("Verdana", 8), bd=4, anchor="nw")

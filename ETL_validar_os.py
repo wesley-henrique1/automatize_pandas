@@ -26,10 +26,10 @@ def app():
         df_aereo = df_aereo[['COD_END', 'COD', 'QTDE', 'ENTRADA', 'SAIDA']]
         df_aereo['ID_COD'] = df_aereo['COD_END'].astype(str) + " - " + df_aereo['COD'].astype(str)
 
-        df_func = pd.read_excel(ar_xlsx.ar_func, sheet_name= 'FUNC', usecols= ['ID_NOME', 'SETOR'])
+        df_func = pd.read_excel(ar_xlsx.ar_func, sheet_name= 'FUNC', usecols= ['ID_FUNC', 'SETOR'])
         
         df = df_28.merge(df_aereo, left_on= 'ID_COD', right_on= 'ID_COD', how= 'left').infer_objects(copy=False).fillna(0).drop(['COD_END', 'COD'],axis= 1)
-        df = df.merge(df_func, left_on= 'CODFUNCOS', right_on= 'ID_NOME', how= 'left').drop(columns=['ID_NOME'])
+        df = df.merge(df_func, left_on= 'CODFUNCOS', right_on= 'ID_FUNC', how= 'left').drop(columns=['ID_FUNC'])
         df['SETOR'] = df['SETOR'].fillna("FUNC")    
     except Exception as e:
         error = validar_erro(e)
