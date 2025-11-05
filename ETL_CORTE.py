@@ -73,7 +73,7 @@ def app():
     try: # Extração dos dados nessecario 
         files = glob.glob(os.path.join(pasta.p_41, '*.xls*'))
         df_corte = pd.read_csv(ar_csv.ar_67,header= None, names= col_name.c67)
-        df_consolidado = pd.read_excel(ar_xlsx.acum_41, sheet_name= 'acumulado_ped')
+        base_cons = pd.read_excel(ar_xlsx.acum_41, sheet_name= 'acumulado_ped')
     except Exception as e:
         error = validar_erro(e)
         print(F"Extração: {error}")
@@ -128,7 +128,7 @@ def app():
                 
                 for file in files:
                     name_file = os.path.basename(file)
-                    valor_existe = (df_consolidado['Nome_arquivo'] == name_file).any()
+                    valor_existe = (base_cons['Nome_arquivo'] == name_file).any()
                     if valor_existe:
                         continue
                     lista_name.append(name_file)
@@ -154,15 +154,17 @@ def app():
                         continue
                 if not lista_files:
                     print("lista vazia")
-                    df_consolidado['DATA'] = pd.to_datetime(df_consolidado['DATA'], format='%d-%m-%Y')
+                    df_cons = base_cons.copy()
+                    df_cons['DATA'] = pd.to_datetime(df_cons['DATA'], format='%d-%m-%Y')
                 
                 else:
-                    df_consolidado = pd.concat(lista_files, ignore_index= True)
-                    df_consolidado = df_consolidado.drop_duplicates(subset= None, keep= 'first')
-                    df_consolidado['DATA_BRUTA'] = df_consolidado['Nome_arquivo'].str.extract(r'(\d{2}[-_]\d{2})')
-                    df_consolidado['DATA_COMPLETA'] = df_consolidado['DATA_BRUTA'].str.replace('_', '-') + '-2025'
-                    df_consolidado['DATA'] = pd.to_datetime(df_consolidado['DATA_COMPLETA'], format='%d-%m-%Y')
-                    df_consolidado.drop(columns=['DATA_BRUTA', 'DATA_COMPLETA'], inplace=True)
+                    df_cons = pd.concat(lista_files, ignore_index= True)
+                    df_cons = pd.concat([base_cons, df_cons], ignore_index= True)
+                    df_cons = df_cons.drop_duplicates(subset= None, keep= 'first')
+                    df_cons['DATA_BRUTA'] = df_cons['Nome_arquivo'].str.extract(r'(\d{2}[-_]\d{2})')
+                    df_cons['DATA_COMPLETA'] = df_cons['DATA_BRUTA'].str.replace('_', '-') + '-2025'
+                    df_cons['DATA'] = pd.to_datetime(df_cons['DATA_COMPLETA'], format='%d-%m-%Y')
+                    df_cons.drop(columns=['DATA_BRUTA', 'DATA_COMPLETA'], inplace=True)
             except Exception as e:
                 error = validar_erro(e)
                 print(F"\nPedidos: {error}")
@@ -179,7 +181,7 @@ def app():
                 var_div['mes'] = var_div['data_turno'].dt.month_name('pt_BR')
                 var_div['ano'] = var_div['data_turno'].dt.year
                 var_div['data_turno'] = pd.to_datetime(var_div['data_turno'], format='%d-%m-%Y')
-                var_div = var_div.merge(df_consolidado, left_on= 'data_turno', right_on= 'DATA', how= 'left').drop(columns= {'Nome_arquivo', 'Qtde_produto'})
+                var_div = var_div.merge(df_cons, left_on= 'data_turno', right_on= 'DATA', how= 'left').drop(columns= {'Nome_arquivo', 'Qtde_produto'})
             except Exception as e:
                 error = validar_erro(e)
                 print(F"\nDivergencia: {error}")
@@ -199,7 +201,7 @@ def app():
             ex_dia.to_excel(writer, sheet_name= 'ex_dia', index= False)
             ex_noite.to_excel(writer, sheet_name= 'ex_noite', index= False)
 
-        df_consolidado.to_excel(ar_xlsx.acum_41, sheet_name= 'acumulado_ped', index= False)
+        df_cons.to_excel(ar_xlsx.acum_41, sheet_name= 'acumulado_ped', index= False)
     except Exception as e:
         error = validar_erro(e)
         print(F"Carga: {error}")
