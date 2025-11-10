@@ -1,10 +1,11 @@
-from OUTROS.path_arquivos import *
+from OUTROS.path_arquivos import output, ar_csv, col_name, ar_xlsx, pasta
 import pandas as pd
 import numpy as np
 import warnings
 import glob
 import os 
 warnings.simplefilter(action='ignore', category=UserWarning)
+path_corte = r'c:\WS_OLIVEIRA\OUTPUT\extratos_corte.xlsx'
 
 def validar_erro(e):
     print("=" * 60)
@@ -38,7 +39,6 @@ def correcao(df, dt):
     return var
 def loop_apre(df1, id):
     if id == 1:
-        df1 = df1.sort_values(by= 'data', ascending= False)
         print(f"\n{"Relatorio corte":-^88}\n")
         print(f"{"DIA":-^88}\n",
             f"{"DATA":<12} {"VL_CORTE":<12} {"QTDE_CORTE":<10} {"QTDE_ITEM":<12} {"DIA":<14} {"MÊS":<14} {"ANO":<4}")
@@ -67,9 +67,7 @@ def loop_apre(df1, id):
         print("\n")
 
 
-
 def app():
-    
     try: # Extração dos dados nessecario 
         files = glob.glob(os.path.join(pasta.p_41, '*.xls*'))
         df_corte = pd.read_csv(ar_csv.ar_67,header= None, names= col_name.c67)
@@ -99,6 +97,7 @@ def app():
                             qtde_item=('desc', 'nunique')
                         ).reset_index()
                 var_dia = correcao(var_dia, 'data')
+                var_dia = var_dia.sort_values(by= 'data', ascending= True, axis= 0)
             except Exception as e:
                 error = validar_erro(e)
                 print(F"\nCortes dias: {error}")
@@ -114,6 +113,7 @@ def app():
                     qtde_item=('desc', 'nunique')
                 ).reset_index()
                 var_noite = correcao(var_noite, 'data_turno')
+                var_noite = var_noite.sort_values(by='data_turno', ascending= True, axis= 0)
             except Exception as e:
                 error = validar_erro(e)
                 print(F"\nCorte noite: {error}")
@@ -159,7 +159,7 @@ def app():
                 
                 else:
                     df_cons = pd.concat(lista_files, ignore_index= True)
-                    df_cons = pd.concat([base_cons, df_cons], ignore_index= True)
+                    df_cons = pd.concat([base_cons, df_cons], ignore_index= True).sort_values(by='DATA', ascending= True, axis= 0)
                     df_cons = df_cons.drop_duplicates(subset= None, keep= 'first')
                     df_cons['DATA_BRUTA'] = df_cons['Nome_arquivo'].str.extract(r'(\d{2}[-_]\d{2})')
                     df_cons['DATA_COMPLETA'] = df_cons['DATA_BRUTA'].str.replace('_', '-') + '-2025'
@@ -181,7 +181,7 @@ def app():
                 var_div['mes'] = var_div['data_turno'].dt.month_name('pt_BR')
                 var_div['ano'] = var_div['data_turno'].dt.year
                 var_div['data_turno'] = pd.to_datetime(var_div['data_turno'], format='%d-%m-%Y')
-                var_div = var_div.merge(df_cons, left_on= 'data_turno', right_on= 'DATA', how= 'left').drop(columns= {'Nome_arquivo', 'Qtde_produto'})
+                var_div = var_div.merge(df_cons, left_on= 'data_turno', right_on= 'DATA', how= 'left').drop(columns= {'Nome_arquivo', 'Qtde_produto'}).sort_values(by="data_turno", ascending= True, axis= 0)
             except Exception as e:
                 error = validar_erro(e)
                 print(F"\nDivergencia: {error}")
@@ -196,7 +196,7 @@ def app():
         ex_dia = df_dia.loc[df_dia['data'] == max_ex_dia]
         ex_noite = df_noite.loc[df_noite['data_turno'] == max_ex_noite]
 
-        with pd.ExcelWriter(output.corte) as writer:
+        with pd.ExcelWriter(path_corte) as writer:
             df_corte.to_excel(writer, sheet_name='extrato', index= False)
             ex_dia.to_excel(writer, sheet_name= 'ex_dia', index= False)
             ex_noite.to_excel(writer, sheet_name= 'ex_noite', index= False)
@@ -223,7 +223,7 @@ def app():
         error = validar_erro(e)
         print(F"Apresentação: {error}")
 
-
 if __name__ == "__main__":
     app()
     input("\nPressione Enter para sair...")
+
