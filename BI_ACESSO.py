@@ -1,4 +1,4 @@
-from OUTROS.path_arquivos import *
+from config.config_path import *
 import pandas as pd
 import numpy as np
 import glob
@@ -6,15 +6,14 @@ import os
 
 print("Iniciando processo, favor aguarde...\n")
 print("=" * 60)
-def directory(files, argumento):
-    directory = glob.glob(os.path.join(files, argumento))
+def director(files, argumento):
+    director = glob.glob(os.path.join(files, argumento))
     lista = []
-    for arquivo in directory:
+    for arquivo in director:
         x = pd.read_csv(arquivo, header= None)
         lista.append(x)
     df_temp = pd.concat(lista, axis= 0, ignore_index= True)
     return df_temp
-
 def validar_erro(e):
     print("=" * 60)
     if isinstance(e, KeyError):
@@ -31,22 +30,22 @@ def validar_erro(e):
 def app():
     try: #"""LEITURA DOS DATAFRAMES"""
 
-        df_sug = directory(pasta.p_82, 'DEP*.txt')
-        df_mov = directory(pasta.p_82, 'MOV*.txt')
-        df_prod = pd.read_excel(ar_xlsx.ar_96, usecols=['CODPROD','DESCRICAO', 'QTUNITCX', 'QTTOTPAL', 'OBS2','RUA', 'PREDIO', 'APTO'])
-        df_acesso = pd.read_excel(ar_xlsx.ar_60, usecols= ['CODPROD','QTOS', 'QT'])
-        df_estoque = pd.read_excel(ar_xls.ar_86, usecols=['Código', 'Estoque', 'Custo ult. ent.','Qtde Pedida','Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria'])
+        df_sug = director(directory.dir_82, 'DEP*.txt')
+        df_mov = director(directory.dir_82, 'MOV*.txt')
+        df_prod = pd.read_excel(relatorios.rel_96, usecols=['CODPROD','DESCRICAO', 'QTUNITCX', 'QTTOTPAL', 'OBS2','RUA', 'PREDIO', 'APTO'])
+        df_acesso = pd.read_excel(relatorios.rel_60, usecols= ['CODPROD','QTOS', 'QT'])
+        df_estoque = pd.read_excel(outros.ou_86, usecols=['Código', 'Estoque', 'Custo ult. ent.','Qtde Pedida','Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria'])
         print("\nleitura dos DATAFRAMES finalizado...\n")
     except Exception as e:
         erro = validar_erro(e)
         print("ETAPA 1: \n", erro)
 
     try:# """TRATATIVAS DOS DF"""
-        df_sug.columns = col_name.c82
+        df_sug.columns = col_names.col_sug
         df_sug = df_sug.drop_duplicates(subset=['COD'], keep='first')
         df_sug.replace([np.inf, -np.inf], 0, inplace=True) 
 
-        df_mov.columns = col_name.cMovi
+        df_mov.columns = col_names.col_mov
         df_mov = df_mov.drop_duplicates(subset=['COD'], keep='first')
         df_mov.replace([np.inf, -np.inf], 0, inplace=True) 
 
@@ -97,20 +96,19 @@ def app():
         nova_ordem = ['COD', 'DESC','EMB', 'OBS2', 'QTUNITCX','QTTOTPAL', 'RUA', 'PREDIO', 'APTO', 'TIPO', 'MÊS 1', 'MÊS 2', 'MÊS 3', 'CAP', '1 DIA', 'COM FATOR', 'VARIAÇÃO','Estoque', 'CUSTO_ULT','MOVI', 'CLASSE', 'PL_SUG', 'PL_CAP', 'CONTAGEM', 'STATUS_PROD', 'CUSTO_TT','PRODUTO']
         df_final = df_final[nova_ordem]
         print("ratamento finalizado...\n")
-
     except Exception as e:
         erro = validar_erro(e)
         print("ETAPA 2: \n", erro)
         
 
     try:# """ETAPA FINAL SALVAR OS DATAFRAMES"""
-        directory = files_bi.bi_acesso
-        file_sug = os.path.join(directory, "DIM_SUGESTÃO.xlsx")
-        file_mov = os.path.join(directory, "DIM_MOVIMENTAR.xlsx")
-        file_prod = os.path.join(directory, "DIM_PRODUTO.xlsx")
-        file_acesso = os.path.join(directory, "DIM_ACESSO.xlsx")
-        file_estoque = os.path.join(directory, "DIM_ESTOQUE.xlsx")
-        file_final = os.path.join(directory, "FATO_GERAL.xlsx")
+        dir = directory.dir_acesso
+        file_sug = os.path.join(dir, "DIM_SUGESTÃO.xlsx")
+        file_mov = os.path.join(dir, "DIM_MOVIMENTAR.xlsx")
+        file_prod = os.path.join(dir, "DIM_PRODUTO.xlsx")
+        file_acesso = os.path.join(dir, "DIM_ACESSO.xlsx")
+        file_estoque = os.path.join(dir, "DIM_ESTOQUE.xlsx")
+        file_final = os.path.join(dir, "FATO_GERAL.xlsx")
 
         df_sug.to_excel(file_sug, index=False, sheet_name="DIM_SUG")
         df_mov.to_excel(file_mov, index=False, sheet_name="DIM_MOVI")  

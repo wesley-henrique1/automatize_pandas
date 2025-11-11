@@ -1,6 +1,9 @@
-from OUTROS.path_arquivos import *
+from config.config_path import *
 import pandas as pd
 import numpy as np
+import warnings
+warnings.simplefilter(action='ignore', category=UserWarning)
+
 
 def validar_erro(e):
     print("=" * 60)
@@ -14,19 +17,20 @@ def validar_erro(e):
         return f"ValueError: Erro de valor. Mensagem original: {e}"
     else:
         return f"Ocorreu um erro inesperado: {e}"
+
 def app():
     try:
-        df_28 = pd.read_excel(ar_xlsx.ar_28, usecols= ['NUMOS','CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.', 'FUNCOSFIM','FUNCGER'])
+        df_28 = pd.read_excel(relatorios.rel_28, usecols= ['NUMOS','CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1', 'NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.', 'FUNCOSFIM','FUNCGER'])
         df_28 = df_28.loc[(df_28['NIVEL'].between(2,8)) & (df_28['Tipo O.S.'] == '58 - Transferencia de Para Vertical')]
         df_28[['CODFUNCESTORNO', 'CODFUNCOS']] = df_28[['CODFUNCESTORNO', 'CODFUNCOS']].fillna(0).astype(int)
         df_28['ID_COD'] = df_28['ENDERECO_ORIG'].astype(str) + " - " + df_28['CODPROD'].astype(str)
 
-        df_aereo = pd.read_csv(ar_csv.ar_end, header= None, names= col_name.cEnd)
+        df_aereo = pd.read_csv(wms.wms_07_end, header= None, names= col_names.col_end)
         df_aereo = df_aereo.loc[df_aereo['TIPO_PK'] == 'AE']
         df_aereo = df_aereo[['COD_END', 'COD', 'QTDE', 'ENTRADA', 'SAIDA']]
         df_aereo['ID_COD'] = df_aereo['COD_END'].astype(str) + " - " + df_aereo['COD'].astype(str)
 
-        df_func = pd.read_excel(ar_xlsx.ar_func, sheet_name= 'FUNC', usecols= ['ID_FUNC', 'SETOR'])
+        df_func = pd.read_excel(outros.ou_func, sheet_name= 'FUNC', usecols= ['ID_FUNC', 'SETOR'])
         
         df = df_28.merge(df_aereo, left_on= 'ID_COD', right_on= 'ID_COD', how= 'left').infer_objects(copy=False).fillna(0).drop(['COD_END', 'COD'],axis= 1)
         df = df.merge(df_func, left_on= 'CODFUNCOS', right_on= 'ID_FUNC', how= 'left').drop(columns=['ID_FUNC'])
@@ -57,7 +61,7 @@ def app():
         print(f"Etapa 2: {error}")
 
     try:
-        with pd.ExcelWriter(output.val_baixa) as destino:
+        with pd.ExcelWriter(output.rel_os) as destino:
             df_pd.to_excel(destino, index= False, sheet_name= 'PEDENTES')
             df_fim.to_excel(destino, index= False, sheet_name= 'FIM_MESA')
     except Exception as e:

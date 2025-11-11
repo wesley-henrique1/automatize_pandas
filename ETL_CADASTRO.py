@@ -1,4 +1,4 @@
-from OUTROS.path_arquivos import *
+from config.config_path import *
 import pandas as pd
 import numpy as np
 
@@ -18,7 +18,7 @@ def validar_erro(e):
 def app(): 
     try:    # ETAPA 1: LEITURA DOS DATAFRAMES
         print("\nIniciando controle de cadastro, favor aguarde...\n")
-        base = pd.read_excel(ar_xlsx.ar_96)
+        base = pd.read_excel(relatorios.rel_96)
         print("=" * 60)
     except Exception as e:
         error = validar_erro(e)
@@ -61,7 +61,7 @@ def app():
         drop_col = ['PKESTRU', 'PK_END', 'CARACTERISTICA', 'PULMAO','TIPO_1', 'PRAZOVAL', 'PERCTOLERANCIAVAL', 'DTULTENT','USAWMS', 'REVENDA', 'TIPOPROD','CODFORNEC', 'FORNECEDOR', 'TIPO','CODAUXILIAR', 'EMBALAGEM', 'EMBALAGEMMASTER', 'QTUNITCX', 'CODSEC','SECAO', 'LASTROPAL', 'ALTURAPAL', 'ALTURAM3', 'LARGURAM3','COMPRIMENTOM3', 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM','PESOBRUTOMASTER', 'PESOLIQMASTER', 'PESOBRUTO', 'PESOLIQ','OBS2', 'CODAUXILIAR2','volume_venda', 'volume_master','CODFILIAL']
         df = df.drop(columns=drop_col)
 
-        df.to_excel(output.var_cadastro, index= False, sheet_name= "DIV_CADASTRO")
+        df.to_excel(output.cadastro, index= False, sheet_name= "DIV_CADASTRO")
         print("Arquivo salvo com sucesso...\n")
     except Exception as e:
         error = validar_erro(e)

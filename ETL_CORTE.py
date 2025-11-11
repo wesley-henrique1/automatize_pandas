@@ -1,11 +1,9 @@
-from OUTROS.path_arquivos import output, ar_csv, col_name, ar_xlsx, pasta
+from config.config_path import *
 import pandas as pd
-import numpy as np
 import warnings
 import glob
 import os 
 warnings.simplefilter(action='ignore', category=UserWarning)
-path_corte = r'c:\WS_OLIVEIRA\OUTPUT\extratos_corte.xlsx'
 
 def validar_erro(e):
     print("=" * 60)
@@ -69,9 +67,9 @@ def loop_apre(df1, id):
 
 def app():
     try: # Extração dos dados nessecario 
-        files = glob.glob(os.path.join(pasta.p_41, '*.xls*'))
-        df_corte = pd.read_csv(ar_csv.ar_67,header= None, names= col_name.c67)
-        base_cons = pd.read_excel(ar_xlsx.acum_41, sheet_name= 'acumulado_ped')
+        files = glob.glob(os.path.join(directory.dir_41, '*.xls*'))
+        df_corte = pd.read_csv(wms.wms_67,header= None, names= col_names.col_67)
+        base_cons = pd.read_excel(output.acum_41, sheet_name= 'acumulado_ped')
     except Exception as e:
         error = validar_erro(e)
         print(F"Extração: {error}")
@@ -196,12 +194,12 @@ def app():
         ex_dia = df_dia.loc[df_dia['data'] == max_ex_dia]
         ex_noite = df_noite.loc[df_noite['data_turno'] == max_ex_noite]
 
-        with pd.ExcelWriter(path_corte) as writer:
-            df_corte.to_excel(writer, sheet_name='extrato', index= False)
-            ex_dia.to_excel(writer, sheet_name= 'ex_dia', index= False)
-            ex_noite.to_excel(writer, sheet_name= 'ex_noite', index= False)
+        with pd.ExcelWriter(output.corte) as destino_corte:
+            df_corte.to_excel(destino_corte, sheet_name='extrato', index= False)
+            ex_dia.to_excel(destino_corte, sheet_name= 'ex_dia', index= False)
+            ex_noite.to_excel(destino_corte, sheet_name= 'ex_noite', index= False)
 
-        df_cons.to_excel(ar_xlsx.acum_41, sheet_name= 'acumulado_ped', index= False)
+        df_cons.to_excel(output.acum_41, sheet_name= 'acumulado_ped', index= False)
     except Exception as e:
         error = validar_erro(e)
         print(F"Carga: {error}")

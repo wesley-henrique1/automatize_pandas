@@ -1,4 +1,4 @@
-from OUTROS.path_arquivos import bi_abst, ar_xlsx
+from config.config_path import *
 import pandas as pd
 
 def validar_erro(e):
@@ -66,11 +66,11 @@ def agrupar(df, col, id):
 class main:
     try:
         print("\nEXTRAÇÃO...\n")
-        func = pd.read_excel(ar_xlsx.ar_func, sheet_name='FUNC')
-        cons28 = pd.read_excel(bi_abst.cons_28)
-        m_atual28 = pd.read_excel(bi_abst.m_atual28)
-        cons64 = pd.read_excel(bi_abst.cons_64)
-        m_atual64 = pd.read_excel(bi_abst.m_atual64)
+        func = pd.read_excel(outros.ou_func, sheet_name='FUNC')
+        cons28 = pd.read_excel(power_bi.abst_cons28)
+        m_atual28 = pd.read_excel(power_bi.abst_atual28)
+        cons64 = pd.read_excel(power_bi.abst_cons64)
+        m_atual64 = pd.read_excel(power_bi.abst_atual64)
         configurar_mes = 11
     except Exception as e:
         erros = validar_erro(e)
@@ -148,10 +148,10 @@ class main:
     try:
         print("\nCARGA...")
         
-        pd_total.to_excel(bi_abst.os_pd, index= False, sheet_name= "OS_PD")
-        fim_total.to_excel(bi_abst.os_fim, index= False, sheet_name= "OS_FIM")
-        geral_total.to_excel(bi_abst.os_geral, index= False, sheet_name= "OS_GERAL")
-        bonus.to_excel(bi_abst.dim_bonus, index= False, sheet_name= "BONUS")       
+        pd_total.to_excel(power_bi.abst_pd, index= False, sheet_name= "OS_PD")
+        fim_total.to_excel(power_bi.abst_fim, index= False, sheet_name= "OS_FIM")
+        geral_total.to_excel(power_bi.abst_geral, index= False, sheet_name= "OS_GERAL")
+        bonus.to_excel(power_bi.abst_bonus, index= False, sheet_name= "BONUS")       
     except Exception as e:
         erros = validar_erro(e)
         print(f"CARGA {erros}")

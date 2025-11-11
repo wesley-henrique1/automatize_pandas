@@ -1,4 +1,4 @@
-from OUTROS.path_arquivos import *
+from config.config_path import *
 import pandas as pd
 
 def validar_erro(e):
@@ -17,10 +17,10 @@ def validar_erro(e):
 def app():
 
     try:
-        df_life = pd.read_excel(totvs.life, usecols=['CONFERENCIA','PRODUTO','VALIDADE','PROBLEMA'])
-        df_bonus = pd.read_excel(ar_xlsx.ar_64)
-        df_end = pd.read_csv(ar_csv.ar_end, header= None, names= col_name.cEnd)
-        df_str = pd.read_excel(ar_xlsx.ar_str, sheet_name= "AE", usecols= ['COD_END', 'RUA'])
+        df_life = pd.read_excel(outros.ou_life, usecols=['CONFERENCIA','PRODUTO','VALIDADE','PROBLEMA'])
+        df_bonus = pd.read_excel(relatorios.rel_64)
+        df_end = pd.read_csv(wms.wms_07_end, header= None, names= col_names.col_end)
+        df_str = pd.read_excel(outros.ou_end, sheet_name= "AE", usecols= ['COD_END', 'RUA'])
     except Exception as e:
         error = validar_erro(e)
         print(F"EXTRAÇÃO: {error}")
@@ -52,7 +52,7 @@ def app():
         print(F"TRATAMENTO: {error}")
 
     try:
-        df_filtrado.to_excel(output.totvs_life, sheet_name="DIVERGENCIA", index=False)
+        df_filtrado.to_excel(output.life, sheet_name="DIVERGENCIA", index=False)
     except Exception as e:
         error = validar_erro(e)
         print(F"CARGA: {error}")

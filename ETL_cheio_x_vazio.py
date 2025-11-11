@@ -1,4 +1,4 @@
-from OUTROS.path_arquivos import *
+from config.config_path import *
 import pandas as pd
 import glob
 import os
@@ -17,7 +17,7 @@ def validar_erro(e):
         return f"Ocorreu um erro inesperado: {e}"
 def app():
     try:
-        arquivos = glob.glob(os.path.join(pasta.p_cheio_vazio, "*.xls*"))
+        arquivos = glob.glob(os.path.join(directory.dir_cheio_vazio, "*.xls*"))
         lista = []
     except Exception as e:
         error = validar_erro(e)

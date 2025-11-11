@@ -1,4 +1,4 @@
-from OUTROS.path_arquivos import *
+from config.config_path import *
 import pandas as pd
 import numpy as np
 
@@ -20,8 +20,8 @@ def app():
         print("Processo iniciado, favor aguarde...\n")
         col_96 = ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', ]
         col_86 = ['Código', 'Estoque', 'Qtde Pedida', 'Bloqueado(Qt.Bloq.-Qt.Avaria)', 'Qt.Avaria', 'Custo real', 'Disponível']
-        df_8596 = pd.read_excel(ar_xlsx.ar_96, usecols= col_96)
-        df_286 = pd.read_excel(ar_xls.ar_86, usecols= col_86)
+        df_8596 = pd.read_excel(relatorios.rel_96, usecols= col_96)
+        df_286 = pd.read_excel(outros.ou_86, usecols= col_86)
     except Exception as e:
         error = validar_erro(e)
         print(error)
@@ -49,13 +49,13 @@ def app():
         exit()
 
     try:
-        with pd.ExcelWriter(output.FL) as feijao:
+        with pd.ExcelWriter(output.controle_fl) as feijao:
             df_os_esquecidos.to_excel(feijao, sheet_name= "FL_ATIVOS", index= False)
             df_fantasminha.to_excel(feijao, sheet_name= "FL_END", index= False)
             df_hora_extra.to_excel(feijao, sheet_name= "INATIVOS", index= False)
             df.to_excel(feijao, sheet_name= "GERAL", index= False)
             print("=" * 60)
-            print('fim do processo, verifique o arquivo controle_corte.xlsx')
+            print('fim do processo, verifique o arquivo controle_FL.xlsx')
     except Exception as e:
         error = validar_erro(e)
         print(error)

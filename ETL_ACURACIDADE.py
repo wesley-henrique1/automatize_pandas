@@ -1,4 +1,4 @@
-from OUTROS.path_arquivos import *
+from config.config_path import *
 import pandas as pd
 import numpy as np
 import os
@@ -16,29 +16,29 @@ def validar_erro(e):
     else:
         return f"Ocorreu um erro inesperado: {e}"
     
+def ajuste_col(df_original, col):
+    df_copia = df_original.copy() 
+    for i in col:
+        df_copia[i] = df_copia[i].fillna(0).astype(str)
+        df_copia[i] = df_copia[i].str.replace(".", "")
+        df_copia[i] = df_copia[i].str.replace(",", ".")
+        df_copia[i] = df_copia[i].fillna(0).astype(float)
+    return df_copia
+
 def app():
     try:
         print("=" * 60)
         print("Processo iniciado, favor aguarde...\n")
 
-        end_ger = pd.read_csv(ar_csv.ar_07, header= None, names= col_name.c07)  
-        df_bloq = pd.read_excel(ar_xls.ar_86, usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)'])
-        df_end = pd.read_csv(ar_csv.ar_end, header= None, names= col_name.cEnd)
-        df_prod = pd.read_excel(ar_xlsx.ar_96, usecols= ['CODPROD', 'QTUNITCX','QTTOTPAL'])
+        df_bloq = pd.read_excel(outros.ou_86, usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)'])
+        end_ger = pd.read_csv(wms.wms_07_ger, header= None, names= col_names.col_ger)  
+        df_end = pd.read_csv(wms.wms_07_end, header= None, names= col_names.col_end)
+        df_prod = pd.read_excel(relatorios.rel_96, usecols= ['CODPROD', 'QTUNITCX','QTTOTPAL'])
     except Exception as e:
         erro = validar_erro(e)
         print(f"Etapa extração: {erro}")
         
-    try:
-        def ajuste_col(df_original, col):
-            df_copia = df_original.copy() 
-            for i in col:
-                df_copia[i] = df_copia[i].fillna(0).astype(str)
-                df_copia[i] = df_copia[i].str.replace(".", "")
-                df_copia[i] = df_copia[i].str.replace(",", ".")
-                df_copia[i] = df_copia[i].fillna(0).astype(float)
-            return df_copia
-        
+    try:        
         dic_end_ger = {'COD' : "CODPROD"}
         end_ger = end_ger.rename(columns= dic_end_ger)
         end_ger['RUA'] = end_ger['RUA'].fillna(0).astype(int)
@@ -121,12 +121,12 @@ def app():
         print(f"Etapa tratamento: {erro}")
 
     try:
-        path_div = os.path.join(files_bi.bi_str, "FATO_DIVERGENCIA.xlsx")
-        path_prod = os.path.join(files_bi.bi_str, "DIM_PROD.xlsx")
+        dic = directory.dir_acuracidade
+        path_div = os.path.join(dic, "FATO_DIVERGENCIA.xlsx")
+        path_prod = os.path.join(dic, "DIM_PROD.xlsx")
 
         df.to_excel(path_div, index= False, sheet_name= 'DIVERGENCIA')
         df_prod.to_excel(path_prod, index= False, sheet_name= 'DIM_PROD')
-
     except Exception as e:
         erro = validar_erro(e)
         print(f"Etapa carga: {erro}")
