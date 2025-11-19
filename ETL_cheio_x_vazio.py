@@ -17,31 +17,49 @@ def validar_erro(e):
         return f"Ocorreu um erro inesperado: {e}"
 def app():
     try:
+        print(f"{"CHEIO X VAZIO":_^36}")
         arquivos = glob.glob(os.path.join(directory.dir_cheio_vazio, "*.xls*"))
+        lista_erros = []
         lista = []
     except Exception as e:
         error = validar_erro(e)
-        print(f"ETAPA 1: {error}\n")
+        print(f"Extração: {error}\n")
 
     try:
         for arquivo in arquivos:
-            x = pd.read_excel(arquivo, header= 2)
-            lista.append(x)
-        df_temp = pd.concat(lista, axis= 0, ignore_index= True)
+            names_files = os.path.basename(arquivo)
 
-        df = df_temp.loc[df_temp['Retorno'] != 'SEM RETORNO'].copy()
+            try:
+                x = pd.read_excel(arquivo, header= 2)
+                lista.append(x)
+            except Exception as e:
+                error = validar_erro(e)
+                print("_" * 36)
+                print(f"leituras: {e}")
+                lista_erros.append(names_files)
+                print(f"erro: {names_files}\n")
+                print("_" * 36)
+                continue
+        
+        if lista:
+            df_temp = pd.concat(lista, axis= 0, ignore_index= True)
 
-        df = df.drop(columns= ['Unnamed: 11', 'Unnamed: 12','Unnamed: 13', 'Unnamed: 14'])
-        df = df.dropna(subset=['END'])
+            df = df_temp.loc[df_temp['Retorno'] != 'SEM RETORNO'].copy()
+
+            df = df.drop(columns= ['Unnamed: 11', 'Unnamed: 12','Unnamed: 13', 'Unnamed: 14'])
+            df = df.dropna(subset=['END'])
+            print("\nProcessamento de DataFrames concluído com sucesso.")
+        else:
+            print("\nNenhuma planilha válida foi encontrada para processamento.")
     except Exception as e:
         error = validar_erro(e)
-        print(f"ETAPA 1: {error}\n")
+        print(f"Tratamento: {error}\n")
 
     try:
         df.to_excel(output.cheio_vazio, index=False, sheet_name= "FATO_GERAL")
     except Exception as e:
         error = validar_erro(e)
-        print(f"ETAPA 1: {error}\n")
+        print(f"Carga: {error}\n")
 
 if __name__ == "__main__":
     app = app()
