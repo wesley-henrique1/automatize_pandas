@@ -1,5 +1,7 @@
 from config.config_path import *
 import pandas as pd
+import warnings
+warnings.simplefilter(action='ignore', category=UserWarning)
 
 def validar_erro(e):
     print("=" * 60)
@@ -63,9 +65,9 @@ def agrupar(df, col, id):
             ).reset_index().sort_values(by=col, ascending= False)  
         return temp 
 
-class main:
+class BI_ABST:
+    print("RELATORIO DE ABASTECIMENTO\n")
     try:
-        print("\nEXTRAÇÃO...\n")
         func = pd.read_excel(outros.ou_func, sheet_name='FUNC')
         cons28 = pd.read_excel(power_bi.abst_cons28)
         m_atual28 = pd.read_excel(power_bi.abst_atual28)
@@ -77,8 +79,6 @@ class main:
         print(f"EXTRAÇÃO: {erros}")
 
     try:
-        print("\nTRATAMENTO...")
-
         try:
             m_atual64['CODEMPILHADOR'] = m_atual64['CODEMPILHADOR'].fillna(0)   
             m_atual28 = organizar_df(m_atual28,'DATA',1)
@@ -114,7 +114,6 @@ class main:
             print(f"\nTRATAMENTO_64: {e}\n")
 
         try:
-            print("CONCATENAÇÃO")
             func = func.loc[func['AREA'] == 'EXPEDICAO']
 
             """Ordem de serviço pendentes"""
@@ -129,11 +128,6 @@ class main:
 
             """Ordem de serviço geradas"""
             grupo64 = agrupar(agrupamento, 'DATA', 3)
-            validar2 = grupo64.loc[grupo64['DATA'] == '2025-10-27']
-            print(f"\n{"validar":-^57}")
-            print(validar2)
-            print("-" * 57)
-
             grupo28 = agrupar(os_geradas28, 'DATA', 4)
             geral_total = grupo28.merge(grupo64, left_on='DATA', right_on= 'DATA', how= 'inner').fillna(0)
 
@@ -145,9 +139,7 @@ class main:
         erros = validar_erro(e)
         print(f"\nTRATAMENTO: {erros}\n")
 
-    try:
-        print("\nCARGA...")
-        
+    try:        
         pd_total.to_excel(power_bi.abst_pd, index= False, sheet_name= "OS_PD")
         fim_total.to_excel(power_bi.abst_fim, index= False, sheet_name= "OS_FIM")
         geral_total.to_excel(power_bi.abst_geral, index= False, sheet_name= "OS_GERAL")
@@ -156,7 +148,22 @@ class main:
         erros = validar_erro(e)
         print(f"CARGA {erros}")
 
+    try:
+        data_max28 = concat28['DATA'].max()
+        data_min28 = concat28['DATA'].min()
+
+        data_max64 = concat64['DATA'].max()
+        data_min64 = concat64['DATA'].min()
+        print("=" * 36)
+        print("\nOperação finalizada...")
+        print("Periodo calculdado de cada base:")
+        print(f"8628: {data_min28:%d-%m-%Y} - {data_max28:%d-%m-%Y}")
+        print(f"8664: {data_min64:%d-%m-%Y} - {data_max64:%d-%m-%Y}")
+
+    except Exception as e:
+        erros = validar_erro(e)
+        print(f"Apresentação: {erros}")
 
 if __name__ == "__main__":
-    main()
+    BI_ABST()
     input("\nPressione Enter para finalizar...")
