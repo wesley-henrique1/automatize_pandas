@@ -13,3 +13,9 @@
         visualizar: vai mostrar as bases necessária e a data de ultima altração.
 
         iniciar: vai da inicio aos calculos de cada script vai ser precisso validar as filas para não conflitar os scripts
+
+
+
+
+O PowerShell bloqueou: Liberar scripts só para o seu usuário
+ -> Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
