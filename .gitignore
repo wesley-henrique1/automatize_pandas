@@ -1,8 +1,17 @@
 
-__pycache__
+# Diretórios e arquivos de compilação/cache
+__pycache__/
+DB_ACCESS/
+config/
 
-DB_ACCESS
+# Arquivos temporarios
+*.ipynb
+*.md
+conectar.py
 
-config
-
-config\sugestao.md
+# Dependências (ambientes virtuais)
+# Editores e IDEs (Integração de Ambiente de Desenvolvimento)
+.vscode/
+.meu_ambiente/
+.idea/
+.ipynb_checkpoints
