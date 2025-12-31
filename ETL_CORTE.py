@@ -17,9 +17,9 @@ warnings.simplefilter(action='ignore', category=UserWarning)
 
 class corte:
     def __init__(self):
-        DRIVER = acumulados_db.drive
-        DB_ACUMULADO = acumulados_db.db_acumulado
-        self.NOME_TABELA = acumulados_db.db_8041
+        DRIVER = DB_acumulado.drive
+        DB_ACUMULADO = DB_acumulado.path_acumulado
+        self.NOME_TABELA = DB_acumulado.db_8041
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_ACUMULADO};")
 
 
@@ -205,7 +205,7 @@ class corte:
                     df_novos.drop(columns=['DATA_BRUTA', 'DATA_COMPLETA'], inplace=True)
                     df_novos = df_novos[['DATA','QTDE_PROD', 'QTDE_PED', 'NOME_ARQUIVO']]
 
-                    df_cons = pd.concat([base_cons, df_cons], ignore_index= True).sort_values(by='DATA', ascending= True, axis= 0)
+                    df_cons = pd.concat([base_cons, df_novos], ignore_index= True).sort_values(by='DATA', ascending= True, axis= 0)
                     df_cons = df_cons.drop_duplicates(subset= None, keep= 'first')
             except Exception as e:
                 error = Funcao.validar_erro(e)

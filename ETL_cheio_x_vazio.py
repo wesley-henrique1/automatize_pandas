@@ -2,7 +2,7 @@ import sys
 caminho_env = r'C:\Users\wesley.oliveira\WS_OLIVEIRA\SCRIPTS\.meu_ambiente\Lib\site-packages'
 if caminho_env not in sys.path:
     sys.path.insert(0, caminho_env)
-from config.config_path import directory, acumulados_db
+from config.config_path import directory, DB_acumulado
 from config.fuction import Funcao
 import pandas as pd
 import glob
@@ -14,9 +14,9 @@ from sqlalchemy.engine import URL
 
 class cheio_vazio:
     def __init__(self):
-        DRIVER = acumulados_db.drive
-        DB_ACUMULADO = acumulados_db.db_acumulado
-        self.NOME_TABELA = acumulados_db.tb_vz_ch
+        DRIVER = DB_acumulado.drive
+        DB_ACUMULADO = DB_acumulado.path_acumulado
+        self.NOME_TABELA = DB_ACUMULADO.tb_vz_ch
 
         self.ODBC_CONN_STR = (
             f"DRIVER={DRIVER};"

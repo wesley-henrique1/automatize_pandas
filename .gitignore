@@ -2,7 +2,7 @@
 # Diretórios e arquivos de compilação/cache
 __pycache__/
 DB_ACCESS/
-config/
+JUPYTER/
 
 # Arquivos temporarios
 *.ipynb
@@ -15,3 +15,4 @@ conectar.py
 .meu_ambiente/
 .idea/
 .ipynb_checkpoints
+.vscode
