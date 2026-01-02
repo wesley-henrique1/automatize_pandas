@@ -11,8 +11,7 @@ class acuracidade:
         self.lista_files = [outros.ou_86, wms.wms_07_ger,wms.wms_07_end,relatorios.rel_96]
         print(f"{"ACURACIDADE":_^78}")
         self.carregamento(self.lista_files)
-        self.pipeline()
-    
+        self.pipeline() 
     def carregamento(self, lista_files):
         try:
             print(f"\n{"ARQUIVOS":_^78}")
@@ -21,8 +20,7 @@ class acuracidade:
             print(f"{"_" * 78}")
         except Exception as e:
             self.erro = Funcao.validar_erro(e)
-            print(self.erro)
-        
+            print(self.erro)        
     def pipeline(self):
         try:
             df_bloq = pd.read_excel(self.lista_files[0], usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)'])

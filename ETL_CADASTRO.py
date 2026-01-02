@@ -65,19 +65,19 @@ class cadastro:
                 df['VAL_TIPO'] = np.where((df['TIPO_1'] == '1 - GRANDEZA') & (df['RUA'].isin(chekout)), "DIVERGENCIA", "NORMAL")
 
                 df['VAL_PROD'] = np.where(
-                    (df['TIPO_y'] == 'UN') & (df['FATOR'] == 1), "DIVERGENCIA",
-                    np.where((df['TIPO_y'] == 'CX') & (df['FATOR'] != 1), "DIVERGENCIA", "NORMAL")
+                    (df['TIPO_RUA'] == 'UN') & (df['FATOR'] == 1), "DIVERGENCIA",
+                    np.where((df['TIPO_RUA'] == 'CX') & (df['FATOR'] != 1), "DIVERGENCIA", "NORMAL")
                 )
             except Exception as e:
                 self.erro = Funcao.validar_erro(e)
                 print(f"Validação: {self.erro}")
 
             try:
-                drop_columns = ['CODFILIAL', 'DTULTENT','CODAUXILIAR2','CODAUXILIAR','PK_END', 'PKESTRU', 'PULMAO','PESOBRUTO', 'PESOLIQ','PESOBRUTOMASTER', 'PESOLIQMASTER', 'CODFORNEC', 'FORNECEDOR', 'CODSEC', 'SECAO', 'PRAZOVAL', 'PERCTOLERANCIAVAL','REVENDA', 'USAWMS','LASTROPAL', 'ALTURAPAL','ALTURAM3', 'LARGURAM3', 'COMPRIMENTOM3', 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM', 'TIPO_1', 'TIPO_NORMA', 'TIPOPROD','EMBALAGEM','EMBALAGEMMASTER','extrator','volume_master', 'volume_venda','TIPO_x', 'NIVEL','CARACTERISTICA','GRAMATURA_GR']
+                drop_columns = ['CODFILIAL', 'DTULTENT','CODAUXILIAR2','CODAUXILIAR','PK_END', 'PKESTRU', 'PULMAO','PESOBRUTO', 'PESOLIQ','PESOBRUTOMASTER', 'PESOLIQMASTER', 'CODFORNEC', 'FORNECEDOR', 'CODSEC', 'SECAO', 'PRAZOVAL', 'PERCTOLERANCIAVAL','REVENDA', 'USAWMS','LASTROPAL', 'ALTURAPAL','ALTURAM3', 'LARGURAM3', 'COMPRIMENTOM3', 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM', 'TIPO_1', 'TIPO_NORMA', 'TIPOPROD','EMBALAGEM','EMBALAGEMMASTER','extrator','volume_master', 'volume_venda','TIPO', 'NIVEL','CARACTERISTICA','GRAMATURA_GR']
 
                 df_final = df.drop(columns= drop_columns)
 
-                ordem_primaria = ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', 'TIPO_y','CARACT']
+                ordem_primaria = ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', 'TIPO_RUA','CARACT']
                 capacidade = ['FATOR','QTTOTPAL','CAP', 'P_REP','CONT_AP','FLEG_ABST','STATUS_PROD']
                 validar = ['VAL_CAP', 'VAL_FLEG', 'VAL_CARACT', 'VAL_TIPO', 'VAL_CUBAGEM', 'VAL_PESO', 'VAL_PROD']
                 ordem_completa = ordem_primaria + capacidade + validar
@@ -99,9 +99,9 @@ class cadastro:
         try:
             print("=" * 36)
             contagem = df_final['RUA'].nunique()
-            misto = df_final['RUA'].loc[df_final['TIPO_y'] == 'MISTO'].nunique()
-            caixa = df_final['RUA'].loc[df_final['TIPO_y'] == 'CX'].nunique()
-            unitario = df_final['RUA'].loc[df_final['TIPO_y'] == 'UN'].nunique()
+            misto = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'MISTO'].nunique()
+            caixa = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'CX'].nunique()
+            unitario = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'UN'].nunique()
 
             print(F"{"COMPARATIVO RUA":_^33}")
             print("_" * 33)

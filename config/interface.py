@@ -1,3 +1,4 @@
+from tkinter import messagebox 
 import tkinter as tk
 
 background = "#0C316B"
@@ -8,60 +9,121 @@ fg_label = "#FFFFFF"
 bg_text = "#FFFFFF"
 fg_text = "#000000"
 
-class fleg_app():
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Controle de Inventário")
-        self.root.configure(background= background)
-        self.root.geometry("330x300")
-        self.root.resizable(False, False)
+class auxiliares:
+    def iniciar_processamento(self, objetivo):
+        selecionados = [nome for nome, var in self.estados.items() if var.get()]
+        if not selecionados:
+            objetivo.config(text=f"Nenhuma opção selecionada.")
 
-        self.interface()
+            print("Nenhuma opção selecionada.")
+        else:
+            objetivo.config(text=f"Iniciando processos para: \n{', '.join(selecionados)}",justify= "center", anchor= "w")
+            print(f"Iniciando processos para: {', '.join(selecionados)}")
 
-    def interface(self):
-        self.observacao = tk.Frame(self.root, text="Aguardando códigos...", bg= bg_label, fg= fg_label)
-        self.observacao.place(relx=0.050, rely=0.005, relwidth=0.900, relheight=0.200)
+class Principal(auxiliares):
+    
+    def __init__(self):
+        root = tk.Tk()
+        root.title("Tela principal")
+        root.geometry("450x500")
+        root.config(bg= background)
+        root.iconbitmap(r"config\img\sloth_icon.ico")
 
-        self.text_codprod = tk.Text(self.root, height=10, width=40,bd= 2, bg= bg_text, fg= fg_text)
-        self.text_codprod.place(relx= 0.050, rely= 0.250, relwidth=0.900, relheight=0.500)
+        self.estados = {
+            "Abastecimento": tk.BooleanVar(),
+            "Giro_estatus": tk.BooleanVar(),
+            "Acuracidade": tk.BooleanVar(),
+            "Cadastro": tk.BooleanVar(),
+            "cheio_vazio": tk.BooleanVar(),
+            "Corte": tk.BooleanVar(),
+            "Validar_os": tk.BooleanVar(),
+            "Contagem": tk.BooleanVar()
+        }
 
-        self.contador = tk.Label(self.root, text="Contador: 0/0", bg= bg_label, fg= fg_label)
-        self.contador.place(relx=0.050, rely=0.770, relwidth=0.900, relheight=0.050)
+        self.valor_check = tk.BooleanVar()
+        self.componentes(janela_principal=root)
+        self.buttons(janela_principal= root)
 
-        self.btn_iniciar = tk.Button(self.root, text="Iniciar Transferência", bg= bg_text, fg= fg_text)
-        self.btn_iniciar.place(relx=0.050, rely=0.870, relwidth=0.900, relheight=0.100)
 
-class t3707():
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Transferência de Códigos")
-        self.root.configure(background="#0C316B")
-        self.root.geometry("330x500")
-        self.root.resizable(False, False)
+        root.mainloop()
+        
 
-        self.interface()
+    def componentes(self, janela_principal):
+        # --- 1. CONTAINER ---
+        container = tk.Frame(janela_principal, bg=fg_label)
+        container.place(relx=0.01, rely=0.01, relheight=0.20, relwidth=0.98)
 
-    def interface(self):
-        self.frame = tk.Frame(self.root, bg= bg_label)
-        self.frame.place(relx=0.005, rely=0.005, relwidth=0.99, relheight=0.99)
+        # --- 2. WIDGETS ---
+        self.check_abst = tk.Checkbutton(
+            container, text="Abastecimento"
+            ,bg= fg_label, variable=self.estados["Abastecimento"]
+        )
+        self.check_Giro_estatus = tk.Checkbutton(
+            container, text="Relatorio Giro Status"
+            ,bg= fg_label, variable=self.estados["Giro_estatus"]
+        )
+        self.check_acuracidade = tk.Checkbutton(
+            container, text="Acuracidade"
+            ,bg= fg_label, variable=self.estados["Acuracidade"]
+        )
+        self.check_cadastro = tk.Checkbutton(
+            container, text="Cadastro"
+            ,bg= fg_label, variable=self.estados["Cadastro"]
+        )
+        self.check_ch_vz = tk.Checkbutton(
+            container, text="Relatorio cheio vazio"
+            ,bg= fg_label, variable= self.estados['cheio_vazio']
+        )
+        self.check_corte = tk.Checkbutton(
+            container, text="Relatorio corte"
+            ,bg= fg_label, variable=self.estados["Corte"]
+        )
+        self.check_validar_os = tk.Checkbutton(
+            container, text="Validar ordem de serviço"
+            ,bg= fg_label, variable=self.estados["Validar_os"]
+        )
+        self.check_contagem = tk.Checkbutton(
+            container, text="Contagem inventario"
+            ,bg= fg_label, variable=self.estados["Contagem"]
+        )
 
-        self.text_codprod = tk.Text(self.frame, bg= bg_text, fg= fg_label, bd=2, font=("Verdana", 10))
-        self.text_codprod.place(relx=0.010, rely=0.100, relwidth=0.490, relheight=0.700)
+        self.retorno = tk.Label(
+            janela_principal, bg= bg_text, text="Aguardando inicialização..."
+            ,font=("Verdana", 10), fg= fg_text
+            ,highlightthickness= 2, highlightbackground= fg_text
+            ,justify= "center", anchor= "center"
+            ,padx=10, pady=10
+        )
+        self.retorno.place(relx=0.01, rely=0.32, relwidth=0.98, relheight=0.65)
 
-        self.text_codend = tk.Text(self.frame, bg= bg_text, fg= fg_label, bd=2, font=("Verdana", 10))
-        self.text_codend.place(relx=0.500, rely=0.100, relwidth=0.490, relheight=0.700)
 
-        self.botao = tk.Button(self.root, text="Transferir", bg= bg_text, fg= fg_text, 
-                             bd=3, font=("Verdana", 10))
-        self.botao.place(relx=0.050, rely=0.030, relwidth=0.250, relheight=0.050)
 
-        self.contador = tk.Label(self.root, text="Contador: 0/0", bg= bg_label, fg= fg_label)
-        self.contador.place(relx=0.650, rely=0.030, relwidth=0.260, relheight=0.050)
+        # --- 3. POSICIONAMENTO ---
+        # Coluna 1
+        self.check_abst.place(relx=0.02, rely=0.05)
+        self.check_Giro_estatus.place(relx=0.02, rely=0.35)
+        self.check_acuracidade.place(relx=0.02, rely=0.65)
 
-        self.observacao = tk.Label(self.root, text="ATENÇÃO: \n", bg= bg_label, fg= fg_label, font=("Verdana", 8), bd=4, anchor="nw")
-        self.observacao.place(relx=0.020, rely=0.810, relwidth=0.960, relheight=0.150)
+        # Coluna 2
+        self.check_cadastro.place(relx=0.35, rely=0.05)    
+        self.check_ch_vz.place(relx=0.35, rely=0.35)  
+        self.check_corte.place(relx=0.35, rely=0.65)
+
+        # Coluna 3
+        self.check_validar_os.place(relx=0.68, rely=0.05)
+        self.check_contagem.place(relx=0.68, rely=0.35)
+
+    def buttons(self, janela_principal):
+        bt_iniciar = tk.Button(
+            janela_principal, text= "INICIAR"
+            ,cursor="hand2"
+            ,fg= fg_text, bg= bg_text
+            ,highlightthickness= 2, highlightbackground= bg_label
+            ,command= lambda: self.iniciar_processamento(self.retorno)
+        )
+        bt_iniciar.place(relx=0.01, rely=0.22, relwidth=0.98, relheight=0.08)
+
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = t3707(root)
-    root.mainloop()
+    Principal()
+
