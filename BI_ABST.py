@@ -8,6 +8,7 @@ warnings.simplefilter(action='ignore', category=UserWarning)
 class BI_ABST:
     def __init__(self):
         print(f"{"BI_ABST":_^36}")
+        
         self.pipeline()
         
     def organizar_df(self, df_original, col, id):

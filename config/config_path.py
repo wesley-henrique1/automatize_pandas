@@ -65,8 +65,8 @@ class output:
 
 class power_bi:
     # relatorio de abastecimentos
-    abst_atual64 = r'C:\Users\wesley.oliveira\WS_OLIVEIRA\BASE_DADOS\BASE_8664\12 - DEZEMBRO 8664.xlsx'
-    abst_atual28 = r'C:\Users\wesley.oliveira\WS_OLIVEIRA\BASE_DADOS\BASE_8628\8628 - 12 - DEZEMBRO.xlsx'
+    abst_atual64 = r'c:\Users\wesley.oliveira\WS_OLIVEIRA\BASE_DADOS\BASE_8664\01- JANEIRO 8664.xlsx'
+    abst_atual28 = r'c:\Users\wesley.oliveira\WS_OLIVEIRA\BASE_DADOS\BASE_8628\8628 - 01 - JANEIRO.xlsx'
 
     abst_bonus = r'C:\Users\wesley.oliveira\WS_OLIVEIRA\OUTPUT\BI_ABASTECIMENTO\BONUS_CONT.xlsx'
     abst_fim = r'C:\Users\wesley.oliveira\WS_OLIVEIRA\OUTPUT\BI_ABASTECIMENTO\OS_FIM.xlsx'

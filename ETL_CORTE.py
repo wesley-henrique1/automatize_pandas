@@ -22,6 +22,8 @@ class corte:
         self.NOME_TABELA = DB_acumulado.db_8041
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_ACUMULADO};")
 
+        self.ano = 2026
+
 
         self.pipeline()
         input()
@@ -199,7 +201,7 @@ class corte:
                     df_novos = pd.concat(list_processados, ignore_index= True)
 
                     df_novos['DATA_BRUTA'] = df_novos['NOME_ARQUIVO'].str.extract(r'(\d{2}[-_]\d{2})')
-                    df_novos['DATA_COMPLETA'] = df_novos['DATA_BRUTA'].str.replace('_', '-') + '-2025'
+                    df_novos['DATA_COMPLETA'] = df_novos['DATA_BRUTA'].str.replace('_', '-') + f"-{self.ano}"
                     df_novos['DATA'] = pd.to_datetime(df_novos['DATA_COMPLETA'], format='%d-%m-%Y')
 
                     df_novos.drop(columns=['DATA_BRUTA', 'DATA_COMPLETA'], inplace=True)
