@@ -4,55 +4,55 @@ import numpy as np
 import glob
 import os
 
-def validar_erro(e):
-    print("=" * 60)
-    if isinstance(e, KeyError):
-        return f"KeyError: A coluna ou chave '{e}' não foi encontrada."
-    elif isinstance(e, PermissionError):
-        return "PermissionError: O arquivo está sendo usado ou você não tem permissão para acessá-lo. Por favor, feche o arquivo."
-    elif isinstance(e, TypeError):
-        return f"TypeError: Erro de tipo. Verifique se os dados são do tipo correto. Mensagem original: {e}"
-    elif isinstance(e, ValueError):
-        return f"ValueError: Erro de valor. Mensagem original: {e}"
-    else:
-        return f"Ocorreu um erro inesperado: {e}"
-def loop_df(dir, heade,acum):
-    list_pular = []
-    list_temporaria = []
-    
-    for files in dir:
-        nome_arquivo = os.path.basename(files)      
-        delimitador_1 = os.path.splitext(nome_arquivo)[0]
+class auxiliar:
+    def validar_erro(e):
+        print("=" * 60)
+        if isinstance(e, KeyError):
+            return f"KeyError: A coluna ou chave '{e}' não foi encontrada."
+        elif isinstance(e, PermissionError):
+            return "PermissionError: O arquivo está sendo usado ou você não tem permissão para acessá-lo. Por favor, feche o arquivo."
+        elif isinstance(e, TypeError):
+            return f"TypeError: Erro de tipo. Verifique se os dados são do tipo correto. Mensagem original: {e}"
+        elif isinstance(e, ValueError):
+            return f"ValueError: Erro de valor. Mensagem original: {e}"
+        else:
+            return f"Ocorreu um erro inesperado: {e}"
+    def loop_df(dir, heade,acum):
+        list_pular = []
+        list_temporaria = []
         
-        if nome_arquivo in acum['NAME_FILES']:
-            print(nome_arquivo)
-            list_pular.append(nome_arquivo)
-            continue
-
-        df_temporariro = pd.read_excel(files, header= heade)
-        delimitador_11 = delimitador_1.split("_")[0]
-        df_temporariro['INV'] = int(delimitador_11)
-
-        if "_" in delimitador_1:
-            delimitador_12 = delimitador_1.split("_")[1]
-            df_temporariro['CONTAGEM'] = int(delimitador_12)
+        for files in dir:
+            nome_arquivo = os.path.basename(files)      
+            delimitador_1 = os.path.splitext(nome_arquivo)[0]
             
-        df_temporariro['NAME_FILES'] = nome_arquivo
-        if "Unnamed: 13" in df_temporariro.columns:
-            df_temporariro = df_temporariro.drop(columns= "Unnamed: 13")
-        
-        list_temporaria.append(df_temporariro)
+            if nome_arquivo in acum['NAME_FILES']:
+                print(nome_arquivo)
+                list_pular.append(nome_arquivo)
+                continue
 
-    if not list_temporaria:
-        print(list_pular)
-        return None
-    if list_pular:   
-        print(list_pular)   
-        
-    df_final = pd.concat(list_temporaria, ignore_index= False)
-    return df_final
+            df_temporariro = pd.read_excel(files, header= heade)
+            delimitador_11 = delimitador_1.split("_")[0]
+            df_temporariro['INV'] = int(delimitador_11)
 
-class consolidado_inv:
+            if "_" in delimitador_1:
+                delimitador_12 = delimitador_1.split("_")[1]
+                df_temporariro['CONTAGEM'] = int(delimitador_12)
+                
+            df_temporariro['NAME_FILES'] = nome_arquivo
+            if "Unnamed: 13" in df_temporariro.columns:
+                df_temporariro = df_temporariro.drop(columns= "Unnamed: 13")
+            
+            list_temporaria.append(df_temporariro)
+
+        if not list_temporaria:
+            print(list_pular)
+            return None
+        if list_pular:   
+            print(list_pular)   
+            
+        df_final = pd.concat(list_temporaria, ignore_index= False)
+        return df_final
+class consolidado_inv(auxiliar):
     print(F"\n{"ANALISE DE INVENTARIO":_^78}\n")
     print("=" * 78)
 

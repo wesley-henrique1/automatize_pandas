@@ -1,16 +1,55 @@
 from config.config_path import *
-from config.fuction import Funcao
+import datetime as dt
 import pandas as pd
 import warnings
 warnings.simplefilter(action='ignore', category=UserWarning)
 
-
-class BI_ABST:
-    def __init__(self):
-        print(f"{"BI_ABST":_^36}")
-        
-        self.pipeline()
-        
+class auxiliar:
+    def validar_erro(self, e, etapa):
+        LARGURA = 78
+        if isinstance(e, PermissionError):
+            msg = (
+                f">>> O arquivo de destino está aberto ou você não tem permissão."
+                f">>> Por favor, feche o Excel e tente novamente."
+            )      
+        elif isinstance(e, FileNotFoundError):
+            msg = (
+                f">>> Um dos arquivos de origem não foi encontrado."
+                f">>> Verifique se a pasta 'base_dados' está ao lado do executável."
+            )
+        elif isinstance(e, KeyError):
+            msg = (f">>> A coluna ou chave '{e}' não foi encontrada no DataFrame.")           
+        elif isinstance(e, TypeError):
+            msg = (
+                f">>> Erro de tipo: Operação inválida entre dados incompatíveis."
+                f">>> Detalhe: {e}"
+            )     
+        elif isinstance(e, ValueError):
+            msg = (
+                f">>> Erro de valor: O formato do dado não corresponde ao esperado."
+                f">>> Detalhe: {e}"
+            )
+        elif isinstance(e, NameError):
+            msg = (
+                f">>> Erro de definição: Variável ou função não definida."
+                f">>> Detalhe: {e}"
+            )
+        else:
+            msg = (f">>> Erro não mapeado: {e}")
+        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        log_conteudo = (
+            f"{'='* LARGURA}\n"
+            f"FONTE: BI_ABST.py"
+            f"ETAPA: {etapa} - {agora}\n"
+            f"TIPO: {type(e).__name__}\n"
+            f"MENSAGEM: {msg}\n"
+            f"{'='* LARGURA}\n\n"
+        )
+        try:
+            with open("log_erros.txt", "a", encoding="utf-8") as erros_log:
+                erros_log.write(log_conteudo)
+        except Exception as erro_gravacao:
+            print(f"Não foi possível gravar o log: {erro_gravacao}")
     def organizar_df(self, df_original, col, id):
         df = df_original
         df[col] = pd.to_datetime(df[col]).dt.normalize()
@@ -24,7 +63,6 @@ class BI_ABST:
             df = df[['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR','EMPILHADOR', 'MES']].copy()
             df = df.drop_duplicates(subset=['NUMOS'])
             return df
-        
     def agrupar(self, df, col, id):
         if id == 1:
             temp = df.groupby(col).agg(
@@ -60,6 +98,13 @@ class BI_ABST:
                 ).reset_index().sort_values(by=col, ascending= False)  
             return temp 
 
+class BI_ABST(auxiliar):
+    def __init__(self):
+        print(f"{"BI_ABST":_^36}")
+        
+        self.pipeline()
+        
+    
     def pipeline(self):
         try:
             func = pd.read_excel(outros.ou_func, sheet_name='FUNC')
@@ -69,8 +114,8 @@ class BI_ABST:
             m_atual64 = pd.read_excel(power_bi.abst_atual64)
             configurar_mes = 12
         except Exception as e:
-            self.erro = Funcao.validar_erro(e)
-            print(f"EXTRAÇÃO: {self.erro}")
+            self.validar_erro(e, "EXTRAIR")
+            return False
 
         try:
             try:
@@ -86,8 +131,8 @@ class BI_ABST:
                 pendencia = concat28.loc[concat28['POSICAO'] =='P']
                 os_pedentes28 = self.agrupar(pendencia, ['DATA','CODFUNCGER'], 1)        
             except Exception as e:
-                self.erro = Funcao.validar_erro(e)
-                print(f"\nTRATAMENTO_28: {self.erro}\n")
+                self.validar_erro(e, "TRATAMENTO_28")
+                return False
 
 
             try:
@@ -105,9 +150,8 @@ class BI_ABST:
                 os_finalizadas64 = agrupamento.loc[agrupamento['CODEMPILHADOR'] != 0]
                 os_pedentes64 = agrupamento.loc[agrupamento['CODEMPILHADOR'] == 0]
             except Exception as e:
-                self.erro = Funcao.validar_erro(e)
-                print(f"\nTRATAMENTO_64: {self.erro}\n")
-
+                self.validar_erro(e, "TRATAMENTO_64")
+                return False
             try:
                 func = func.loc[func['AREA'] == 'EXPEDICAO']
 
@@ -129,12 +173,11 @@ class BI_ABST:
 
                 bonus = self.agrupar(concat64, 'DTLANC', 5)
             except Exception as e:
-                self.erro = Funcao.validar_erro(e)
-                print(f"\nTRATAMENTO_CONCATENAÇÃO: {self.erro}\n")
+                self.validar_erro(e, "TRATAMENTO_GERAL")
+                return False
         except Exception as e:
-            self.erro = Funcao.validar_erro(e)
-            print(f"\nTRATAMENTO: {self.erro}\n")
-
+            self.validar_erro(e, "TRATAMENTO")
+            return False
         try:
             
             pd_total.to_excel(power_bi.abst_pd, index= False, sheet_name= "OS_PD")
@@ -142,8 +185,8 @@ class BI_ABST:
             geral_total.to_excel(power_bi.abst_geral, index= False, sheet_name= "OS_GERAL")
             bonus.to_excel(power_bi.abst_bonus, index= False, sheet_name= "BONUS")       
         except Exception as e:
-            self.erro = Funcao.validar_erro(e)
-            print(f"CARGA {self.erro}")
+            self.validar_erro(e, "CARGA")
+            return False
 
         try:
             data_max28 = concat28['DATA'].max()
@@ -156,6 +199,7 @@ class BI_ABST:
             print("Periodo calculdado de cada base:")
             print(f"8628: {data_min28:%d-%m-%Y} - {data_max28:%d-%m-%Y}")
             print(f"8664: {data_min64:%d-%m-%Y} - {data_max64:%d-%m-%Y}")
+
 
         except Exception as e:
             self.erro = Funcao.validar_erro(e)
