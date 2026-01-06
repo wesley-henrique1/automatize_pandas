@@ -1,51 +1,139 @@
 from tkinter import messagebox 
 import tkinter as tk
+import threading
+import datetime as dt
+
+from MODULOS.BI_ABST import BI_ABST
+from MODULOS.BI_Giro_Status import Giro_Status
+from MODULOS.ETL_ACURACIDADE import acuracidade
+from MODULOS.ETL_CADASTRO import cadastro
+from MODULOS.ETL_CHEIO_X_VAZIO import cheio_vazio
+from MODULOS.ETL_CORTE import corte
+from MODULOS.ETL_validar_os import validar_os
 
 background = "#2D2D2D"
 frame_color = "#2D2D2D"
 
 text_color = "#E0E0E0"
 borda_color = "#910083"
+import datetime as dt
+import threading
+from tkinter import messagebox
 
+class Auxiliares:
+    def __init__(self):
+        self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
 
-class auxiliares:
-    def iniciar_processamento(self, objetivo):
-        selecionados = [nome for nome, var in self.estados.items() if var.get()]
-        if not selecionados:
-            messagebox.showwarning("Aviso", "Selecione ao menos uma opção!")
-            return
-        for nome in selecionados:
+    
+    def iniciar_processamento(self):
+        try:
+            selecionados = [nome for nome, var in self.estados.items() if var.get()]
+
+            if not selecionados:
+                messagebox.showwarning("Aviso", "Selecione ao menos uma opção!")
+                return
+
+            self._exibir_mensagem_status(" >>> PROCESSANDO DADOS... POR FAVOR, AGUARDE.")
+            
+            thread = threading.Thread(target=self.task, args=(selecionados,), daemon=True)
+            thread.start()
+            
+        except Exception as e:
+            self.validar_erro(e, "Inicializador")
+
+    def task(self, argumento):
+        lista_de_logs = []
+        for nome in argumento:
             try:
                 classe_do_script = self.scripts_map[nome]
                 instancia = classe_do_script() 
+                temp = instancia.carregamento()
                 
-                # 3. Define quais arquivos ESSE script específico precisa
-                # (Você pode criar uma função que retorna a lista de paths)
-                arquivos = self.obter_paths_especificos(nome)
-                
-                # 4. Chama o carregamento que você criou
-                instancia.carregamento(arquivos)
-                
-                # 5. Se passou pelo carregamento, executa a lógica principal
-                instancia.executar() 
-                
+                if isinstance(temp, list):
+                    lista_de_logs.extend(temp)
+                elif isinstance(temp, dict):
+                    lista_de_logs.append(temp)
+                    
             except Exception as e:
-                messagebox.showerror("Erro Crítico", f"Falha no módulo {nome}:\n{e}")
-                break # Para o processamento se um módulo falhar feio
+                self.validar_erro(e, f"Módulo: {nome}")
+                self.retorno.after(0, lambda n=nome: messagebox.showerror(
+                    "Erro Crítico", f"Falha no módulo {n}:\nVerifique o log_erros.txt"
+                ))
+                break 
+        
+        self.retorno.after(0, lambda: self.atualizar_log(lista_de_logs))
 
-        texto_formatado = ""
-        for i, item in enumerate(selecionados, start=1):
-            texto_formatado += f"{i} - {item}\n"
+    def atualizar_log(self, dados_arquivos):
+        try:
+            dados_validos = [d for d in dados_arquivos if isinstance(d, dict)]
+            
+            if not dados_validos:
+                self._exibir_mensagem_status(" >>> NENHUM DADO PROCESSADO")
+                return
 
-        if not selecionados:
-            objetivo.config(text=f"Nenhuma opção selecionada.")
-        else:
-            objetivo.config(
-                text=f"Iniciando processos para:\n{texto_formatado}"
-                ,justify= "left"
-                ,anchor= "nw"
-            )
-class Principal(auxiliares):
+            conteudo = f"{'ID':^3} | {'ARQUIVO':^41} | {'DATA':^10} | {'HORA':^8}\n"
+            conteudo += f"{'-' * 71}\n"
+
+            for item in dados_validos:
+                nome_arq = str(item.get('ARQUIVO', 'DESCONHECIDO'))
+                if len(nome_arq) > 41:
+                    nome_arq = nome_arq[:38] + "..."
+                
+                linha = (f"{item.get('CONTADOR', 0):02d}  | {nome_arq:<41} | "
+                         f"{item.get('DATA', '--/--/----'):<10} | {item.get('HORAS', '--:--'):<8}\n")
+                conteudo += linha
+
+            self._escrever_no_widget(conteudo)
+
+        except Exception as e:
+            self.validar_erro(e, "Atualizar LOG")
+            self._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
+
+    def _exibir_mensagem_status(self, mensagem):
+        self.retorno.config(state="normal")
+        self.retorno.delete("1.0", "end")
+        self.retorno.insert("1.0", mensagem)
+        self.retorno.tag_add("alerta", "1.0", "end")
+        self.retorno.tag_config("alerta", **self.estilo_alerta)
+        self.retorno.config(state="disabled")
+
+    def _escrever_no_widget(self, texto):
+        self.retorno.config(state="normal")
+        self.retorno.delete("1.0", "end")
+        self.retorno.insert("end", texto)
+        self.retorno.config(state="disabled")
+        self.retorno.see("end")
+
+
+    def validar_erro(self, e, etapa):
+        largura = 78
+        mapeamento = {
+            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
+            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
+            KeyError: f"Coluna ou chave não encontrada: {e}",
+            TypeError: f"Incompatibilidade de tipo: {e}",
+            ValueError: f"Formato de dado inválido: {e}",
+            NameError: f"Variável ou função não definida: {e}"
+        }
+        
+        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
+        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        
+        log_conteudo = (
+            f"{'='* largura}\n"
+            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"TIPO: {type(e).__name__}\n"
+            f"MENSAGEM: {msg}\n"
+            f"{'='* largura}\n\n"
+        )
+
+        try:
+            with open("log_erros.txt", "a", encoding="utf-8") as f:
+                f.write(log_conteudo)
+        except Exception as erro_f:
+            print(f"Falha crítica ao gravar log: {erro_f}")
+
+class Principal(Auxiliares):
     def __init__(self):
         root = tk.Tk()
         root.title("Tela principal")
@@ -64,14 +152,14 @@ class Principal(auxiliares):
             "Contagem": tk.BooleanVar()
         }
         self.scripts_map = {
-            "Abastecimento": BI_ABST,
-            "Giro_estatus": Giro_Status,
-            "Acuracidade": acuracidade,
-            "Cadastro": cadastro,
-            "cheio_vazio": cheio_vazio,
-            "Corte": corte,
-            "Validar_os": app,
-            "Contagem": consolidado_inv
+            "Abastecimento": BI_ABST
+            ,"Giro_estatus": Giro_Status
+            ,"Acuracidade": acuracidade
+            ,"Cadastro": cadastro
+            ,"cheio_vazio": cheio_vazio
+            ,"Corte": corte
+            ,"Validar_os": validar_os
+            # ,"Contagem": consolidado_inv
         }
 
         self.valor_check = tk.BooleanVar()
@@ -183,18 +271,16 @@ class Principal(auxiliares):
         )
 
         # --- 3. WIDGETS RETORNO---
-        self.retorno = tk.Label(
-            janela_principal
-            ,text="Aguardando inicialização..."
-            ,font=("Verdana", 10)
-            ,bg= frame_color
-            ,fg= text_color
-            ,highlightbackground= borda_color
-            ,highlightthickness= 2
-            ,justify= "center"
-            ,anchor= "center"
-            ,padx=10, pady=10
-        )
+        self.retorno = tk.Text(
+            janela_principal,
+            font=("Consolas", 10), # Consolas é melhor para tabelas que Verdana
+            bg=frame_color,
+            fg=text_color,
+            highlightbackground=borda_color,
+            highlightthickness=2,
+            padx=10, pady=10,
+            state="disabled" # Impede o usuário de digitar no log
+        )        
     def buttons(self, janela_principal):
         self.bt_iniciar = tk.Button(
             janela_principal
@@ -206,7 +292,7 @@ class Principal(auxiliares):
             ,highlightthickness=3
             ,relief="solid"
             ,font=("Arial", 10, "bold")
-            ,command=lambda: self.iniciar_processamento(self.retorno)
+            ,command=lambda: self.iniciar_processamento()
         )
     def loc(self):
         self.container.place(relx=0.01, rely=0.01, relheight=0.20, relwidth=0.98)

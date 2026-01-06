@@ -6,32 +6,45 @@ if caminho_env not in sys.path:
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
-from config.config_path import *
+from MODULOS.config_path import *
 from config.fuction import Funcao
+import datetime as dt
 import pandas as pd
 import warnings
 import glob
+import re
 import os 
 warnings.simplefilter(action='ignore', category=UserWarning)
 
+class auxiliar:
+    def validar_erro(self, e, etapa):
+        largura = 78
+        mapeamento = {
+            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
+            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
+            KeyError: f"Coluna ou chave não encontrada: {e}",
+            TypeError: f"Incompatibilidade de tipo: {e}",
+            ValueError: f"Formato de dado inválido: {e}",
+            NameError: f"Variável ou função não definida: {e}"
+        }
+        
+        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
+        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        
+        log_conteudo = (
+            f"{'='* largura}\n"
+            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"TIPO: {type(e).__name__}\n"
+            f"MENSAGEM: {msg}\n"
+            f"{'='* largura}\n\n"
+        )
 
-class corte:
-    def __init__(self):
-        DRIVER = DB_acumulado.drive
-        DB_ACUMULADO = DB_acumulado.path_acumulado
-        self.NOME_TABELA = DB_acumulado.db_8041
-        self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_ACUMULADO};")
-
-        self.ano = 2026
-
-
-        self.pipeline()
-        input()
-
-    def conectar_db(self, coluna,tabela):
-        query_select = f"SELECT {coluna} FROM {tabela}"
-        query_tb = f"SELECT * FROM {tabela}"
-
+        try:
+            with open("log_erros.txt", "a", encoding="utf-8") as f:
+                f.write(log_conteudo)
+        except Exception as erro_f:
+            print(f"Falha crítica ao gravar log: {erro_f}")
+    def cosultar_db(self, consulta):
         try:
             connection_url = URL.create(
             "access+pyodbc",
@@ -39,24 +52,21 @@ class corte:
             )
             self.engine = create_engine(connection_url)
             with self.engine.connect() as connection:
-                result = connection.execute(text(query_select))
+                result = connection.execute(text(consulta))
                 dados_existentes = result.fetchall()
 
-                result_1 = connection.execute(text(query_tb))
-                tb_dados = result_1.fetchall()
-                nomes_colunas = result_1.keys()
-                df_tb_dados = pd.DataFrame(
-                    tb_dados,
+                nomes_colunas = result.keys()
+                db_dados = pd.DataFrame(
+                    dados_existentes,
                     columns=nomes_colunas
                 )
-
                 print("Conectado com sucesso ao Access!")
                 print("DataFrame criado com sucesso!")
         except Exception as e:
-            error = Funcao.validar_erro(e)
-            print(error)
-            
-        return dados_existentes, df_tb_dados        
+            self.validar_erro(e, "Consulta_banco_dados")
+            return False
+
+        return db_dados        
     def atualizar(self, df, tabela):
         try:            
             df.to_sql(
@@ -95,19 +105,81 @@ class corte:
                 print(f"|{data_formatada:<14} {x.QTDE_PED:<14} {x.ped_imperfeito:<14} {x.dia:<14} {x.mes:<14} {x.ano:<4}|")
             print("-" * 88)
             print("\n")            
+    def leitura_41(self, ano, caminho):
+        pasta_files = glob.glob(os.path.join(caminho, "*.xlsx"))
+
+        list_processados = []
+        dic_erros = {}
+
+        for file in pasta_files:
+            names = os.path.basename(file)
+            df_var = pd.read_excel(file)
+            if 'NUMPED' not in df_var.columns:
+                dic_erros['PED_COLUMNS'] = str(names), "COLUNA 'NUMPED' INEXISTENTE"
+                continue
+
+            pedido = df_var['NUMPED'].nunique()
+            produto = df_var['PRODUTO'].nunique()
+
+            data_extraida = re.search(r'(\d{2}[-_]\d{2})', names).group(1)
+            data_arrumada = data_extraida.replace('_', '-') + f"-{ano}"
+            data_final = pd.to_datetime(data_arrumada, format='%d-%m-%Y')
+
+            df_pedidos = pd.DataFrame({
+                "NOME_ARQUIVO" : [names],
+                "QTDE_PED"     : [pedido],
+                "QTDE_PROD"    : [produto],
+                "DATA"         : [data_final]
+            })
+            list_processados.append(df_pedidos)
+
+class corte(auxiliar):
+    def __init__(self):
+        DRIVER = DB_acumulado.drive
+        DB_ACUMULADO = DB_acumulado.path_acumulado
+        self.NOME_TABELA = DB_acumulado.db_8041
+        self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_ACUMULADO};")
+
+        self.ano = dt.datetime.now().year
+
+        self.carregamento()
+        self.pipeline()
 
 
+    def carregamento(self):
+        lista_de_logs = []
+        try:
+            for contador, path in enumerate(self.lista_df, 1):
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                dic_log = {
+                    "CONTADOR" : contador
+                    ,"ARQUIVO" : nome_file
+                    ,"DATA" : data_formatada
+                    ,"HORAS" : horas_formatada
+                }
+                lista_de_logs.append(dic_log)
+            print(lista_de_logs)
+            return lista_de_logs
+        except Exception as e:
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
     def pipeline(self):
         try: # Extração dos dados nessecario 
-            files = glob.glob(os.path.join(directory.dir_41, '*.xls*'))
-            names_db, base_cons = self.conectar_db('NOME_ARQUIVO', self.NOME_TABELA)
-            arquivos_processados = set([tupla[0].strip() for tupla in names_db if tupla[0] is not None])
+            files_pedidos = glob.glob(os.path.join(directory.dir_41, '*.xls*'))
+            query_select = f"SELECT {'NOME_ARQUIVO'} FROM {self.NOME_TABELA}"
+            names_db = list(self.cosultar_db(query_select))
+            arquivos_processados = set(names_db['NOME_ARQUIVO'].str.strip().tolist())
 
             df_corte = pd.read_csv(wms.wms_67,header= None, names= col_names.col_67)
-            print(len(arquivos_processados))
         except Exception as e:
-            error = Funcao.validar_erro(e)
-            print(F"Extração: {error}")
+            self.validar_erro(e, "EXTRAIR")
+            return False
         
         try:
             try:
@@ -120,9 +192,8 @@ class corte:
                     df_corte = Funcao.ajustar_numero(df_corte, col, float)
                 df_corte = df_corte.sort_values(by="data", ascending= True, axis= 0)
             except Exception as e:
-                error = Funcao.validar_erro(e)
-                print(F"\nCortes geral: {error}")
-
+                self.validar_erro(e, "CORTE_GERAL")
+                return False
             try:
                 df_dia = df_corte.loc[df_corte['hora'].between("07:30:00", "18:00:00")].copy()
 
@@ -136,8 +207,8 @@ class corte:
                 var_dia['vl_corte'] = var_dia['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
                 var_dia = var_dia.sort_values(by= 'data', ascending= True, axis= 0)
             except Exception as e:
-                error = Funcao.validar_erro(e)
-                print(F"\nCortes dias: {error}")
+                self.validar_erro(e, "CORTE_DIA")
+                return False
 
             try:
                 df_noite = df_corte.loc[~df_corte['hora'].between("07:30:00", "18:00:00")].copy()
@@ -154,64 +225,64 @@ class corte:
                 var_noite['vl_corte'] = var_noite['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
                 var_noite = var_noite.sort_values(by='data_turno', ascending= True, axis= 0)
             except Exception as e:
-                error = Funcao.validar_erro(e)
-                print(F"\nCorte noite: {error}")
+                self.validar_erro(e, "CORTE_NOITE")
+                return False
 
             try:
-                list_consolidado = []
-                list_processados = []
+                list_achados = []
+                lis_procurados = []
                 dic_erros = {}
 
-                if not files:
-                    print("Nenhum arquivo Excel encontrado na pasta especificada.")
-                
-                for file in files:
+                if not files_pedidos:
+                    aviso = "Nenhum arquivo Excel encontrado na pasta especificada."
+                    
+                for file in files_pedidos:
                     name_file = os.path.basename(file)
                     if name_file in arquivos_processados:
-                        list_consolidado.append(name_file)
+                        list_achados.append(name_file)
                         continue
 
-                    try: # PROCESSAR ARQUIVOS DA PASTA
-                        df_var = pd.read_excel(file)
-                        if 'NUMPED' not in df_var.columns:
-                            dic_erros['PED_COLUMNS'] = str(name_file), "COLUNA 'NUMPED' INEXISTENTE"
-                            continue
+                    df_var = pd.read_excel(file)
+                    if 'NUMPED' not in df_var.columns:
+                        dic_erros['name_file'] = "COLUNA 'NUMPED' INEXISTENTE"
+                        continue
 
-                        pedido = df_var['NUMPED'].nunique()
-                        produto = df_var['PRODUTO'].nunique()
+                    pedido = df_var['NUMPED'].nunique()
+                    produto = df_var['PRODUTO'].nunique()
 
-                        df_pedidos = pd.DataFrame({
-                            "NOME_ARQUIVO" :  [name_file]
-                            ,"QTDE_PED"  : [pedido]
-                            ,"QTDE_PROD" : [produto]
-                        })
-                        list_processados.append(df_pedidos)
-                        
+                    data_extraida = re.search(r'(\d{2}[-_]\d{2})', name_file).group(1)
+                    data_arrumada = data_extraida.replace('_', '-') + f"-{self.ano}"
+                    data_final = pd.to_datetime(data_arrumada, format='%d-%m-%Y')
+                    novo_nome_arquivo = f"PEDIDOS_{data_arrumada}.xlsx"
+
+                    df_pedidos = pd.DataFrame({
+                        "NOME_ARQUIVO" : [novo_nome_arquivo],
+                        "QTDE_PED"     : [pedido],
+                        "QTDE_PROD"    : [produto],
+                        "DATA"         : [data_final]
+                    })
+                    lis_procurados.append(df_pedidos)
+                    try:
+                        novo_caminho_completo = os.path.join(directory.dir_41, novo_nome_arquivo)
+                        os.rename(file, novo_caminho_completo)
+                        print(f"Sucesso: {name_file} -> {novo_nome_arquivo}")
                     except Exception as e:
-                        error = Funcao.validar_erro(e)
-                        dic_erros['PED_PASTA'] = str(name_file), str(error)
-                        continue
+                        print(f"Erro ao renomear {name_file}: Verifique se o arquivo está aberto!")        
+                if lis_procurados:
+                    df_final = pd.concat(lis_procurados, ignore_index=True)
+                    self.atualizar(df_final, self.NOME_TABELA)
+                    query_dados = f"SELECT {'*'} FROM {self.NOME_TABELA}"
 
-                if not list_processados:
-                    df_cons = base_cons.copy()
-                    if 'DATA' in df_cons.columns:
-                        df_cons['DATA'] = pd.to_datetime(df_cons['DATA'], format='%d-%m-%Y', errors='coerce')
-                
-                else:
-                    df_novos = pd.concat(list_processados, ignore_index= True)
+                    db_dados = self.cosultar_db(query_dados)
+                    
 
-                    df_novos['DATA_BRUTA'] = df_novos['NOME_ARQUIVO'].str.extract(r'(\d{2}[-_]\d{2})')
-                    df_novos['DATA_COMPLETA'] = df_novos['DATA_BRUTA'].str.replace('_', '-') + f"-{self.ano}"
-                    df_novos['DATA'] = pd.to_datetime(df_novos['DATA_COMPLETA'], format='%d-%m-%Y')
-
-                    df_novos.drop(columns=['DATA_BRUTA', 'DATA_COMPLETA'], inplace=True)
-                    df_novos = df_novos[['DATA','QTDE_PROD', 'QTDE_PED', 'NOME_ARQUIVO']]
-
-                    df_cons = pd.concat([base_cons, df_novos], ignore_index= True).sort_values(by='DATA', ascending= True, axis= 0)
-                    df_cons = df_cons.drop_duplicates(subset= None, keep= 'first')
+                mensagem_ped = (
+                    f"Total de arquivos na pasta: {len(files_pedidos)}\n"
+                    ,f"Total de arquivos tratados: {len(lis_procurados)}\n"
+                )                                
             except Exception as e:
-                error = Funcao.validar_erro(e)
-                print(F"\nPedidos: {error}")
+                self.validar_erro(e, "PEDIDOS")
+                return False
             
             try:
                 df_div = df_corte[['data','desc','hora', 'n_ped']].copy()
@@ -225,13 +296,13 @@ class corte:
                 var_div['mes'] = var_div['data_turno'].dt.month_name('pt_BR')
                 var_div['ano'] = var_div['data_turno'].dt.year
                 var_div['data_turno'] = pd.to_datetime(var_div['data_turno'], format='%d-%m-%Y')
-                var_div = var_div.merge(df_cons, left_on= 'data_turno', right_on= 'DATA', how= 'left').drop(columns= {'NOME_ARQUIVO', 'QTDE_PROD'}).sort_values(by="data_turno", ascending= True, axis= 0)
+                var_div = var_div.merge(db_dados, left_on= 'data_turno', right_on= 'DATA', how= 'left').drop(columns= {'NOME_ARQUIVO', 'QTDE_PROD'}).sort_values(by="data_turno", ascending= True, axis= 0)
             except Exception as e:
-                error = Funcao.validar_erro(e)
-                print(F"\nDivergencia: {error}")
+                self.validar_erro(e, "DIVERGENCIAS")
+                return False
         except Exception as e:
-            error = Funcao.validar_erro(e)
-            print(F"\nTratamento: {error}")
+            self.validar_erro(e, "TRATAMENTO")
+            return False
 
         try:
             max_ex_dia= df_dia['data'].max() 
@@ -246,23 +317,15 @@ class corte:
                 ex_dia.to_excel(destino_corte, sheet_name= 'ex_dia', index= False)
                 ex_noite.to_excel(destino_corte, sheet_name= 'ex_noite', index= False)
 
-            if list_processados:
-                self.atualizar(df_novos, self.NOME_TABELA)
         except Exception as e:
-            error = Funcao.validar_erro(e)
-            print(F"Carga: {error}")
+                self.validar_erro(e, "CARGA")
+                return False
 
         try:
             print("-" * 88)
             self.loop_apre(var_dia, 1)
             self.loop_apre(var_noite, 2)
             self.loop_apre(var_div, 3)
-
-            if not list_consolidado:
-                print(f"{len(list_processados)} arquivos consolidados com sucesso.\n")
-            elif list_consolidado:
-                print("Nenhum novo arquivo foi consolidado nesta execução.\n")
-
             LARGURA = 88
 
             if dic_erros:

@@ -1,4 +1,4 @@
-from config.config_path import relatorios, outros, output
+from MODULOS.config_path import relatorios, outros, output
 from config.fuction import Funcao
 import pandas as pd
 import numpy as np

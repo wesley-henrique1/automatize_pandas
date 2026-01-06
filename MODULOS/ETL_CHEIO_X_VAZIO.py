@@ -2,7 +2,7 @@ import sys
 caminho_env = r'C:\Users\wesley.oliveira\WS_OLIVEIRA\SCRIPTS\.meu_ambiente\Lib\site-packages'
 if caminho_env not in sys.path:
     sys.path.insert(0, caminho_env)
-from config.config_path import directory, DB_acumulado
+from MODULOS.config_path import directory, DB_acumulado
 from config.fuction import Funcao
 import pandas as pd
 import glob

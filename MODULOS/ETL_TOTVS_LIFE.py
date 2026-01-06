@@ -1,4 +1,4 @@
-from config.config_path import *
+from MODULOS.config_path import *
 import pandas as pd
 
 def validar_erro(e):

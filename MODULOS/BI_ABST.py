@@ -1,4 +1,4 @@
-from config.config_path import *
+from MODULOS.config_path import *
 import datetime as dt
 import pandas as pd
 import warnings

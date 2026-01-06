@@ -4,6 +4,7 @@ class DB_acumulado:
 
     tb_vz_ch = "DB_VZ_CH"
     db_8041 = "DB_8041"
+    db_pedidos = "DB_PEDIDOS"
 
 
 class relatorios:
