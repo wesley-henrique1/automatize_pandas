@@ -1,26 +1,42 @@
-from MODULOS.config_path import *
+from MODULOS.config_path import Output, Relatorios, Wms, ColNames, Outros
+import datetime as dt
 import pandas as pd
 
-def validar_erro(e):
-    print("=" * 60)
-    if isinstance(e, KeyError):
-        return f"KeyError: A coluna ou chave '{e}' não foi encontrada."
-    elif isinstance(e, PermissionError):
-        return "PermissionError: O arquivo está sendo usado ou você não tem permissão para acessá-lo. Por favor, feche o arquivo."
-    elif isinstance(e, TypeError):
-        return f"TypeError: Erro de tipo. Verifique se os dados são do tipo correto. Mensagem original: {e}"
-    elif isinstance(e, ValueError):
-        return f"ValueError: Erro de valor. Mensagem original: {e}"
-    else:
-        return f"Ocorreu um erro inesperado: {e}"  
+def validar_erro(self, e, etapa):
+    largura = 78
+    mapeamento = {
+        PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
+        FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
+        KeyError: f"Coluna ou chave não encontrada: {e}",
+        TypeError: f"Incompatibilidade de tipo: {e}",
+        ValueError: f"Formato de dado inválido: {e}",
+        NameError: f"Variável ou função não definida: {e}"
+    }
+    
+    msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
+    agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+    
+    log_conteudo = (
+        f"{'='* largura}\n"
+        f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+        f"TIPO: {type(e).__name__}\n"
+        f"MENSAGEM: {msg}\n"
+        f"{'='* largura}\n\n"
+    )
+
+    try:
+        with open("log_erros.txt", "a", encoding="utf-8") as f:
+            f.write(log_conteudo)
+    except Exception as erro_f:
+        print(f"Falha crítica ao gravar log: {erro_f}")
 
 def app():
 
     try:
-        df_life = pd.read_excel(outros.ou_life, usecols=['CONFERENCIA','PRODUTO','VALIDADE','PROBLEMA'])
-        df_bonus = pd.read_excel(relatorios.rel_64)
-        df_end = pd.read_csv(wms.wms_07_end, header= None, names= col_names.col_end)
-        df_str = pd.read_excel(outros.ou_end, sheet_name= "AE", usecols= ['COD_END', 'RUA'])
+        df_life = pd.read_excel(Outros.ou_life, usecols=['CONFERENCIA','PRODUTO','VALIDADE','PROBLEMA'])
+        df_bonus = pd.read_excel(Relatorios.rel_64)
+        df_end = pd.read_csv(Wms.wms_07_end, header= None, names= ColNames.col_end)
+        df_str = pd.read_excel(Outros.ou_end, sheet_name= "AE", usecols= ['COD_END', 'RUA'])
     except Exception as e:
         error = validar_erro(e)
         print(F"EXTRAÇÃO: {error}")
@@ -52,7 +68,7 @@ def app():
         print(F"TRATAMENTO: {error}")
 
     try:
-        df_filtrado.to_excel(output.life, sheet_name="DIVERGENCIA", index=False)
+        df_filtrado.to_excel(Output.life, sheet_name="DIVERGENCIA", index=False)
     except Exception as e:
         error = validar_erro(e)
         print(F"CARGA: {error}")

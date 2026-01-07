@@ -1,4 +1,4 @@
-from MODULOS.config_path import directory, outros, wms, relatorios, col_names
+from MODULOS.config_path import Directory, Outros, Wms, Relatorios, ColNames
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -23,7 +23,7 @@ class auxiliar:
         
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: ETL_ACURACIDADE.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
@@ -81,7 +81,7 @@ class auxiliar:
                     TOTAL_BONUS = ("NUMBONUS", "nunique")
                 ).reset_index().sort_values(by=col, ascending= False)  
             return temp 
-    def ajustar_numero(df_copia, coluna, tipo_dados):
+    def ajustar_numero(self,df_copia, coluna, tipo_dados):
         def ajustar(valor):
             if pd.isna(valor) or valor is None:
                 return 0.0
@@ -104,10 +104,8 @@ class auxiliar:
 
 class acuracidade(auxiliar):
     def __init__(self):
-        self.lista_files = [outros.ou_86, wms.wms_07_ger,wms.wms_07_end,relatorios.rel_96]
+        self.lista_files = [Outros.ou_86, Wms.wms_07_ger,Wms.wms_07_end,Relatorios.rel_96]
         
-        self.carregamento()
-        self.pipeline() 
 
     def carregamento(self):
         lista_de_logs = []
@@ -134,8 +132,8 @@ class acuracidade(auxiliar):
     def pipeline(self):
         try:
             df_bloq = pd.read_excel(self.lista_files[0], usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)'])
-            end_ger = pd.read_csv(self.lista_files[1], header= None, names= col_names.col_ger)  
-            df_end = pd.read_csv(self.lista_files[2], header= None, names= col_names.col_end)
+            end_ger = pd.read_csv(self.lista_files[1], header= None, names= ColNames.col_ger)  
+            df_end = pd.read_csv(self.lista_files[2], header= None, names= ColNames.col_end)
             df_prod = pd.read_excel(self.lista_files[3], usecols= ['CODPROD', 'QTUNITCX','QTTOTPAL'])
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
@@ -226,12 +224,13 @@ class acuracidade(auxiliar):
             return False
 
         try:
-            dic = directory.dir_acuracidade
+            dic = Directory.dir_acuracidade
             path_div = os.path.join(dic, "FATO_DIVERGENCIA.xlsx")
             path_prod = os.path.join(dic, "DIM_PROD.xlsx")
 
             df.to_excel(path_div, index= False, sheet_name= 'DIVERGENCIA')
             df_prod.to_excel(path_prod, index= False, sheet_name= 'DIM_PROD')
+            return True
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
             return False

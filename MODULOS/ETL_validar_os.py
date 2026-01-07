@@ -1,4 +1,4 @@
-from MODULOS.config_path import relatorios, col_names, wms, outros, output
+from MODULOS.config_path import Relatorios, ColNames, Wms, Outros, Output
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -52,7 +52,7 @@ class auxiliar:
                 erros_log.write(log_conteudo)
         except Exception as erro_gravacao:
             print(f"Não foi possível gravar o log: {erro_gravacao}")
-    def ajustar_numero(df_copia, coluna, tipo_dados):
+    def ajustar_numero(self, df_copia, coluna, tipo_dados):
         def ajustar(valor):
             if pd.isna(valor) or valor is None:
                 return 0.0
@@ -74,7 +74,7 @@ class auxiliar:
 
 class validar_os(auxiliar):
     def __init__(self):
-        self.lista_files = [outros.ou_func, wms.wms_07_end, relatorios.rel_28]
+        self.lista_files = [Outros.ou_func, Wms.wms_07_end, Relatorios.rel_28]
 
     def carregamento(self):
         lista_de_logs = []
@@ -104,7 +104,7 @@ class validar_os(auxiliar):
             col_28 = ['NUMOS','CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1','NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.', 'FUNCOSFIM','FUNCGER']
 
             df_func = pd.read_excel(self.lista_files[0], sheet_name= 'FUNC', usecols= ['ID_FUNC', 'SETOR'])
-            df_aereo = pd.read_csv(self.lista_files[1], header= None, names= col_names.col_end)
+            df_aereo = pd.read_csv(self.lista_files[1], header= None, names= ColNames.col_end)
             df_28 = pd.read_excel(self.lista_files[2], usecols= col_28)
         except Exception as e:
             self.validar_erro(e, "EXTRAIR")
@@ -157,7 +157,7 @@ class validar_os(auxiliar):
             return False
 
         try:
-            with pd.ExcelWriter(output.rel_os) as destino:
+            with pd.ExcelWriter(Output.rel_os) as destino:
                 df_pd.to_excel(
                     destino
                     ,index= False
@@ -168,6 +168,8 @@ class validar_os(auxiliar):
                     ,index= False
                     ,sheet_name= 'FIM_MESA'
                 )
+
+            return True
         except Exception as e:
             self.validar_erro(e, "CARGA")
             return False

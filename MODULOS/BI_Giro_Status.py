@@ -1,4 +1,4 @@
-from config_path import Relatorios, Outros, Output, ColNames, Wms
+from MODULOS.config_path import Relatorios, Outros, Output, ColNames, Wms
 import pandas as pd
 import numpy as np
 import datetime as dt
@@ -85,7 +85,7 @@ class auxiliar:
 class Giro_Status(auxiliar):
     def __init__(self):
         self.HOJE = dt.datetime.now()
-        self.lista_df = [Relatorios.rel_96,Relatorios.rel_f18,Outros.ou_86, Outros.ou_f18,Wms.Wms_07_end, Outros.ou_end]
+        self.lista_df = [Relatorios.rel_96,Relatorios.rel_f18,Outros.ou_86, Outros.ou_f18,Wms.wms_07_end, Outros.ou_end]
 
         self.carregamento()
         self.pipeline()
@@ -109,7 +109,6 @@ class Giro_Status(auxiliar):
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
-            print(lista_de_logs)
             return lista_de_logs
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")

@@ -1,4 +1,4 @@
-from MODULOS.config_path import relatorios, outros, output
+from MODULOS.config_path import Relatorios, Outros, Output
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -33,7 +33,7 @@ class auxiliar:
                 f.write(log_conteudo)
         except Exception as erro_f:
             print(f"Falha crítica ao gravar log: {erro_f}")
-    def extrair_e_converter_peso(argumento):
+    def extrair_e_converter_peso(self,argumento):
         match = re.search(r'([\d\.,]+)\s*(KG|GR)', str(argumento), re.IGNORECASE)
         if match:
             valor_str = match.group(1).replace(',', '.')
@@ -47,11 +47,7 @@ class auxiliar:
 
 class cadastro(auxiliar):
     def __init__(self):
-        self.lista_files = [relatorios.rel_96, outros.ou_end]
-
-        self.carregamento(self.lista_files)
-        self.pipeline()
-
+        self.lista_files = [Relatorios.rel_96, Outros.ou_end]
 
     def carregamento(self):
         lista_de_logs = []
@@ -136,6 +132,30 @@ class cadastro(auxiliar):
                 validar = ['VAL_CAP', 'VAL_FLEG', 'VAL_CARACT', 'VAL_TIPO', 'VAL_CUBAGEM', 'VAL_PESO', 'VAL_PROD']
                 ordem_completa = ordem_primaria + capacidade + validar
                 df_final = df_final[ordem_completa]
+
+
+                contagem = df_final['RUA'].nunique()
+                misto = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'MISTO'].nunique()
+                caixa = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'CX'].nunique()
+                unitario = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'UN'].nunique()
+
+
+                pront_tt = df_final['CODPROD'].nunique()
+                prod_caixa = df_final['CODPROD'].loc[df_final['FATOR'] == 1].nunique()
+                prod_unitario = df_final['CODPROD'].loc[df_final['FATOR'] != 1].nunique()
+                porcent_cx = round((prod_caixa / pront_tt) * 100, 2)
+                porcent_un = round((prod_unitario / pront_tt) * 100, 2)
+
+                df_amostradinho = pd.DataFrame({
+                    "CONTAGEM":     contagem
+                    ,"MISTO":       misto
+                    ,"CAIXA":       caixa
+                    ,"UNITARIO":    unitario
+                    ,"x": "x"
+                    ,"CONTAGEM":    [pront_tt,100]
+                    ,"CAIXA":       [prod_caixa,porcent_cx]
+                    ,"UNITARIO":    [prod_unitario, porcent_un]
+                })
             except Exception as e:
                 self.validar_erro(e, "CARREGAMENTO")
                 return False
@@ -145,41 +165,13 @@ class cadastro(auxiliar):
 
         try:
             df_final = df_final.sort_values(by=['RUA', 'PREDIO'], ascending= True)
-            df_final.to_excel(output.cadastro, sheet_name= "cadastro", index= False)
+            with pd.ExcelWriter(Output.cadastro) as PL:
+                df_final.to_excel(PL, sheet_name= "cadastro", index= False)
+                df_amostradinho.to_excel(PL, sheet_name= "demostrativo", index= False)
+            return True
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
             return False
-
-        try:
-            print("=" * 36)
-            contagem = df_final['RUA'].nunique()
-            misto = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'MISTO'].nunique()
-            caixa = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'CX'].nunique()
-            unitario = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'UN'].nunique()
-
-            print(F"{"COMPARATIVO RUA":_^33}")
-            print("_" * 33)
-            print(f"{"CONTAGEM":<10}|{"MISTO":<6}|{"CAIXA":<6}|{"UNITARIO":<8}")
-            print(f"{contagem:^10}|{misto:^6}|{caixa:^6}|{unitario:^8}")
-            print("_" * 33)
-
-
-            pront_tt = df_final['CODPROD'].nunique()
-            prod_caixa = df_final['CODPROD'].loc[df_final['FATOR'] == 1].nunique()
-            prod_unitario = df_final['CODPROD'].loc[df_final['FATOR'] != 1].nunique()
-            porcent_cx = round((prod_caixa / pront_tt) * 100, 2)
-            porcent_un = round((prod_unitario / pront_tt) * 100, 2)
-
-            print(F"\n{"COMPARATIVO PROD":_^35}")
-            print("_" * 35)
-            print(f"{"":^4}|{"CONTAGEM":^10}|{"CAIXA":^8}|{"UNITARIO":^10}")
-            print(f"{"qtde":^4}|{pront_tt:^10}|{prod_caixa:^8}|{prod_unitario:^10}")
-            print(f"{"%":^4}|{100:^10}|{porcent_cx:^8}|{porcent_un:^10}")
-            print("_" * 35)
-        except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
-            return False
-
 if __name__ == "__main__":
     cadastro()
     input("Precione a tecla 'enter'...")

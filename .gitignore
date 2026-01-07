@@ -8,7 +8,7 @@ dados_files/
 # Arquivos temporarios
 *.ipynb
 *.md
-conectar.py
+log_erros.txt
 
 # Dependências (ambientes virtuais)
 # Editores e IDEs (Integração de Ambiente de Desenvolvimento)

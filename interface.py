@@ -40,41 +40,46 @@ class Auxiliares:
             
         except Exception as e:
             self.validar_erro(e, "Inicializador")
+            self._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
+
     def task(self, argumento):
         lista_de_logs = []
-        dados_corte = None  # Variável para armazenar os dados se o Corte for selecionado
+        msg_corte = None
+        dic_log = {}
 
         for nome in argumento:
             try:
                 classe_do_script = self.scripts_map[nome]
                 instancia = classe_do_script() 
-                
-                # Aqui supomos que seu método carregamento() retorna os dados
-                temp = instancia.carregamento()
-                
-                # Se for o script de Corte, vamos capturar o retorno para a tela
-                if nome == "Corte":
-                    dados_corte = temp  # Salva o DataFrame/Resultado
-                
-                # Lógica normal de log que você já tem
-                if isinstance(temp, list):
-                    lista_de_logs.extend(temp)
-                elif isinstance(temp, dict):
-                    lista_de_logs.append(temp)
+
+                log_arquivo = instancia.carregamento()
+                status_pipeline = instancia.pipeline()
+                if nome == "Corte" and status_pipeline is not False:
+                    msg_corte = instancia.apresentar()
+                    dic_log[nome] = "Executado"
+                elif status_pipeline:
+                    dic_log[nome] = "Executado"
+                elif not status_pipeline:
+                    dic_log[nome] = "Travado (Erro Interno)"
+
+                if isinstance(log_arquivo, list):
+                    lista_de_logs.extend(log_arquivo)
+                elif isinstance(log_arquivo, dict):
+                    lista_de_logs.append(log_arquivo)
                     
             except Exception as e:
+                dic_log[nome] = "Falha Crítica"
                 self.validar_erro(e, f"Módulo: {nome}")
-                # ... resto do seu código de erro ...
-                break 
+                self._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
 
-        # Ao final do loop, atualiza o log principal
-        self.retorno.after(0, lambda: self.atualizar_log(lista_de_logs))
-        
-        # SE houve dados de corte, abre a segunda tela na Main Thread
-        if dados_corte is not None:
-            # Abre a tela passando o ID 1 (Dia) ou 2 (Noite) conforme sua lógica
-            # Aqui vou passar ID 1 como exemplo
-            self.retorno.after(0, lambda: self.segunda_tela("Relatório de Corte", dados_corte, 1))
+                
+        logs_unicos = {log['ARQUIVO']: log for log in lista_de_logs}.values()
+        self.retorno.after(0, lambda: self.atualizar_log(logs_unicos))
+        resumo = "\n".join([f"{modulo}: {status}" for modulo, status in dic_log.items()])
+        self.retorno.after(0, lambda: messagebox.showinfo("Resumo da Operação", resumo))
+
+        if msg_corte is not None:
+            self.retorno.after(0, lambda: self.segunda_tela("Relatório de Corte", msg_corte))
     def atualizar_log(self, dados_arquivos):
         try:
             dados_validos = [d for d in dados_arquivos if isinstance(d, dict)]
@@ -83,15 +88,15 @@ class Auxiliares:
                 self._exibir_mensagem_status(" >>> NENHUM DADO PROCESSADO")
                 return
 
-            conteudo = f"{'ID':^3} | {'ARQUIVO':^41} | {'DATA':^10} | {'HORA':^8}\n"
-            conteudo += f"{'-' * 71}\n"
+            conteudo = f"{'ID':^3} | {'ARQUIVO':^46} | {'DATA':^10} | {'HORA':^8}\n"
+            conteudo += f"{'-' * 76}\n"
 
             for item in dados_validos:
                 nome_arq = str(item.get('ARQUIVO', 'DESCONHECIDO'))
                 if len(nome_arq) > 41:
-                    nome_arq = nome_arq[:38] + "..."
+                    nome_arq = nome_arq[:43] + "..."
                 
-                linha = (f"{item.get('CONTADOR', 0):02d}  | {nome_arq:<41} | "
+                linha = (f"{item.get('CONTADOR', 0):02d}  | {nome_arq:<46} | "
                          f"{item.get('DATA', '--/--/----'):<10} | {item.get('HORAS', '--:--'):<8}\n")
                 conteudo += linha
 
@@ -100,6 +105,7 @@ class Auxiliares:
         except Exception as e:
             self.validar_erro(e, "Atualizar LOG")
             self._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
+
     def _exibir_mensagem_status(self, mensagem):
         self.retorno.config(state="normal")
         self.retorno.delete("1.0", "end")
@@ -141,35 +147,36 @@ class Auxiliares:
         except Exception as erro_f:
             print(f"Falha crítica ao gravar log: {erro_f}")
 
-    def segunda_tela(self, titulo, df_recebido, id_relatorio):
+    def segunda_tela(self, titulo, conteudo_formatado):
         # Cria a janela pop-up
         janela_info = tk.Toplevel()
         janela_info.title(titulo)
-        janela_info.geometry("950x600")
-        janela_info.configure(bg=self.backgraund)
+        janela_info.geometry("1020x500")
+        janela_info.resizable(False,True)
+        janela_info.configure(bg=background)
         janela_info.iconbitmap(Path_dados.icone_pricipal)
-
-        # Gera o texto formatado usando a função que criamos antes
-        # Note: você deve ter a função loop_apre_texto definida na classe Auxiliares
-        conteudo_formatado = self.loop_apre_texto(df_recebido, id_relatorio)
+        janela_info.attributes("-topmost", True)
 
         txt_area = scrolledtext.ScrolledText(
             janela_info, 
             width=110, height=35, 
             font=("Consolas", 10),
-            bg=self.backgraund, 
-            fg=self.text_color
+            bg= background, 
+            fg= text_color
         )
+        
         txt_area.insert(tk.INSERT, conteudo_formatado)
         txt_area.configure(state='disabled') # Somente leitura
         txt_area.pack(padx=10, pady=10, expand=True, fill="both")
-class Principal(Auxiliares):
+class Principal(Auxiliares):  
     def __init__(self):
+        super().__init__()
         root = tk.Tk()
         root.title("Tela principal")
         root.geometry("580x500")
+        root.resizable(False,True)
         root.config(bg= background)
-        root.iconbitmap(r"config\img\sloth_icon.ico")
+        root.iconbitmap(Path_dados.icone_pricipal)
 
         self.estados = {
             "Abastecimento": tk.BooleanVar(),
@@ -347,7 +354,6 @@ class Principal(Auxiliares):
 
         # botão
         self.bt_iniciar.place(relx=0.01, rely=0.22, relwidth=0.98, relheight=0.08)
-
 
 if __name__ == "__main__":
     Principal()

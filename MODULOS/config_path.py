@@ -19,9 +19,8 @@ class Path_dados:
     icone_segundario = os.path.join(PASTA_STYLE, 'sloth_icon.ico')
     png_jc = os.path.join(PASTA_STYLE, 'JC_Distribuição.png')
     
-
 class DB_acumulado:
-    path_acumulado = r'c:\Users\wesley.oliveira\WS_OLIVEIRA\BASE_DADOS\DB_ACUMULADO.accdb'
+    path_acumulado = os.path.join(PASTA_DADOS, "DB_ACUMULADO.accdb")
     drive = '{Microsoft Access Driver (*.mdb, *.accdb)}'
 
     tb_vz_ch = "DB_VZ_CH"

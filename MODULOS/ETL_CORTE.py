@@ -6,7 +6,9 @@ if caminho_env not in sys.path:
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
-from config_path import *
+# from config_path import DB_acumulado,  Wms, Directory, ColNames, Output
+from MODULOS.config_path import DB_acumulado,  Wms, Directory, ColNames, Output
+
 import datetime as dt
 import pandas as pd
 import warnings
@@ -32,13 +34,14 @@ class auxiliar:
         
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: corte | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
         )
 
         try:
+            print("Verificar log de erro")
             with open("log_erros.txt", "a", encoding="utf-8") as f:
                 f.write(log_conteudo)
         except Exception as erro_f:
@@ -59,11 +62,9 @@ class auxiliar:
                     dados_existentes,
                     columns=nomes_colunas
                 )
-                print("Conectado com sucesso ao Access!")
-                print("DataFrame criado com sucesso!")
         except Exception as e:
             self.validar_erro(e, "Consulta_banco_dados")
-            return False
+            return pd.DataFrame()
 
         return db_dados        
     def atualizar(self, df, tabela):
@@ -74,84 +75,11 @@ class auxiliar:
                 if_exists='append',
                 index=False,
             )
-            print(f"DataFrame salvo com sucesso na tabela '{tabela}' no Access.")
         except Exception as e:
             self.validar_erro(e, "Consulta_banco_dados")
             return False
-            exit()
-    def loop_apre_texto(self, df1, id):
-        texto_final = ""
-        
-        # ID 1 e 2: Relatório de Corte (DIA e NOITE)
-        if id == 1 or id == 2:
-            titulo_turno = "DIA" if id == 1 else "NOITE"
             
-            texto_final += f"{'Relatorio corte':-^88}\n"
-            texto_final += f"{titulo_turno:-^88}\n\n"
-            texto_final += (f"{'DATA':<12} {'VL_CORTE':<12} {'QTDE_CORTE':<10} "
-                            f"{'QTDE_ITEM':<12} {'DIA':<14} {'MÊS':<14} {'ANO':<4}\n")
-            texto_final += "-" * 88 + "\n"
-
-            for x in df1.itertuples():
-                # Verifica qual coluna de data usar baseada no ID
-                data_valor = x.data if id == 1 else x.data_turno
-                
-                # Formata a data se for um objeto datetime
-                if hasattr(data_valor, 'strftime'):
-                    data_valor = data_valor.strftime('%d-%m-%Y')
-                
-                texto_final += (f"|{str(data_valor):<12} {str(x.vl_corte):<12} {str(x.qtde_corte):<10} "
-                                f"{str(x.qtde_item):<12} {str(x.dia):<14} {str(x.mes):<14} {str(x.ano):<4}|\n")
-            
-            texto_final += "-" * 88 + "\n"
-
-        # ID 3: Relatório de Divergência
-        elif id == 3:
-            texto_final += f"{'DIVERGENCIA':-^88}\n\n"
-            texto_final += (f"{'DATA':<14} {'QTDE_PEDIDOS':<14} {'PED_IMPERFEITO':<14} "
-                            f"{'DIA':<14} {'MÊS':<14} {'ANO':<4}\n")
-            texto_final += "-" * 88 + "\n"
-            
-            for x in df1.itertuples():
-                # Formatação segura da data
-                data_f = x.data_turno
-                if hasattr(data_f, 'strftime'):
-                    data_f = data_f.strftime('%d-%m-%Y')
-                
-                texto_final += (f"|{str(data_f):<14} {str(x.QTDE_PED):<14} {str(x.ped_imperfeito):<14} "
-                                f"{str(x.dia):<14} {str(x.mes):<14} {str(x.ano):<4}|\n")
-            
-            texto_final += "-" * 88 + "\n"
-
-        return texto_final
-    def leitura_41(self, ano, caminho):
-        pasta_files = glob.glob(os.path.join(caminho, "*.xlsx"))
-
-        list_processados = []
-        dic_erros = {}
-
-        for file in pasta_files:
-            names = os.path.basename(file)
-            df_var = pd.read_excel(file)
-            if 'NUMPED' not in df_var.columns:
-                dic_erros['PED_COLUMNS'] = str(names), "COLUNA 'NUMPED' INEXISTENTE"
-                continue
-
-            pedido = df_var['NUMPED'].nunique()
-            produto = df_var['PRODUTO'].nunique()
-
-            data_extraida = re.search(r'(\d{2}[-_]\d{2})', names).group(1)
-            data_arrumada = data_extraida.replace('_', '-') + f"-{ano}"
-            data_final = pd.to_datetime(data_arrumada, format='%d-%m-%Y')
-
-            df_pedidos = pd.DataFrame({
-                "NOME_ARQUIVO" : [names],
-                "QTDE_PED"     : [pedido],
-                "QTDE_PROD"    : [produto],
-                "DATA"         : [data_final]
-            })
-            list_processados.append(df_pedidos)
-    def extrair_e_ordenar_data(df, data):
+    def extrair_e_ordenar_data(self, df, data):
         var = df.copy()
 
         var['dia'] = var[data].dt.day_name('pt_BR')
@@ -160,6 +88,26 @@ class auxiliar:
         var[data] = var[data].dt.strftime("%d-%m-%Y")    
         var = var.sort_values(by= data, ascending= True, axis= 0)
         return var
+    def ajustar_numero(self, df_copia, coluna, tipo_dados):
+        def ajustar(valor):
+            if pd.isna(valor) or valor is None:
+                return 0.0
+            valor = str(valor).strip()
+            if isinstance(valor, str):
+                if valor.count('.') >= 1 and ',' in valor: 
+                    valor = valor.replace('.', '').replace(',', '.')
+                elif ',' in valor:
+                    valor = valor.replace(',', '.')
+            try:
+                if tipo_dados == int:
+                    return int(float(valor))
+                elif tipo_dados == float:
+                    return round(float(valor), 2)
+            except (ValueError, TypeError):
+                return 0.0
+        df_copia[coluna] = df_copia[coluna].apply(ajustar)
+        return df_copia
+
 
 class corte(auxiliar):
     def __init__(self):
@@ -170,9 +118,6 @@ class corte(auxiliar):
 
         self.list_path = [Wms.wms_67]
         self.ano = dt.datetime.now().year
-
-        self.carregamento()
-        self.pipeline()
 
 
     def carregamento(self):
@@ -193,7 +138,6 @@ class corte(auxiliar):
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
-            print(lista_de_logs)
             return lista_de_logs
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
@@ -201,8 +145,9 @@ class corte(auxiliar):
     def pipeline(self):
         try: # Extração dos dados nessecario 
             files_pedidos = glob.glob(os.path.join(Directory.dir_41, '*.xls*'))
+
             query_select = f"SELECT {'NOME_ARQUIVO'} FROM {self.NOME_TABELA}"
-            names_db = list(self.cosultar_db(query_select))
+            names_db = self.cosultar_db(query_select)
             arquivos_processados = set(names_db['NOME_ARQUIVO'].str.strip().tolist())
 
             df_corte = pd.read_csv(self.list_path[0],header= None, names= ColNames.col_67)
@@ -300,8 +245,11 @@ class corte(auxiliar):
                 if lis_procurados:
                     df_final = pd.concat(lis_procurados, ignore_index=True)
                     self.atualizar(df_final, self.NOME_TABELA)
-                    query_dados = f"SELECT {'*'} FROM {self.NOME_TABELA}"
 
+                    query_dados = f"SELECT {'*'} FROM {self.NOME_TABELA}"
+                    db_dados = self.cosultar_db(query_dados)
+                else :
+                    query_dados = f"SELECT {'*'} FROM {self.NOME_TABELA}"
                     db_dados = self.cosultar_db(query_dados)
                     
 
@@ -318,14 +266,13 @@ class corte(auxiliar):
                 df_div['data'] = pd.to_datetime(df_div['data'], format= '%d/%m/%Y')
                 df_div["data_turno"] = df_div['data'].copy()
                 df_div.loc[df_div['hora'] < "07:30:00", 'data_turno'] -= pd.Timedelta(days=1)
+
                 var_div = df_div.groupby('data_turno').agg(
                     ped_imperfeito=('n_ped', 'nunique')
                 ).reset_index()
-                var_div['dia'] = var_div['data_turno'].dt.day_name('pt_BR')
-                var_div['mes'] = var_div['data_turno'].dt.month_name('pt_BR')
-                var_div['ano'] = var_div['data_turno'].dt.year
                 var_div['data_turno'] = pd.to_datetime(var_div['data_turno'], format='%d-%m-%Y')
                 var_div = var_div.merge(db_dados, left_on= 'data_turno', right_on= 'DATA', how= 'left').drop(columns= {'NOME_ARQUIVO', 'QTDE_PROD'}).sort_values(by="data_turno", ascending= True, axis= 0)
+                
             except Exception as e:
                 self.validar_erro(e, "DIVERGENCIAS")
                 return False
@@ -345,32 +292,72 @@ class corte(auxiliar):
                 df_corte.to_excel(destino_corte, sheet_name='extrato', index= False)
                 ex_dia.to_excel(destino_corte, sheet_name= 'ex_dia', index= False)
                 ex_noite.to_excel(destino_corte, sheet_name= 'ex_noite', index= False)
-
+            
+            self.dia = var_dia
+            self.noite = var_noite
+            self.divergencia = var_div
+            
         except Exception as e:
                 self.validar_erro(e, "CARGA")
                 return False
-
+    def apresentar(self):
         try:
-            print("-" * 88)
-            self.loop_apre(var_dia, 1)
-            self.loop_apre(var_noite, 2)
-            self.loop_apre(var_div, 3)
-            LARGURA = 88
+            self.dia['data'] = pd.to_datetime(self.dia['data'], format='%d-%m-%Y')
+            self.noite['data_turno'] = pd.to_datetime(self.noite['data_turno'], format='%d-%m-%Y')
+            self.divergencia['DATA'] = pd.to_datetime(self.divergencia['DATA'], format='%d-%m-%Y')
 
-            if dic_erros:
-                print(f"{'RELATÓRIO DE FALHAS':^{LARGURA}}")
-                print("-" * LARGURA)
-                for etapa, detalhe_erro in dic_erros.items():
-                    nome_arquivo = detalhe_erro[0]
-                    descricao_erro = detalhe_erro[1]
-                    print(f"ETAPA DA FALHA: {etapa}")
-                    print(f"  > Arquivo Afetado: {nome_arquivo}")
-                    print(f"  > Causa: {descricao_erro}")
-                    print("-" * LARGURA)
-            print("-" * 88)    
+            apresentar_final = self.dia.merge(self.noite, left_on='data',right_on='data_turno', how='left', suffixes=('_DIA', '_NOITE'))
+            apresentar_final = apresentar_final.merge(self.divergencia, left_on='data',right_on='DATA', how='left')
+        
+            data = ['data']
+            valor_corte =['vl_corte_DIA', 'vl_corte_NOITE']
+            corte = ['qtde_corte_DIA', 'qtde_corte_NOITE']
+            qtde = ['qtde_item_DIA', 'qtde_item_NOITE']
+            pedido_col = ['QTDE_PED', 'ped_imperfeito']
+            col_nova = data + valor_corte + corte + qtde + pedido_col
+            apresentar_final = apresentar_final[col_nova].copy().fillna(0)
+            apresentar_final['dia'] = apresentar_final['data'].dt.day_name('pt_BR')
+            apresentar_final['mes'] = apresentar_final['data'].dt.month_name('pt_BR')
+            apresentar_final['ano'] = apresentar_final['data'].dt.year
+
+            titulo = (
+                f"|{"DATA":^12} |"
+                f" {"VL_CORTE":^19} |" 
+                f" {"QTDE DIA E NOITE":16} |"
+                f" {"CORTE DIA E NOITE":^17} |" 
+                f" {"PEDIDO":^10} |"
+                f" {"DIVERGENCIA":^11} |"
+                f" {"DIA":<13} |"
+                f" {"MES":<10} |"
+                f" {"ANO":<4} |\n"
+                f"{"-" * 139}\n"
+
+            )
+            tabela = ""
+            for celula in apresentar_final.itertuples():
+                data_formatada = celula.data.strftime('%d-%m-%Y') if hasattr(celula.data, 'strftime') else str(celula.data)
+                
+                celula_vl = f"{celula.vl_corte_DIA:^8} - {celula.vl_corte_NOITE:^8}"
+                celula_qt = f"{celula.qtde_corte_DIA:^4} - {celula.qtde_corte_NOITE:^4}"
+                celula_item = f"{celula.qtde_item_DIA:^4} - {celula.qtde_item_NOITE:^4}"
+                linhas = (
+                    f"|{data_formatada:<12} |"
+                    f" {celula_vl:^18} |"
+                    f" {celula_qt:^16} |"
+                    f" {celula_item:^17} |"
+                    f" {str(celula.QTDE_PED):^10} |"
+                    f" {str(celula.ped_imperfeito):^11} |"
+                    f" {celula.dia:<13} |"
+                    f" {celula.mes:<10} |"
+                    f" {celula.ano:<4} |\n"
+                )
+                tabela += linhas
+
+            return titulo + tabela
         except Exception as e:
-            error = self.validar_erro(e)
-            print(F"Apresentação: {error}")
+            self.validar_erro(e, "CARGA")
+            return False
+        
 
 if __name__ == '__main__':
     corte()

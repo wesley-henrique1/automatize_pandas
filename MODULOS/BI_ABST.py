@@ -1,5 +1,6 @@
-from MODULOS.config_path import *
+from MODULOS.config_path import Power_BI,Outros
 import datetime as dt
+import os
 import pandas as pd
 import warnings
 warnings.simplefilter(action='ignore', category=UserWarning)
@@ -21,7 +22,7 @@ class auxiliar:
         
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: BI_ABST.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
@@ -80,18 +81,40 @@ class auxiliar:
             return temp 
 
 class BI_ABST(auxiliar):
-    def __init__(self):        
-
-        self.pipeline()
+    def __init__(self):
+        self.list_path = [Outros.ou_func, Power_BI.abst_atual28, Power_BI.abst_atual64]
+        self.carregamento()
         
-    
+    def carregamento(self):
+        lista_de_logs = []
+        try:
+            for contador, path in enumerate(self.list_path, 1):
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                dic_log = {
+                    "CONTADOR" : contador
+                    ,"ARQUIVO" : nome_file
+                    ,"DATA" : data_formatada
+                    ,"HORAS" : horas_formatada
+                }
+                lista_de_logs.append(dic_log)
+            return lista_de_logs
+        except Exception as e:
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
+
     def pipeline(self):
         try:
-            func = pd.read_excel(outros.ou_func, sheet_name='FUNC')
-            cons28 = pd.read_excel(power_bi.abst_cons28)
-            m_atual28 = pd.read_excel(power_bi.abst_atual28)
-            cons64 = pd.read_excel(power_bi.abst_cons64)
-            m_atual64 = pd.read_excel(power_bi.abst_atual64)
+            func = pd.read_excel(Outros.ou_func, sheet_name='FUNC')
+            cons28 = pd.read_excel(Power_BI.abst_cons28)
+            m_atual28 = pd.read_excel(Power_BI.abst_atual28)
+            cons64 = pd.read_excel(Power_BI.abst_cons64)
+            m_atual64 = pd.read_excel(Power_BI.abst_atual64)
             configurar_mes = 12
         except Exception as e:
             self.validar_erro(e, "EXTRAIR")

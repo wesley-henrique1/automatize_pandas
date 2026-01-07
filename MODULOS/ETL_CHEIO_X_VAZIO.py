@@ -2,7 +2,7 @@ import sys
 caminho_env = r'C:\Users\wesley.oliveira\WS_OLIVEIRA\SCRIPTS\.meu_ambiente\Lib\site-packages'
 if caminho_env not in sys.path:
     sys.path.insert(0, caminho_env)
-from MODULOS.config_path import directory, DB_acumulado
+from MODULOS.config_path import Directory, DB_acumulado
 from config.fuction import Funcao
 import pandas as pd
 import glob
@@ -63,7 +63,7 @@ class cheio_vazio:
         try:  # EXTRAÇÃO DOS DADOS
             dados_db = self.conectar_db(self.NOME_TABELA)
 
-            pasta_files = glob.glob(os.path.join(directory.dir_cheio_vazio, "*xls*"))
+            pasta_files = glob.glob(os.path.join(Directory.dir_cheio_vazio, "*xls*"))
 
             list_processado = []
             list_files_db = []
