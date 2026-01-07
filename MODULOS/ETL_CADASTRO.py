@@ -1,33 +1,87 @@
 from MODULOS.config_path import relatorios, outros, output
-from config.fuction import Funcao
+import datetime as dt
 import pandas as pd
 import numpy as np
 import warnings
+import os
+import re
 warnings.simplefilter(action='ignore', category=UserWarning)
+class auxiliar:
+    def validar_erro(self, e, etapa):
+        largura = 78
+        mapeamento = {
+            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
+            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
+            KeyError: f"Coluna ou chave não encontrada: {e}",
+            TypeError: f"Incompatibilidade de tipo: {e}",
+            ValueError: f"Formato de dado inválido: {e}",
+            NameError: f"Variável ou função não definida: {e}"
+        }
+        
+        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
+        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        
+        log_conteudo = (
+            f"{'='* largura}\n"
+            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"TIPO: {type(e).__name__}\n"
+            f"MENSAGEM: {msg}\n"
+            f"{'='* largura}\n\n"
+        )
+        try:
+            with open("log_erros.txt", "a", encoding="utf-8") as f:
+                f.write(log_conteudo)
+        except Exception as erro_f:
+            print(f"Falha crítica ao gravar log: {erro_f}")
+    def extrair_e_converter_peso(argumento):
+        match = re.search(r'([\d\.,]+)\s*(KG|GR)', str(argumento), re.IGNORECASE)
+        if match:
+            valor_str = match.group(1).replace(',', '.')
+            valor = float(valor_str)
+            unidade = match.group(2).upper()
+            if unidade == 'KG':
+                return valor * 1000
+            elif unidade == 'GR':
+                return valor     
+        return None
 
-class cadastro:
+class cadastro(auxiliar):
     def __init__(self):
         self.lista_files = [relatorios.rel_96, outros.ou_end]
+
         self.carregamento(self.lista_files)
         self.pipeline()
 
 
-    def carregamento(self, lista_files):
+    def carregamento(self):
+        lista_de_logs = []
         try:
-            print(f"\n{"ARQUIVOS":_^78}")
-            for i, path in enumerate(lista_files):
-                self.validar = Funcao.leitura(path, i+1)
-            print(f"{"_" * 78}")
+            for contador, path in enumerate(self.lista_files, 1):
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                dic_log = {
+                    "CONTADOR" : contador
+                    ,"ARQUIVO" : nome_file
+                    ,"DATA" : data_formatada
+                    ,"HORAS" : horas_formatada
+                }
+                lista_de_logs.append(dic_log)
+            return lista_de_logs
         except Exception as e:
-            self.erro = Funcao.validar_erro(e)
-            print(self.erro)
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
     def pipeline(self):
         try:
             base = pd.read_excel(self.lista_files[0])
             endereco = pd.read_excel(self.lista_files[1], sheet_name= 'STATUS')
         except Exception as e:
-                self.erro = Funcao.validar_erro(e)
-                print(f"extrair: {self.erro}")
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
 
         try:
             TEMP = base.merge(endereco, left_on= 'RUA', right_on= 'RUA', how= 'inner')
@@ -51,7 +105,7 @@ class cadastro:
             df['STATUS_PROD'] = np.where((df['CONT_AP'] <= 2) & (df['PK_END'].isin(list_int)), "INT", 
                 np.where(df['CONT_AP'] > 3,"DIV", "VAL"))
 
-            df['GRAMATURA_GR'] = df["DESCRICAO"].apply(Funcao.extrair_e_converter_peso).fillna(0)
+            df['GRAMATURA_GR'] = df["DESCRICAO"].apply(self.extrair_e_converter_peso).fillna(0)
             chekout = [13, 27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
             
             try:
@@ -69,8 +123,8 @@ class cadastro:
                     np.where((df['TIPO_RUA'] == 'CX') & (df['FATOR'] != 1), "DIVERGENCIA", "NORMAL")
                 )
             except Exception as e:
-                self.erro = Funcao.validar_erro(e)
-                print(f"Validação: {self.erro}")
+                self.validar_erro(e, "CARREGAMENTO")
+                return False
 
             try:
                 drop_columns = ['CODFILIAL', 'DTULTENT','CODAUXILIAR2','CODAUXILIAR','PK_END', 'PKESTRU', 'PULMAO','PESOBRUTO', 'PESOLIQ','PESOBRUTOMASTER', 'PESOLIQMASTER', 'CODFORNEC', 'FORNECEDOR', 'CODSEC', 'SECAO', 'PRAZOVAL', 'PERCTOLERANCIAVAL','REVENDA', 'USAWMS','LASTROPAL', 'ALTURAPAL','ALTURAM3', 'LARGURAM3', 'COMPRIMENTOM3', 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM', 'TIPO_1', 'TIPO_NORMA', 'TIPOPROD','EMBALAGEM','EMBALAGEMMASTER','extrator','volume_master', 'volume_venda','TIPO', 'NIVEL','CARACTERISTICA','GRAMATURA_GR']
@@ -83,18 +137,18 @@ class cadastro:
                 ordem_completa = ordem_primaria + capacidade + validar
                 df_final = df_final[ordem_completa]
             except Exception as e:
-                self.erro = Funcao.validar_erro(e)
-                print(f"Validação: {self.erro}")
+                self.validar_erro(e, "CARREGAMENTO")
+                return False
         except Exception as e:
-                self.erro = Funcao.validar_erro(e)
-                print(f"tratamento: {self.erro}")
+                self.validar_erro(e, "CARREGAMENTO")
+                return False
 
         try:
             df_final = df_final.sort_values(by=['RUA', 'PREDIO'], ascending= True)
             df_final.to_excel(output.cadastro, sheet_name= "cadastro", index= False)
         except Exception as e:
-                self.erro = Funcao.validar_erro(e)
-                print(f"carga: {self.erro}")
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
 
         try:
             print("=" * 36)
@@ -123,12 +177,13 @@ class cadastro:
             print(f"{"%":^4}|{100:^10}|{porcent_cx:^8}|{porcent_un:^10}")
             print("_" * 35)
         except Exception as e:
-                self.erro = Funcao.validar_erro(e)
-                print(f"apresentar: {self.erro}")
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
 
 if __name__ == "__main__":
     cadastro()
     input("Precione a tecla 'enter'...")
 
 
+    
     

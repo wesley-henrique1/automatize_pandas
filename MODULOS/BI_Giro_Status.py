@@ -1,4 +1,4 @@
-from MODULOS.config_path import relatorios, outros, output, col_names, wms
+from config_path import Relatorios, Outros, Output, ColNames, Wms
 import pandas as pd
 import numpy as np
 import datetime as dt
@@ -6,52 +6,34 @@ import warnings
 import os
 warnings.simplefilter(action='ignore', category=UserWarning)
 
+
 class auxiliar:
     def validar_erro(self, e, etapa):
-        LARGURA = 78
-        if isinstance(e, PermissionError):
-            msg = (
-                f">>> O arquivo de destino está aberto ou você não tem permissão."
-                f">>> Por favor, feche o Excel e tente novamente."
-            )      
-        elif isinstance(e, FileNotFoundError):
-            msg = (
-                f">>> Um dos arquivos de origem não foi encontrado."
-                f">>> Verifique se a pasta 'base_dados' está ao lado do executável."
-            )
-        elif isinstance(e, KeyError):
-            msg = (f">>> A coluna ou chave '{e}' não foi encontrada no DataFrame.")           
-        elif isinstance(e, TypeError):
-            msg = (
-                f">>> Erro de tipo: Operação inválida entre dados incompatíveis."
-                f">>> Detalhe: {e}"
-            )     
-        elif isinstance(e, ValueError):
-            msg = (
-                f">>> Erro de valor: O formato do dado não corresponde ao esperado."
-                f">>> Detalhe: {e}"
-            )
-        elif isinstance(e, NameError):
-            msg = (
-                f">>> Erro de definição: Variável ou função não definida."
-                f">>> Detalhe: {e}"
-            )
-        else:
-            msg = (f">>> Erro não mapeado: {e}")
+        largura = 78
+        mapeamento = {
+            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
+            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
+            KeyError: f"Coluna ou chave não encontrada: {e}",
+            TypeError: f"Incompatibilidade de tipo: {e}",
+            ValueError: f"Formato de dado inválido: {e}",
+            NameError: f"Variável ou função não definida: {e}"
+        }
+        
+        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
         agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        
         log_conteudo = (
-            f"{'='* LARGURA}\n"
-            f"FONTE: BI_Giro_Status.py"
-            f"ETAPA: {etapa} - {agora}\n"
+            f"{'='* largura}\n"
+            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
-            f"{'='* LARGURA}\n\n"
+            f"{'='* largura}\n\n"
         )
         try:
-            with open("log_erros.txt", "a", encoding="utf-8") as erros_log:
-                erros_log.write(log_conteudo)
-        except Exception as erro_gravacao:
-            print(f"Não foi possível gravar o log: {erro_gravacao}")
+            with open("log_erros.txt", "a", encoding="utf-8") as f:
+                f.write(log_conteudo)
+        except Exception as erro_f:
+            print(f"Falha crítica ao gravar log: {erro_f}")
     def organizar_df(self, df_original, col, id):
         df = df_original
         df[col] = pd.to_datetime(df[col]).dt.normalize()
@@ -103,7 +85,7 @@ class auxiliar:
 class Giro_Status(auxiliar):
     def __init__(self):
         self.HOJE = dt.datetime.now()
-        self.lista_df = [relatorios.rel_96,relatorios.rel_f18,outros.ou_86, outros.ou_f18,wms.wms_07_end, outros.ou_end]
+        self.lista_df = [Relatorios.rel_96,Relatorios.rel_f18,Outros.ou_86, Outros.ou_f18,Wms.Wms_07_end, Outros.ou_end]
 
         self.carregamento()
         self.pipeline()
@@ -161,7 +143,7 @@ class Giro_Status(auxiliar):
             ESTOQUE_F11 = pd.read_excel(self.lista_df[2], usecols= colunas_estoque)
             ESTOQUE_F18 = pd.read_excel(self.lista_df[3], usecols= colunas_estoque)
 
-            ENDERECO = pd.read_csv(self.lista_df[4], header= None, names= col_names.col_end)
+            ENDERECO = pd.read_csv(self.lista_df[4], header= None, names= ColNames.col_end)
             BASE_END = pd.read_excel(self.lista_df[5], sheet_name= "AE", usecols= ['COD_END', 'RUA'])
         except Exception as e:
             self.validar_erro(e, "EXTRAIR")
@@ -305,7 +287,7 @@ class Giro_Status(auxiliar):
                 lista_dfs[i] = lista_dfs[i].sort_values(by=['RUA', 'PREDIO'], ascending=True)
             FL_zerado, FL_ativo, ativo_zerado, ger_parado, aereo_filtrado = lista_dfs
             
-            with pd.ExcelWriter(output.controle_fl) as feijao:
+            with pd.ExcelWriter(Output.controle_fl) as feijao:
                 FL_zerado.to_excel(feijao, index= False, sheet_name= "FL_ZERADO")
                 FL_ativo.to_excel(feijao, index= False, sheet_name= "FL_ATIVO")
                 ativo_zerado.to_excel(feijao, index= False, sheet_name= "ATIVO_ZERADO")

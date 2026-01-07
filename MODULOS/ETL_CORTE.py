@@ -6,8 +6,7 @@ if caminho_env not in sys.path:
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
-from MODULOS.config_path import *
-from config.fuction import Funcao
+from config_path import *
 import datetime as dt
 import pandas as pd
 import warnings
@@ -77,34 +76,54 @@ class auxiliar:
             )
             print(f"DataFrame salvo com sucesso na tabela '{tabela}' no Access.")
         except Exception as e:
-            error = Funcao.validar_erro(e)
-            print(error)
+            self.validar_erro(e, "Consulta_banco_dados")
+            return False
             exit()
-    def loop_apre(self, df1, id):
-        if   id == 1:
-            print(f"\n{"Relatorio corte":-^88}\n")
-            print(f"{"DIA":-^88}\n",
-                f"{"DATA":<12} {"VL_CORTE":<12} {"QTDE_CORTE":<10} {"QTDE_ITEM":<12} {"DIA":<14} {"MÊS":<14} {"ANO":<4}")
+    def loop_apre_texto(self, df1, id):
+        texto_final = ""
+        
+        # ID 1 e 2: Relatório de Corte (DIA e NOITE)
+        if id == 1 or id == 2:
+            titulo_turno = "DIA" if id == 1 else "NOITE"
+            
+            texto_final += f"{'Relatorio corte':-^88}\n"
+            texto_final += f"{titulo_turno:-^88}\n\n"
+            texto_final += (f"{'DATA':<12} {'VL_CORTE':<12} {'QTDE_CORTE':<10} "
+                            f"{'QTDE_ITEM':<12} {'DIA':<14} {'MÊS':<14} {'ANO':<4}\n")
+            texto_final += "-" * 88 + "\n"
+
             for x in df1.itertuples():
-                print(f"|{x.data:<12} {x.vl_corte:<12} {x.qtde_corte:<10} {x.qtde_item:<12} {x.dia:<14} {x.mes:<14} {x.ano:<4}|")
-            print("-" * 88)
-            print("\n")
-        elif id == 2:
-            print(f"{"NOITE":-^88}\n",
-                f"{"DATA":<12} {"VL_CORTE":<12} {"QTDE_CORTE":<10} {"QTDE_ITEM":<12} {"DIA":<14} {"MÊS":<14} {"ANO":<4}")
-            for x in df1.itertuples():
-                print(f"|{x.data_turno:<12} {x.vl_corte:<12} {x.qtde_corte:<10} {x.qtde_item:<12} {x.dia:<14} {x.mes:<14} {x.ano:<4}|")
-            print("-" * 88)
-            print("\n")
+                # Verifica qual coluna de data usar baseada no ID
+                data_valor = x.data if id == 1 else x.data_turno
+                
+                # Formata a data se for um objeto datetime
+                if hasattr(data_valor, 'strftime'):
+                    data_valor = data_valor.strftime('%d-%m-%Y')
+                
+                texto_final += (f"|{str(data_valor):<12} {str(x.vl_corte):<12} {str(x.qtde_corte):<10} "
+                                f"{str(x.qtde_item):<12} {str(x.dia):<14} {str(x.mes):<14} {str(x.ano):<4}|\n")
+            
+            texto_final += "-" * 88 + "\n"
+
+        # ID 3: Relatório de Divergência
         elif id == 3:
-            print(f"{"DIVERGENCIA":-^88}\n",
-                f"{"DATA":<14} {"QTDE_PEDIDOS":<14} {"PED_IMPERFEITO":<14} {"DIA":<14} {"MÊS":<14} {"ANO":<4}")
+            texto_final += f"{'DIVERGENCIA':-^88}\n\n"
+            texto_final += (f"{'DATA':<14} {'QTDE_PEDIDOS':<14} {'PED_IMPERFEITO':<14} "
+                            f"{'DIA':<14} {'MÊS':<14} {'ANO':<4}\n")
+            texto_final += "-" * 88 + "\n"
             
             for x in df1.itertuples():
-                data_formatada = x.data_turno.strftime('%d-%m-%Y')
-                print(f"|{data_formatada:<14} {x.QTDE_PED:<14} {x.ped_imperfeito:<14} {x.dia:<14} {x.mes:<14} {x.ano:<4}|")
-            print("-" * 88)
-            print("\n")            
+                # Formatação segura da data
+                data_f = x.data_turno
+                if hasattr(data_f, 'strftime'):
+                    data_f = data_f.strftime('%d-%m-%Y')
+                
+                texto_final += (f"|{str(data_f):<14} {str(x.QTDE_PED):<14} {str(x.ped_imperfeito):<14} "
+                                f"{str(x.dia):<14} {str(x.mes):<14} {str(x.ano):<4}|\n")
+            
+            texto_final += "-" * 88 + "\n"
+
+        return texto_final
     def leitura_41(self, ano, caminho):
         pasta_files = glob.glob(os.path.join(caminho, "*.xlsx"))
 
@@ -132,6 +151,15 @@ class auxiliar:
                 "DATA"         : [data_final]
             })
             list_processados.append(df_pedidos)
+    def extrair_e_ordenar_data(df, data):
+        var = df.copy()
+
+        var['dia'] = var[data].dt.day_name('pt_BR')
+        var['mes'] = var[data].dt.month_name('pt_BR')
+        var['ano'] = var[data].dt.year
+        var[data] = var[data].dt.strftime("%d-%m-%Y")    
+        var = var.sort_values(by= data, ascending= True, axis= 0)
+        return var
 
 class corte(auxiliar):
     def __init__(self):
@@ -140,6 +168,7 @@ class corte(auxiliar):
         self.NOME_TABELA = DB_acumulado.db_8041
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_ACUMULADO};")
 
+        self.list_path = [Wms.wms_67]
         self.ano = dt.datetime.now().year
 
         self.carregamento()
@@ -149,7 +178,7 @@ class corte(auxiliar):
     def carregamento(self):
         lista_de_logs = []
         try:
-            for contador, path in enumerate(self.lista_df, 1):
+            for contador, path in enumerate(self.list_path, 1):
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
 
@@ -171,12 +200,12 @@ class corte(auxiliar):
             return False
     def pipeline(self):
         try: # Extração dos dados nessecario 
-            files_pedidos = glob.glob(os.path.join(directory.dir_41, '*.xls*'))
+            files_pedidos = glob.glob(os.path.join(Directory.dir_41, '*.xls*'))
             query_select = f"SELECT {'NOME_ARQUIVO'} FROM {self.NOME_TABELA}"
             names_db = list(self.cosultar_db(query_select))
             arquivos_processados = set(names_db['NOME_ARQUIVO'].str.strip().tolist())
 
-            df_corte = pd.read_csv(wms.wms_67,header= None, names= col_names.col_67)
+            df_corte = pd.read_csv(self.list_path[0],header= None, names= ColNames.col_67)
         except Exception as e:
             self.validar_erro(e, "EXTRAIR")
             return False
@@ -189,7 +218,7 @@ class corte(auxiliar):
 
                 col_ajustar = ['vl_corte', 'qtde_corte']
                 for col in col_ajustar:
-                    df_corte = Funcao.ajustar_numero(df_corte, col, float)
+                    df_corte = self.ajustar_numero(df_corte, col, float)
                 df_corte = df_corte.sort_values(by="data", ascending= True, axis= 0)
             except Exception as e:
                 self.validar_erro(e, "CORTE_GERAL")
@@ -203,7 +232,7 @@ class corte(auxiliar):
                             qtde_item=('desc', 'nunique')
                         ).reset_index()
                 
-                var_dia = Funcao.extrair_e_ordenar_data(var_dia, 'data')
+                var_dia = self.extrair_e_ordenar_data(var_dia, 'data')
                 var_dia['vl_corte'] = var_dia['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
                 var_dia = var_dia.sort_values(by= 'data', ascending= True, axis= 0)
             except Exception as e:
@@ -221,7 +250,7 @@ class corte(auxiliar):
                     qtde_corte=('qtde_corte', 'count'),
                     qtde_item=('desc', 'nunique')
                 ).reset_index()
-                var_noite = Funcao.extrair_e_ordenar_data(var_noite, 'data_turno')
+                var_noite = self.extrair_e_ordenar_data(var_noite, 'data_turno')
                 var_noite['vl_corte'] = var_noite['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
                 var_noite = var_noite.sort_values(by='data_turno', ascending= True, axis= 0)
             except Exception as e:
@@ -263,7 +292,7 @@ class corte(auxiliar):
                     })
                     lis_procurados.append(df_pedidos)
                     try:
-                        novo_caminho_completo = os.path.join(directory.dir_41, novo_nome_arquivo)
+                        novo_caminho_completo = os.path.join(Directory.dir_41, novo_nome_arquivo)
                         os.rename(file, novo_caminho_completo)
                         print(f"Sucesso: {name_file} -> {novo_nome_arquivo}")
                     except Exception as e:
@@ -312,7 +341,7 @@ class corte(auxiliar):
             ex_noite = df_noite.loc[df_noite['data_turno'] == max_ex_noite].copy()
             
 
-            with pd.ExcelWriter(output.corte) as destino_corte:
+            with pd.ExcelWriter(Output.corte) as destino_corte:
                 df_corte.to_excel(destino_corte, sheet_name='extrato', index= False)
                 ex_dia.to_excel(destino_corte, sheet_name= 'ex_dia', index= False)
                 ex_noite.to_excel(destino_corte, sheet_name= 'ex_noite', index= False)
@@ -340,7 +369,7 @@ class corte(auxiliar):
                     print("-" * LARGURA)
             print("-" * 88)    
         except Exception as e:
-            error = Funcao.validar_erro(e)
+            error = self.validar_erro(e)
             print(F"Apresentação: {error}")
 
 if __name__ == '__main__':

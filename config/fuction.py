@@ -65,7 +65,7 @@ class Funcao:
     def director(files, argumento):
         director = glob.glob(os.path.join(files, argumento))
         lista = []
-        for arquivo in director:
+        for arquivo in director:    
             x = pd.read_csv(arquivo, header= None)
             lista.append(x)
         df_temp = pd.concat(lista, axis= 0, ignore_index= True)

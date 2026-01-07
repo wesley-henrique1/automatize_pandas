@@ -3,6 +3,7 @@
 __pycache__/
 DB_ACCESS/
 JUPYTER/
+dados_files/
 
 # Arquivos temporarios
 *.ipynb

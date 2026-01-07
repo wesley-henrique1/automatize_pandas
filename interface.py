@@ -1,4 +1,4 @@
-from tkinter import messagebox 
+from tkinter import messagebox, scrolledtext
 import tkinter as tk
 import threading
 import datetime as dt
@@ -10,6 +10,7 @@ from MODULOS.ETL_CADASTRO import cadastro
 from MODULOS.ETL_CHEIO_X_VAZIO import cheio_vazio
 from MODULOS.ETL_CORTE import corte
 from MODULOS.ETL_validar_os import validar_os
+from MODULOS.config_path import Path_dados
 
 background = "#2D2D2D"
 frame_color = "#2D2D2D"
@@ -24,7 +25,6 @@ class Auxiliares:
     def __init__(self):
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
 
-    
     def iniciar_processamento(self):
         try:
             selecionados = [nome for nome, var in self.estados.items() if var.get()]
@@ -40,15 +40,23 @@ class Auxiliares:
             
         except Exception as e:
             self.validar_erro(e, "Inicializador")
-
     def task(self, argumento):
         lista_de_logs = []
+        dados_corte = None  # Variável para armazenar os dados se o Corte for selecionado
+
         for nome in argumento:
             try:
                 classe_do_script = self.scripts_map[nome]
                 instancia = classe_do_script() 
+                
+                # Aqui supomos que seu método carregamento() retorna os dados
                 temp = instancia.carregamento()
                 
+                # Se for o script de Corte, vamos capturar o retorno para a tela
+                if nome == "Corte":
+                    dados_corte = temp  # Salva o DataFrame/Resultado
+                
+                # Lógica normal de log que você já tem
                 if isinstance(temp, list):
                     lista_de_logs.extend(temp)
                 elif isinstance(temp, dict):
@@ -56,13 +64,17 @@ class Auxiliares:
                     
             except Exception as e:
                 self.validar_erro(e, f"Módulo: {nome}")
-                self.retorno.after(0, lambda n=nome: messagebox.showerror(
-                    "Erro Crítico", f"Falha no módulo {n}:\nVerifique o log_erros.txt"
-                ))
+                # ... resto do seu código de erro ...
                 break 
-        
-        self.retorno.after(0, lambda: self.atualizar_log(lista_de_logs))
 
+        # Ao final do loop, atualiza o log principal
+        self.retorno.after(0, lambda: self.atualizar_log(lista_de_logs))
+        
+        # SE houve dados de corte, abre a segunda tela na Main Thread
+        if dados_corte is not None:
+            # Abre a tela passando o ID 1 (Dia) ou 2 (Noite) conforme sua lógica
+            # Aqui vou passar ID 1 como exemplo
+            self.retorno.after(0, lambda: self.segunda_tela("Relatório de Corte", dados_corte, 1))
     def atualizar_log(self, dados_arquivos):
         try:
             dados_validos = [d for d in dados_arquivos if isinstance(d, dict)]
@@ -88,7 +100,6 @@ class Auxiliares:
         except Exception as e:
             self.validar_erro(e, "Atualizar LOG")
             self._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
-
     def _exibir_mensagem_status(self, mensagem):
         self.retorno.config(state="normal")
         self.retorno.delete("1.0", "end")
@@ -96,15 +107,12 @@ class Auxiliares:
         self.retorno.tag_add("alerta", "1.0", "end")
         self.retorno.tag_config("alerta", **self.estilo_alerta)
         self.retorno.config(state="disabled")
-
     def _escrever_no_widget(self, texto):
         self.retorno.config(state="normal")
         self.retorno.delete("1.0", "end")
         self.retorno.insert("end", texto)
         self.retorno.config(state="disabled")
         self.retorno.see("end")
-
-
     def validar_erro(self, e, etapa):
         largura = 78
         mapeamento = {
@@ -133,6 +141,28 @@ class Auxiliares:
         except Exception as erro_f:
             print(f"Falha crítica ao gravar log: {erro_f}")
 
+    def segunda_tela(self, titulo, df_recebido, id_relatorio):
+        # Cria a janela pop-up
+        janela_info = tk.Toplevel()
+        janela_info.title(titulo)
+        janela_info.geometry("950x600")
+        janela_info.configure(bg=self.backgraund)
+        janela_info.iconbitmap(Path_dados.icone_pricipal)
+
+        # Gera o texto formatado usando a função que criamos antes
+        # Note: você deve ter a função loop_apre_texto definida na classe Auxiliares
+        conteudo_formatado = self.loop_apre_texto(df_recebido, id_relatorio)
+
+        txt_area = scrolledtext.ScrolledText(
+            janela_info, 
+            width=110, height=35, 
+            font=("Consolas", 10),
+            bg=self.backgraund, 
+            fg=self.text_color
+        )
+        txt_area.insert(tk.INSERT, conteudo_formatado)
+        txt_area.configure(state='disabled') # Somente leitura
+        txt_area.pack(padx=10, pady=10, expand=True, fill="both")
 class Principal(Auxiliares):
     def __init__(self):
         root = tk.Tk()
@@ -294,6 +324,7 @@ class Principal(Auxiliares):
             ,font=("Arial", 10, "bold")
             ,command=lambda: self.iniciar_processamento()
         )
+
     def loc(self):
         self.container.place(relx=0.01, rely=0.01, relheight=0.20, relwidth=0.98)
 

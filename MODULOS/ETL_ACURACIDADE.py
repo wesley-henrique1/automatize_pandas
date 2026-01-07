@@ -8,50 +8,32 @@ warnings.simplefilter(action='ignore', category=UserWarning)
 
 class auxiliar:
     def validar_erro(self, e, etapa):
-        LARGURA = 78
-        if isinstance(e, PermissionError):
-            msg = (
-                f">>> O arquivo de destino está aberto ou você não tem permissão."
-                f">>> Por favor, feche o Excel e tente novamente."
-            )      
-        elif isinstance(e, FileNotFoundError):
-            msg = (
-                f">>> Um dos arquivos de origem não foi encontrado."
-                f">>> Verifique se a pasta 'base_dados' está ao lado do executável."
-            )
-        elif isinstance(e, KeyError):
-            msg = (f">>> A coluna ou chave '{e}' não foi encontrada no DataFrame.")           
-        elif isinstance(e, TypeError):
-            msg = (
-                f">>> Erro de tipo: Operação inválida entre dados incompatíveis."
-                f">>> Detalhe: {e}"
-            )     
-        elif isinstance(e, ValueError):
-            msg = (
-                f">>> Erro de valor: O formato do dado não corresponde ao esperado."
-                f">>> Detalhe: {e}"
-            )
-        elif isinstance(e, NameError):
-            msg = (
-                f">>> Erro de definição: Variável ou função não definida."
-                f">>> Detalhe: {e}"
-            )
-        else:
-            msg = (f">>> Erro não mapeado: {e}")
+        largura = 78
+        mapeamento = {
+            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
+            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
+            KeyError: f"Coluna ou chave não encontrada: {e}",
+            TypeError: f"Incompatibilidade de tipo: {e}",
+            ValueError: f"Formato de dado inválido: {e}",
+            NameError: f"Variável ou função não definida: {e}"
+        }
+        
+        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
         agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        
         log_conteudo = (
-            f"{'='* LARGURA}\n"
-            f"FONTE:ETL_ACURACIDADE.py.py"
-            f"ETAPA: {etapa} - {agora}\n"
+            f"{'='* largura}\n"
+            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
-            f"{'='* LARGURA}\n\n"
+            f"{'='* largura}\n\n"
         )
         try:
-            with open("log_erros.txt", "a", encoding="utf-8") as erros_log:
-                erros_log.write(log_conteudo)
-        except Exception as erro_gravacao:
-            print(f"Não foi possível gravar o log: {erro_gravacao}")
+            with open("log_erros.txt", "a", encoding="utf-8") as f:
+                f.write(log_conteudo)
+        except Exception as erro_f:
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
     def organizar_df(self, df_original, col, id):
         df = df_original
         df[col] = pd.to_datetime(df[col]).dt.normalize()
@@ -99,12 +81,32 @@ class auxiliar:
                     TOTAL_BONUS = ("NUMBONUS", "nunique")
                 ).reset_index().sort_values(by=col, ascending= False)  
             return temp 
+    def ajustar_numero(df_copia, coluna, tipo_dados):
+        def ajustar(valor):
+            if pd.isna(valor) or valor is None:
+                return 0.0
+            valor = str(valor).strip()
+            if isinstance(valor, str):
+                if valor.count('.') >= 1 and ',' in valor: 
+                    valor = valor.replace('.', '').replace(',', '.')
+                elif ',' in valor:
+                    valor = valor.replace(',', '.')
+            try:
+                if tipo_dados == int:
+                    return int(float(valor))
+                elif tipo_dados == float:
+                    return round(float(valor), 2)
+            except (ValueError, TypeError):
+                return 0.0
+        df_copia[coluna] = df_copia[coluna].apply(ajustar)
+        return df_copia
 
 
-class acuracidade:
+class acuracidade(auxiliar):
     def __init__(self):
         self.lista_files = [outros.ou_86, wms.wms_07_ger,wms.wms_07_end,relatorios.rel_96]
-        print(f"{"ACURACIDADE":_^78}")
+        
+        self.carregamento()
         self.pipeline() 
 
     def carregamento(self):
@@ -129,7 +131,6 @@ class acuracidade:
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
             return False
-
     def pipeline(self):
         try:
             df_bloq = pd.read_excel(self.lista_files[0], usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)'])
@@ -137,8 +138,8 @@ class acuracidade:
             df_end = pd.read_csv(self.lista_files[2], header= None, names= col_names.col_end)
             df_prod = pd.read_excel(self.lista_files[3], usecols= ['CODPROD', 'QTUNITCX','QTTOTPAL'])
         except Exception as e:
-            self.erro = Funcao.validar_erro(e)
-            print(f"Etapa extração: {self.erro}")
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
             
         try:        
             dic_end_ger = {'COD' : "CODPROD"}
@@ -155,7 +156,7 @@ class acuracidade:
             
             col_ajuste = ['CODPROD','ENTRADA', 'SAIDA', 'DISP','QTDE']
             for col in col_ajuste:
-                df_end = Funcao.ajustar_numero(df_end, col, int)
+                df_end = self.ajustar_numero(df_end, col, int)
             
             grupo_end = df_end.groupby('CODPROD').agg(
                 SAIDA = ('SAIDA', 'sum'),
@@ -175,7 +176,7 @@ class acuracidade:
 
             col_ajuste = ['ENDERECO', 'GERENCIAL','PICKING','CAP','QTUNITCX','ENTRADA', 'SAIDA', 'QTDE']
             for col in col_ajuste:
-                df = Funcao.ajustar_numero(df, col, float)
+                df = self.ajustar_numero(df, col, float)
 
             df['DIF_UN'] = df['ENDERECO'].astype(float) - df['GERENCIAL'].astype(float)
             df['DIF_CX'] = (df['DIF_UN'] / df['QTUNITCX'].astype(int)).round(1)
@@ -221,8 +222,8 @@ class acuracidade:
             df_prod = df_prod.drop_duplicates(subset=None, keep='first')
             df = df.sort_values(by=['RUA', 'PREDIO'], ascending= True)
         except Exception as e:
-            erro = Funcao.validar_erro(e)
-            print(f"Etapa tratamento: {erro}")
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
 
         try:
             dic = directory.dir_acuracidade
@@ -232,8 +233,8 @@ class acuracidade:
             df.to_excel(path_div, index= False, sheet_name= 'DIVERGENCIA')
             df_prod.to_excel(path_prod, index= False, sheet_name= 'DIM_PROD')
         except Exception as e:
-            erro = Funcao.validar_erro(e)
-            print(f"Etapa carga: {erro}")
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
 
 if __name__ == '__main__':
     acuracidade()

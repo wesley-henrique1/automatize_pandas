@@ -6,50 +6,31 @@ warnings.simplefilter(action='ignore', category=UserWarning)
 
 class auxiliar:
     def validar_erro(self, e, etapa):
-        LARGURA = 78
-        if isinstance(e, PermissionError):
-            msg = (
-                f">>> O arquivo de destino está aberto ou você não tem permissão."
-                f">>> Por favor, feche o Excel e tente novamente."
-            )      
-        elif isinstance(e, FileNotFoundError):
-            msg = (
-                f">>> Um dos arquivos de origem não foi encontrado."
-                f">>> Verifique se a pasta 'base_dados' está ao lado do executável."
-            )
-        elif isinstance(e, KeyError):
-            msg = (f">>> A coluna ou chave '{e}' não foi encontrada no DataFrame.")           
-        elif isinstance(e, TypeError):
-            msg = (
-                f">>> Erro de tipo: Operação inválida entre dados incompatíveis."
-                f">>> Detalhe: {e}"
-            )     
-        elif isinstance(e, ValueError):
-            msg = (
-                f">>> Erro de valor: O formato do dado não corresponde ao esperado."
-                f">>> Detalhe: {e}"
-            )
-        elif isinstance(e, NameError):
-            msg = (
-                f">>> Erro de definição: Variável ou função não definida."
-                f">>> Detalhe: {e}"
-            )
-        else:
-            msg = (f">>> Erro não mapeado: {e}")
+        largura = 78
+        mapeamento = {
+            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
+            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
+            KeyError: f"Coluna ou chave não encontrada: {e}",
+            TypeError: f"Incompatibilidade de tipo: {e}",
+            ValueError: f"Formato de dado inválido: {e}",
+            NameError: f"Variável ou função não definida: {e}"
+        }
+        
+        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
         agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        
         log_conteudo = (
-            f"{'='* LARGURA}\n"
-            f"FONTE: BI_ABST.py"
-            f"ETAPA: {etapa} - {agora}\n"
+            f"{'='* largura}\n"
+            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
-            f"{'='* LARGURA}\n\n"
+            f"{'='* largura}\n\n"
         )
         try:
-            with open("log_erros.txt", "a", encoding="utf-8") as erros_log:
-                erros_log.write(log_conteudo)
-        except Exception as erro_gravacao:
-            print(f"Não foi possível gravar o log: {erro_gravacao}")
+            with open("log_erros.txt", "a", encoding="utf-8") as f:
+                f.write(log_conteudo)
+        except Exception as erro_f:
+            print(f"Falha crítica ao gravar log: {erro_f}")
     def organizar_df(self, df_original, col, id):
         df = df_original
         df[col] = pd.to_datetime(df[col]).dt.normalize()
@@ -99,9 +80,8 @@ class auxiliar:
             return temp 
 
 class BI_ABST(auxiliar):
-    def __init__(self):
-        print(f"{"BI_ABST":_^36}")
-        
+    def __init__(self):        
+
         self.pipeline()
         
     
@@ -199,8 +179,6 @@ class BI_ABST(auxiliar):
             print("Periodo calculdado de cada base:")
             print(f"8628: {data_min28:%d-%m-%Y} - {data_max28:%d-%m-%Y}")
             print(f"8664: {data_min64:%d-%m-%Y} - {data_max64:%d-%m-%Y}")
-
-
         except Exception as e:
             self.erro = Funcao.validar_erro(e)
             print(f"Apresentação: {self.erro}")
