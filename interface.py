@@ -96,8 +96,9 @@ class Auxiliares:
                 if len(nome_arq) > 41:
                     nome_arq = nome_arq[:43] + "..."
                 
-                linha = (f"{item.get('CONTADOR', 0):02d}  | {nome_arq:<46} | "
-                         f"{item.get('DATA', '--/--/----'):<10} | {item.get('HORAS', '--:--'):<8}\n")
+                linha = (
+                    f"{item.get('CONTADOR', 0):02d}  | {nome_arq:<46} | "
+                    f"{item.get('DATA', '--/--/----'):<10} | {item.get('HORAS', '--:--'):<8}\n")
                 conteudo += linha
 
             self._escrever_no_widget(conteudo)

@@ -147,14 +147,12 @@ class cadastro(auxiliar):
                 porcent_un = round((prod_unitario / pront_tt) * 100, 2)
 
                 df_amostradinho = pd.DataFrame({
-                    "CONTAGEM":     contagem
-                    ,"MISTO":       misto
-                    ,"CAIXA":       caixa
-                    ,"UNITARIO":    unitario
-                    ,"x": "x"
-                    ,"CONTAGEM":    [pront_tt,100]
-                    ,"CAIXA":       [prod_caixa,porcent_cx]
-                    ,"UNITARIO":    [prod_unitario, porcent_un]
+                    "CATEGORIA": ["RUAS", "PRODUTOS", "PERC_PROD (%)"],
+                    "CONTAGEM":  [contagem, pront_tt, 100],
+                    "MISTO":     [misto, 0, 0], # Misto não tem cálculo de produto no seu código, preenchi com 0
+                    "CAIXA":     [caixa, prod_caixa, porcent_cx],
+                    "UNITARIO":  [unitario, prod_unitario, porcent_un],
+                    "x":         ["x", "x", "x"]
                 })
             except Exception as e:
                 self.validar_erro(e, "CARREGAMENTO")
