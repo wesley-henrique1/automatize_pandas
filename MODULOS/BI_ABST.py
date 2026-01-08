@@ -1,4 +1,4 @@
-from MODULOS.config_path import Power_BI,Outros
+from config_path import Power_BI,Outros
 import datetime as dt
 import os
 import pandas as pd
@@ -84,6 +84,7 @@ class BI_ABST(auxiliar):
     def __init__(self):
         self.list_path = [Outros.ou_func, Power_BI.abst_atual28, Power_BI.abst_atual64]
         self.carregamento()
+        self.pipeline()
         
     def carregamento(self):
         lista_de_logs = []
@@ -110,12 +111,14 @@ class BI_ABST(auxiliar):
 
     def pipeline(self):
         try:
+            print("inicio")
             func = pd.read_excel(Outros.ou_func, sheet_name='FUNC')
             cons28 = pd.read_excel(Power_BI.abst_cons28)
             m_atual28 = pd.read_excel(Power_BI.abst_atual28)
             cons64 = pd.read_excel(Power_BI.abst_cons64)
             m_atual64 = pd.read_excel(Power_BI.abst_atual64)
             configurar_mes = 12
+            print("passou 1")
         except Exception as e:
             self.validar_erro(e, "EXTRAIR")
             return False
@@ -132,7 +135,8 @@ class BI_ABST(auxiliar):
                 os_finalizadas28 = self.agrupar(concat28, ['DATA','CODFUNCOS'], 1)
 
                 pendencia = concat28.loc[concat28['POSICAO'] =='P']
-                os_pedentes28 = self.agrupar(pendencia, ['DATA','CODFUNCGER'], 1)        
+                os_pedentes28 = self.agrupar(pendencia, ['DATA','CODFUNCGER'], 1) 
+                print("passou 2")
             except Exception as e:
                 self.validar_erro(e, "TRATAMENTO_28")
                 return False
@@ -152,6 +156,7 @@ class BI_ABST(auxiliar):
 
                 os_finalizadas64 = agrupamento.loc[agrupamento['CODEMPILHADOR'] != 0]
                 os_pedentes64 = agrupamento.loc[agrupamento['CODEMPILHADOR'] == 0]
+                print("passou 3")
             except Exception as e:
                 self.validar_erro(e, "TRATAMENTO_64")
                 return False
@@ -175,6 +180,7 @@ class BI_ABST(auxiliar):
                 geral_total = grupo28.merge(grupo64, left_on='DATA', right_on= 'DATA', how= 'left').fillna(0)
 
                 bonus = self.agrupar(concat64, 'DTLANC', 5)
+                print("passou 4")
             except Exception as e:
                 self.validar_erro(e, "TRATAMENTO_GERAL")
                 return False
@@ -182,16 +188,11 @@ class BI_ABST(auxiliar):
             self.validar_erro(e, "TRATAMENTO")
             return False
         try:
-            
-            pd_total.to_excel(power_bi.abst_pd, index= False, sheet_name= "OS_PD")
-            fim_total.to_excel(power_bi.abst_fim, index= False, sheet_name= "OS_FIM")
-            geral_total.to_excel(power_bi.abst_geral, index= False, sheet_name= "OS_GERAL")
-            bonus.to_excel(power_bi.abst_bonus, index= False, sheet_name= "BONUS")       
-        except Exception as e:
-            self.validar_erro(e, "CARGA")
-            return False
+            pd_total.to_excel(Power_BI.abst_pd, index= False, sheet_name= "OS_PD")
+            fim_total.to_excel(Power_BI.abst_fim, index= False, sheet_name= "OS_FIM")
+            geral_total.to_excel(Power_BI.abst_geral, index= False, sheet_name= "OS_GERAL")
+            bonus.to_excel(Power_BI.abst_bonus, index= False, sheet_name= "BONUS")       
 
-        try:
             data_max28 = concat28['DATA'].max()
             data_min28 = concat28['DATA'].min()
 
@@ -202,10 +203,10 @@ class BI_ABST(auxiliar):
             print("Periodo calculdado de cada base:")
             print(f"8628: {data_min28:%d-%m-%Y} - {data_max28:%d-%m-%Y}")
             print(f"8664: {data_min64:%d-%m-%Y} - {data_max64:%d-%m-%Y}")
+            print("passou 5")
         except Exception as e:
-            self.erro = Funcao.validar_erro(e)
-            print(f"Apresentação: {self.erro}")
-
+            self.validar_erro(e, "CARGA")
+            return False
 if __name__ == "__main__":
     BI_ABST()
     input("\nPressione Enter para finalizar...")

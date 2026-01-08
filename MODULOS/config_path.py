@@ -50,7 +50,7 @@ class Wms:
     wms_82     = os.path.join(PASTA_DADOS, '1782 - Relatório de curva ABC de produtos.xls')
 
 class Outros:
-    ou_corte = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.1 Analise de Cortes\2025\# 2 Acompanhamento de produtos cortados.xlsx'
+    ou_corte = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.1 Analise de Cortes\2026\# 2 Acompanhamento de produtos cortados.xlsx'
     
     _fixar = os.path.join(PASTA_DADOS, 'BASE_FIXAR')
     ou_end   = os.path.join(_fixar, 'BASE_ENDEREÇOS.xlsx')
@@ -137,9 +137,10 @@ class Power_BI:
     # Relatório de Cheio x Vazio (Histórico/Acumulado)
     ch_vz = os.path.join(_base_dados, 'ACUMULADOS', 'acumulado_cheio_vazio.xlsx')
 class Ipynb:
+    _base = os.path.join(BASE_DIR, "OUTPUT")
     # Salvando os resultados na raiz do projeto (BASE_DIR)
-    retorno   = os.path.join(BASE_DIR, 'RESULTADO.xlsx')
-    retorno_1 = os.path.join(BASE_DIR, 'RESULTADO_FINAL.xlsx')
+    retorno   = os.path.join(_base, 'RESULTADO.xlsx')
+    retorno_1 = os.path.join(_base, 'RESULTADO_FINAL.xlsx')
 
 class ColNames:
     # Listas de colunas não precisam de caminhos, então apenas mantemos a estrutura

@@ -9,9 +9,12 @@ dados_files/
 *.ipynb
 *.md
 log_erros.txt
+*.xlsx
+*.xls
 
 # Dependências (ambientes virtuais)
 # Editores e IDEs (Integração de Ambiente de Desenvolvimento)
+OUTPUT/
 .vscode/
 .meu_ambiente/
 .idea/
