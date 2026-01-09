@@ -354,6 +354,7 @@ class corte(auxiliar):
                 tabela += linhas
 
             return titulo + tabela
+            
         except Exception as e:
             self.validar_erro(e, "CARGA")
             return False

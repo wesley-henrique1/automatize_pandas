@@ -293,6 +293,7 @@ class Giro_Status(auxiliar):
                 ger_parado.to_excel(feijao, index= False, sheet_name= 'PROD_PARADO')
                 df_completo.to_excel(feijao, index= False, sheet_name= "GERAL")
                 aereo_filtrado.to_excel(feijao, index= False, sheet_name= "AEREOS_RELATORIO")
+            return True
         except Exception as e:
             self.validar_erro(e, "TRATAMENTO")
             return False

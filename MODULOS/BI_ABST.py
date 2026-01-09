@@ -1,4 +1,4 @@
-from config_path import Power_BI,Outros
+from MODULOS.config_path import Power_BI,Outros
 import datetime as dt
 import os
 import pandas as pd
@@ -204,6 +204,7 @@ class BI_ABST(auxiliar):
             print(f"8628: {data_min28:%d-%m-%Y} - {data_max28:%d-%m-%Y}")
             print(f"8664: {data_min64:%d-%m-%Y} - {data_max64:%d-%m-%Y}")
             print("passou 5")
+            return True
         except Exception as e:
             self.validar_erro(e, "CARGA")
             return False

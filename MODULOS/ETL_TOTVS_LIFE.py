@@ -69,6 +69,7 @@ def app():
 
     try:
         df_filtrado.to_excel(Output.life, sheet_name="DIVERGENCIA", index=False)
+        return True
     except Exception as e:
         error = validar_erro(e)
         print(F"CARGA: {error}")

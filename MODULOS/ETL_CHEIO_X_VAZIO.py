@@ -3,7 +3,6 @@ caminho_env = r'C:\Users\wesley.oliveira\WS_OLIVEIRA\SCRIPTS\.meu_ambiente\Lib\s
 if caminho_env not in sys.path:
     sys.path.insert(0, caminho_env)
 from MODULOS.config_path import Directory, DB_acumulado
-from config.fuction import Funcao
 import pandas as pd
 import glob
 import os
@@ -138,6 +137,7 @@ class cheio_vazio:
             print("-" * LARGURA + "\n")
 
             self.atualizar(df_consolidado, self.NOME_TABELA)
+            return True
         except Exception as e:
             error = Funcao.validar_erro(e)
             print(error)

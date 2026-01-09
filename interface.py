@@ -7,7 +7,7 @@ from MODULOS.BI_ABST import BI_ABST
 from MODULOS.BI_Giro_Status import Giro_Status
 from MODULOS.ETL_ACURACIDADE import acuracidade
 from MODULOS.ETL_CADASTRO import cadastro
-from MODULOS.ETL_CHEIO_X_VAZIO import cheio_vazio
+# from MODULOS.ETL_CHEIO_X_VAZIO import cheio_vazio
 from MODULOS.ETL_CORTE import corte
 from MODULOS.ETL_validar_os import validar_os
 from MODULOS.config_path import Path_dados
@@ -71,7 +71,6 @@ class Auxiliares:
                 dic_log[nome] = "Falha Crítica"
                 self.validar_erro(e, f"Módulo: {nome}")
                 self._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
-
                 
         logs_unicos = {log['ARQUIVO']: log for log in lista_de_logs}.values()
         self.retorno.after(0, lambda: self.atualizar_log(logs_unicos))
@@ -180,24 +179,24 @@ class Principal(Auxiliares):
         root.iconbitmap(Path_dados.icone_pricipal)
 
         self.estados = {
-            "Abastecimento": tk.BooleanVar(),
-            "Giro_estatus": tk.BooleanVar(),
-            "Acuracidade": tk.BooleanVar(),
-            "Cadastro": tk.BooleanVar(),
-            "cheio_vazio": tk.BooleanVar(),
-            "Corte": tk.BooleanVar(),
-            "Validar_os": tk.BooleanVar(),
-            "Contagem": tk.BooleanVar()
+            "Corte": tk.BooleanVar()
+            ,"Acuracidade": tk.BooleanVar()
+            ,"Validar_os": tk.BooleanVar()
+            ,"Cadastro": tk.BooleanVar()
+            ,"Giro_estatus": tk.BooleanVar()
+            ,"cheio_vazio": tk.BooleanVar()
+            ,"Abastecimento": tk.BooleanVar()
+            ,"Contagem": tk.BooleanVar()
         }
         self.scripts_map = {
-            "Abastecimento": BI_ABST
-            ,"Giro_estatus": Giro_Status
+            "Corte": corte
+            ,"Validar_os": validar_os
             ,"Acuracidade": acuracidade
             ,"Cadastro": cadastro
-            ,"cheio_vazio": cheio_vazio
-            ,"Corte": corte
-            ,"Validar_os": validar_os
+            ,"Giro_estatus": Giro_Status
+            # ,"cheio_vazio": cheio_vazio
             # ,"Contagem": consolidado_inv
+            ,"Abastecimento": BI_ABST
         }
 
         self.valor_check = tk.BooleanVar()

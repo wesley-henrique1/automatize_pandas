@@ -144,6 +144,7 @@ class consolidado_inv(auxiliar):
                 df_temp.to_excel(destino, index= False, sheet_name= "ACUMULADO"),
             
             df_fim.to_excel(Output.inv, index= False, sheet_name= "INVENTARIO")   
+            return True
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
             return False
