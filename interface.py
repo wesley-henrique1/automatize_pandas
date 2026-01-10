@@ -3,6 +3,8 @@ import tkinter as tk
 import threading
 import datetime as dt
 
+import time 
+
 from MODULOS.BI_ABST import BI_ABST
 from MODULOS.BI_Giro_Status import Giro_Status
 from MODULOS.ETL_ACURACIDADE import acuracidade
@@ -79,24 +81,65 @@ class Auxiliares:
 
         for i, nome in enumerate(argumento):
             try:
+                inicio_fase = time.time()
+                ID = 1
+                print(
+                    f"depuração\n"
+                    f"fase_{ID} {nome}"
+                )
+
                 progresso_anterior = (i / total_scripts) * 100
                 self.retorno.after(0, lambda p=progresso_anterior, n=nome: self.contador.config(text=f"{p:.0f}% -> {n}"))
 
                 classe_do_script = self.scripts_map[nome]
                 instancia = classe_do_script()
 
+                ID +=1
+                print(
+                    f"\ndepuração\n"
+                    f"fase_{ID} {nome}"
+                )
+
+
                 log_arquivo = instancia.carregamento()
                 status_pipeline = instancia.pipeline()
+
+                ID +=1
+                print(
+                    f"\ndepuração\n"
+                    f"fase_{ID} {nome}"
+                    f"fase_{ID} {log_arquivo}"
+                    f"fase_{ID} {status_pipeline}"
+                )
+
 
                 if nome == "Corte" and status_pipeline is not False:
                     msg_corte = instancia.apresentar()
                     dic_log[nome] = "Executado"
                 elif status_pipeline:
                     dic_log[nome] = "Executado"
+
+                    ID +=1
+                    print(
+                        f"\ndepuração\n"
+                        f"fase_{ID} {nome}"
+                        f"fase_{ID} {log_arquivo}"
+                        f"fase_{ID} {status_pipeline}"
+                    )
+
                 elif not status_pipeline:
                     dic_log[nome] = "Travado (Erro Interno)"
 
                 if isinstance(log_arquivo, list):
+
+                    ID +=1
+                    print(
+                        f"\ndepuração\n"
+                        f"fase_{ID} {nome}"
+                        f"fase_{ID} {log_arquivo}"
+                        f"fase_{ID} {status_pipeline}"
+                    )
+
                     lista_de_logs.extend(log_arquivo)
                 elif isinstance(log_arquivo, dict):
                     lista_de_logs.append(log_arquivo)
@@ -104,6 +147,9 @@ class Auxiliares:
                 progresso_atual = ((i + 1) / total_scripts) * 100
                 txt_final = f"{progresso_atual:.0f}% -> {nome}"
                 self.retorno.after(0, lambda p=txt_final: self.contador.config(text=p))
+                
+                fim_fase = time.time()
+                print(f"DEBUG: Fase {ID} finalizada em {fim_fase - inicio_fase:.2f} segundos")  
             except Exception as e:
                 dic_log[nome] = "Falha Crítica"
                 self.validar_erro(e, f"Módulo: {nome}")

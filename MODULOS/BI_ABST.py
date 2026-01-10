@@ -1,7 +1,7 @@
 from MODULOS.config_path import Power_BI,Outros
 import datetime as dt
-import os
 import pandas as pd
+import os
 import warnings
 warnings.simplefilter(action='ignore', category=UserWarning)
 
@@ -46,12 +46,17 @@ class auxiliar:
             df = df.drop_duplicates(subset=['NUMOS'])
             return df
     def agrupar(self, df, col, id):
+        df = df.copy()
         if id == 1:
+            df['IS_50'] = (df['Tipo O.S.'] == '50 - Movimentação De Para').astype(int)
+            df['IS_61'] = (df['Tipo O.S.'] == '61 - Movimentação De Para Horizontal').astype(int)
+            df['IS_58'] = (df['Tipo O.S.'] == '58 - Transferencia de Para Vertical').astype(int)
+            print(df.head(4))
             temp = df.groupby(col).agg(
                 QTDE_OS = ("NUMOS", 'nunique'),
-                OS_50 = ("Tipo O.S.", lambda x: (x == '50 - Movimentação De Para').sum()),
-                OS_61 = ("Tipo O.S.", lambda x: (x == '61 - Movimentação De Para Horizontal').sum()),
-                OS_58 = ("Tipo O.S.", lambda x: (x == '58 - Transferencia de Para Vertical').sum())
+                OS_50 = ("IS_50", "sum"),
+                OS_61 = ("IS_61", "sum"),
+                OS_58 = ("IS_58", "sum")
             ).reset_index()
             return temp
         elif id == 2:
@@ -83,9 +88,14 @@ class auxiliar:
 class BI_ABST(auxiliar):
     def __init__(self):
         self.list_path = [Outros.ou_func, Power_BI.abst_atual28, Power_BI.abst_atual64]
-        self.carregamento()
-        self.pipeline()
-        
+
+        self.data_atual = dt.datetime.now().date()
+        self.data_limite = self.data_atual - dt.timedelta(days= 90)
+        self.data_filtro = pd.to_datetime(self.data_limite)
+
+        self.mes_relatorio = self.data_atual.month()
+
+
     def carregamento(self):
         lista_de_logs = []
         try:
@@ -112,12 +122,19 @@ class BI_ABST(auxiliar):
     def pipeline(self):
         try:
             print("inicio")
-            func = pd.read_excel(Outros.ou_func, sheet_name='FUNC')
-            cons28 = pd.read_excel(Power_BI.abst_cons28)
-            m_atual28 = pd.read_excel(Power_BI.abst_atual28)
-            cons64 = pd.read_excel(Power_BI.abst_cons64)
-            m_atual64 = pd.read_excel(Power_BI.abst_atual64)
-            configurar_mes = 12
+            cols_28 = ['NUMOS', 'DATA', 'CODROTINA', 'POSICAO', 'CODFUNCGER', 'FUNCGER', 
+            'DTFIMOS', 'CODFUNCOS', 'FUNCOSFIM', 'Tipo O.S.', 'TIPOABAST']
+
+            cols_64 = ['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR', 'EMPILHADOR']
+
+            # Execução da leitura
+            func = pd.read_excel(Outros.ou_func, sheet_name='FUNC', usecols=['CODFUNC', 'NOME', 'AREA'], engine='openpyxl')
+
+            cons28 = pd.read_excel(Power_BI.abst_cons28, usecols=cols_28, engine='openpyxl')
+            m_atual28 = pd.read_excel(Power_BI.abst_atual28, usecols=cols_28, engine='openpyxl')
+
+            cons64 = pd.read_excel(Power_BI.abst_cons64, usecols=cols_64, engine='openpyxl')
+            m_atual64 = pd.read_excel(Power_BI.abst_atual64, usecols=cols_64, engine='openpyxl')
             print("passou 1")
         except Exception as e:
             self.validar_erro(e, "EXTRAIR")
@@ -127,7 +144,7 @@ class BI_ABST(auxiliar):
             try:
                 m_atual28 = self.organizar_df(m_atual28,'DATA',1)
                 cons28 = self.organizar_df(cons28,'DATA',1)
-                cons28 = cons28.loc[cons28['MES'] != configurar_mes]
+                cons28 = cons28.loc[cons28['MES'] != self.mes_relatorio]
                 concat28 = pd.concat([cons28, m_atual28], ignore_index= True)
 
                 os_geradas28 = self.agrupar(concat28, ['DATA','CODFUNCGER'], 1)
@@ -147,7 +164,7 @@ class BI_ABST(auxiliar):
                 m_atual64 = self.organizar_df(m_atual64, 'DATAGERACAO', 2)
                 cons64 = self.organizar_df(cons64, 'DATAGERACAO', 2)
 
-                cons64 = cons64.loc[cons64['MES'] != configurar_mes]
+                cons64 = cons64.loc[cons64['MES'] != self.mes_relatorio]
                 concat64 = pd.concat([cons64, m_atual64], ignore_index= True)
                 concat64 = concat64.rename(columns={'DATAGERACAO' : "DATA"})
 

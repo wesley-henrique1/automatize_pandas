@@ -131,7 +131,7 @@ class acuracidade(auxiliar):
             return False
     def pipeline(self):
         try:
-            df_bloq = pd.read_excel(self.lista_files[0], usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)'])
+            df_bloq = pd.read_excel(self.lista_files[0], usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria'])
             end_ger = pd.read_csv(self.lista_files[1], header= None, names= ColNames.col_ger)  
             df_end = pd.read_csv(self.lista_files[2], header= None, names= ColNames.col_end)
             df_prod = pd.read_excel(self.lista_files[3], usecols= ['CODPROD', 'QTUNITCX','QTTOTPAL'])
@@ -144,9 +144,10 @@ class acuracidade(auxiliar):
             end_ger = end_ger.rename(columns= dic_end_ger)
             end_ger['RUA'] = end_ger['RUA'].fillna(0).astype(int)
 
-            dic_bloq = {'Código' : "CODPROD", 'Bloqueado(Qt.Bloq.-Qt.Avaria)' : "BLOQ"}
-            df_bloq = df_bloq.rename(columns= dic_bloq)
-            df_bloq['CODPROD'] = df_bloq['CODPROD'].fillna(0).astype(int)
+            dic_bloq = {'Código' : "CODPROD", 'Bloqueado(Qt.Bloq.-Qt.Avaria)' : "BLOQ", "Qt.Avaria": "AVARIA"}
+            df_bloq = df_bloq.rename(columns= dic_bloq).fillna(0)
+            df_bloq["BLOQUEADOS"] = df_bloq['BLOQ'] + df_bloq['AVARIA']
+            df_bloq['CODPROD'] = df_bloq['CODPROD'].astype(int)
 
             dic_end = {"COD" : "CODPROD"}
             df_end = df_end.rename(columns= dic_end)
@@ -159,7 +160,7 @@ class acuracidade(auxiliar):
             grupo_end = df_end.groupby('CODPROD').agg(
                 SAIDA = ('SAIDA', 'sum'),
                 ENTRADA = ('ENTRADA', 'sum'),
-                DISP = ('DISP', 'sum'),
+                QT_DISP = ('DISP', 'sum'),
                 QTDE = ('QTDE', 'sum'),
             ).reset_index()
 
@@ -172,15 +173,32 @@ class acuracidade(auxiliar):
             drop_col = ['EMBALAGEM']
             df.drop(columns= drop_col, inplace= True)
 
-            col_ajuste = ['ENDERECO', 'GERENCIAL','PICKING','CAP','QTUNITCX','ENTRADA', 'SAIDA', 'QTDE']
+            col_ajuste = ['ENDERECO', 'GERENCIAL','PICKING','CAP','QTUNITCX','ENTRADA', 'SAIDA', 'QTDE', 'QT_DISP']
             for col in col_ajuste:
                 df = self.ajustar_numero(df, col, float)
 
-            df['DIF_UN'] = df['ENDERECO'].astype(float) - df['GERENCIAL'].astype(float)
-            df['DIF_CX'] = (df['DIF_UN'] / df['QTUNITCX'].astype(int)).round(1)
+
+            df['DIF_UN'] = df['ENDERECO'] - df['GERENCIAL']
+            df['DIF_CX'] = round(df['DIF_UN'] / df['QTUNITCX'], 1)
             df['ENDERECO'] = df['ENDERECO'] + df['ENTRADA']
             df['CAP_CONVERTIDA'] = df['CAP'] * df['QTUNITCX']
-            df['PENDENCIA'] = np.where(df['QTDE_O.S'] > 0, 'FOLHA', 'INVENTARIO')
+            df["STG_DISP"] =  df['GERENCIAL'] - df['BLOQUEADOS']
+            
+
+            for col in ['PICKING', 'CAP_CONVERTIDA', 'DIF_CX', 'DIF_UN','RUA', 'PREDIO', 'STG_DISP']:
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+            # CRIAÇÃO DAS COLUNAS CATEGORIZADAS
+
+            df['VAL_ESTOQUE'] = np.where(
+                df['STG_DISP'].between(1, 40)
+                ,"VALIDAR"
+                ,"NORMAL"
+            )
+            df['PENDENCIA'] = np.where(
+                df['QTDE_O.S'] > 0
+                ,'FOLHA'
+                ,'INVENTARIO'
+            )
 
             cond_dif = [
                 df['DIF_CX'] == 0,
@@ -193,7 +211,8 @@ class acuracidade(auxiliar):
                 (df['DIF_CX'] <= -5) & (df['DIF_CX'] > -10),
                 df['DIF_CX'] <= -10
             ]
-            result_dif = ['0', '1', '2', '3', '-1', '-2', '-3',]
+            result_dif = [0, 1, 2, 3, -1, -2, -3]
+            df['CATEGORIA_DIF'] = np.select(cond_dif, result_dif, default=99)
 
             cond_op = [
                 df['DIF_UN'] < 0,
@@ -201,22 +220,20 @@ class acuracidade(auxiliar):
                 df['DIF_UN'] == 0,
             ]
             result_op = ["END_MENOR", "END_MAIOR", "CORRETO"]
+            df["TIPO_OP"] = np.select(cond_op, result_op, default= "-")
 
             cond_ap = [
-                df['PICKING'].astype(int) > df['CAP_CONVERTIDA'].astype(int),
-                df['PICKING'].astype(int) < 0,
-                df['PICKING'].astype(int) == 0
+                df['PICKING'] > df['CAP_CONVERTIDA'],
+                df['PICKING'] < 0,
+                df['PICKING'] == 0
             ]
             result_ap = [
-                'AP_MAIOR',
-                "AP_NEGATIVO",
-                "CORRETO"
+                'AP_MAIOR'
+                ,"AP_NEGATIVO"
+                ,"CORRETO"
             ]
-
-            df['CATEGORIA_DIF'] = np.select(cond_dif, result_dif, default= "99").astype(int)
-            df["TIPO_OP"] = np.select(cond_op, result_op, default= "-")
             df['AP_VS_CAP'] = np.select(cond_ap, result_ap, default= "-")
-            df[['RUA', 'PREDIO']] = df[['RUA', 'PREDIO']].astype(int)
+            
             df_prod = df_prod.drop_duplicates(subset=None, keep='first')
             df = df.sort_values(by=['RUA', 'PREDIO'], ascending= True)
         except Exception as e:
