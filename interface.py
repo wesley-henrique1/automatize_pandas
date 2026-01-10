@@ -12,11 +12,23 @@ from MODULOS.ETL_CORTE import corte
 from MODULOS.ETL_validar_os import validar_os
 from MODULOS.config_path import Path_dados
 
+"""
+primeira fase
 background = "#2D2D2D"
 frame_color = "#2D2D2D"
 
 text_color = "#E0E0E0"
 borda_color = "#910083"
+
+segunda fase 
+"""
+background = "#87CEFA"
+frame_color = "#F0FFFF"
+
+text_color = "#000000"
+borda_color = "#000000"
+
+
 import datetime as dt
 import threading
 from tkinter import messagebox
@@ -26,6 +38,8 @@ class Auxiliares:
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
 
     def iniciar_processamento(self):
+        self.bt_iniciar.config(state="disabled")
+        self.bt_limpar.config(state="disabled")
         try:
             selecionados = [nome for nome, var in self.estados.items() if var.get()]
 
@@ -41,19 +55,39 @@ class Auxiliares:
         except Exception as e:
             self.validar_erro(e, "Inicializador")
             self._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
+    def resetar_ui(self):
+        for var in self.estados:
+            self.estados[var].set(False)
+        
+        self._exibir_mensagem_status("Aguardando proximo processo...")
+        self.contador.config(text="100%")
+
 
     def task(self, argumento):
         lista_de_logs = []
         msg_corte = None
         dic_log = {}
+        total_scripts = len(argumento)
+        def finalizar():
+            self.bt_iniciar.config(state="normal")
+            self.bt_limpar.config(state="normal")
 
-        for nome in argumento:
+        if total_scripts == 0:
+            self.retorno.after(0, lambda: self.contador.config(text="0%"))
+            self.retorno.after(0, finalizar)
+            return
+
+        for i, nome in enumerate(argumento):
             try:
+                progresso_anterior = (i / total_scripts) * 100
+                self.retorno.after(0, lambda p=progresso_anterior, n=nome: self.contador.config(text=f"{p:.0f}% -> {n}"))
+
                 classe_do_script = self.scripts_map[nome]
-                instancia = classe_do_script() 
+                instancia = classe_do_script()
 
                 log_arquivo = instancia.carregamento()
                 status_pipeline = instancia.pipeline()
+
                 if nome == "Corte" and status_pipeline is not False:
                     msg_corte = instancia.apresentar()
                     dic_log[nome] = "Executado"
@@ -66,7 +100,10 @@ class Auxiliares:
                     lista_de_logs.extend(log_arquivo)
                 elif isinstance(log_arquivo, dict):
                     lista_de_logs.append(log_arquivo)
-                    
+
+                progresso_atual = ((i + 1) / total_scripts) * 100
+                txt_final = f"{progresso_atual:.0f}% -> {nome}"
+                self.retorno.after(0, lambda p=txt_final: self.contador.config(text=p))
             except Exception as e:
                 dic_log[nome] = "Falha Crítica"
                 self.validar_erro(e, f"Módulo: {nome}")
@@ -74,11 +111,14 @@ class Auxiliares:
                 
         logs_unicos = {log['ARQUIVO']: log for log in lista_de_logs}.values()
         self.retorno.after(0, lambda: self.atualizar_log(logs_unicos))
+
         resumo = "\n".join([f"{modulo}: {status}" for modulo, status in dic_log.items()])
-        self.retorno.after(0, lambda: messagebox.showinfo("Resumo da Operação", resumo))
+        self.retorno.after(100, lambda: messagebox.showinfo("Resumo da Operação", resumo))
 
         if msg_corte is not None:
-            self.retorno.after(0, lambda: self.segunda_tela("Relatório de Corte", msg_corte))
+            self.retorno.after(200, lambda: self.segunda_tela("Relatório de Corte", msg_corte))
+
+        self.retorno.after(300, finalizar)
     def atualizar_log(self, dados_arquivos):
         try:
             dados_validos = [d for d in dados_arquivos if isinstance(d, dict)]
@@ -105,7 +145,6 @@ class Auxiliares:
         except Exception as e:
             self.validar_erro(e, "Atualizar LOG")
             self._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
-
     def _exibir_mensagem_status(self, mensagem):
         self.retorno.config(state="normal")
         self.retorno.delete("1.0", "end")
@@ -179,14 +218,14 @@ class Principal(Auxiliares):
         root.iconbitmap(Path_dados.icone_pricipal)
 
         self.estados = {
-            "Corte": tk.BooleanVar()
-            ,"Acuracidade": tk.BooleanVar()
-            ,"Validar_os": tk.BooleanVar()
-            ,"Cadastro": tk.BooleanVar()
-            ,"Giro_estatus": tk.BooleanVar()
-            ,"cheio_vazio": tk.BooleanVar()
-            ,"Abastecimento": tk.BooleanVar()
-            ,"Contagem": tk.BooleanVar()
+            "Corte": tk.BooleanVar(value=False),
+            "Acuracidade": tk.BooleanVar(value=False),
+            "Validar_os": tk.BooleanVar(value=False),
+            "Cadastro": tk.BooleanVar(value=False),
+            "Giro_estatus": tk.BooleanVar(value=False),
+            "cheio_vazio": tk.BooleanVar(value=False),
+            "Abastecimento": tk.BooleanVar(value=False),
+            "Contagem": tk.BooleanVar(value=False)
         }
         self.scripts_map = {
             "Corte": corte
@@ -199,10 +238,9 @@ class Principal(Auxiliares):
             ,"Abastecimento": BI_ABST
         }
 
-        self.valor_check = tk.BooleanVar()
         self.componentes(janela_principal= root)
-        self.buttons(janela_principal= root)
-        self.loc()
+        self.botoes_layout(janela_principal= root)
+        self.localizador()
 
 
         root.mainloop()
@@ -309,30 +347,61 @@ class Principal(Auxiliares):
 
         # --- 3. WIDGETS RETORNO---
         self.retorno = tk.Text(
-            janela_principal,
-            font=("Consolas", 10), # Consolas é melhor para tabelas que Verdana
-            bg=frame_color,
-            fg=text_color,
-            highlightbackground=borda_color,
-            highlightthickness=2,
-            padx=10, pady=10,
-            state="disabled" # Impede o usuário de digitar no log
-        )        
-    def buttons(self, janela_principal):
+            janela_principal
+            ,font=("Consolas", 10)
+            ,bg=frame_color
+            ,fg=text_color
+            ,highlightbackground=borda_color
+            ,highlightthickness=2
+            ,padx=10, pady=10
+            ,state="disabled"
+        )
+        self.text_contador = tk.Label(
+            janela_principal
+            ,text= "PROGRESSO >>"
+            ,font= ("Consolas", 14)
+            ,fg= text_color
+            ,bg= background
+            ,anchor = "w"
+        )
+        self.contador = tk.Label(
+            janela_principal
+            ,text= "100%"
+            ,font= ("Consolas", 12)
+            ,fg= text_color
+            ,bg= background
+            ,anchor = "w"
+        )
+    def botoes_layout(self, janela_principal):
         self.bt_iniciar = tk.Button(
             janela_principal
             ,text="INICIAR"
             ,cursor="hand2"
+            ,relief="solid"
+            ,font=("Arial", 10, "bold")
+            ,highlightthickness=3
+            
             ,bg=background
             ,fg=text_color
             ,highlightbackground=borda_color
-            ,highlightthickness=3
-            ,relief="solid"
-            ,font=("Arial", 10, "bold")
             ,command=lambda: self.iniciar_processamento()
         )
+        self.bt_limpar = tk.Button(
+            janela_principal
+            ,text="LIMPAR"
+            ,cursor="hand2"
+            ,relief="solid"
+            ,font=("Arial", 10, "bold")
+            ,highlightthickness=3
+            
+            ,bg=background
+            ,fg=text_color
+            ,highlightbackground=borda_color
+            ,command=lambda: self.resetar_ui()
+        )
 
-    def loc(self):
+
+    def localizador(self):
         self.container.place(relx=0.01, rely=0.01, relheight=0.20, relwidth=0.98)
 
         # Coluna 1
@@ -351,9 +420,12 @@ class Principal(Auxiliares):
 
         # Retorno dos scripts
         self.retorno.place(relx=0.01, rely=0.32, relwidth=0.98, relheight=0.65)
+        self.text_contador.place(relx=0.01, rely=0.22, relwidth=0.23, relheight=0.08)
+        self.contador.place(relx=0.24, rely=0.22, relwidth=0.40, relheight=0.08)
 
         # botão
-        self.bt_iniciar.place(relx=0.01, rely=0.22, relwidth=0.98, relheight=0.08)
+        self.bt_iniciar.place(relx=0.67, rely=0.22, relwidth=0.15, relheight=0.08)
+        self.bt_limpar.place(relx=0.84, rely=0.22, relwidth=0.15, relheight=0.08)
 
 if __name__ == "__main__":
     Principal()
