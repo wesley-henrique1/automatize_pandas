@@ -20,7 +20,8 @@ class Path_dados:
     png_jc = os.path.join(PASTA_STYLE, 'JC_Distribuição.png')
     
 class DB_acumulado:
-    path_acumulado = os.path.join(PASTA_DADOS, "DB_ACUMULADO.accdb")
+    _fixar = os.path.join(PASTA_DADOS, 'BASE_FIXAR')
+    path_acumulado = os.path.join(_fixar, "DB_ACUMULADO.accdb")
     drive = '{Microsoft Access Driver (*.mdb, *.accdb)}'
 
     tb_vz_ch = "DB_VZ_CH"

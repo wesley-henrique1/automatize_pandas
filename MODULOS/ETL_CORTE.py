@@ -12,6 +12,7 @@ from MODULOS.config_path import DB_acumulado,  Wms, Directory, ColNames, Output
 import datetime as dt
 import pandas as pd
 import warnings
+import time
 import glob
 import re
 import os 
@@ -113,7 +114,7 @@ class corte(auxiliar):
     def __init__(self):
         DRIVER = DB_acumulado.drive
         DB_ACUMULADO = DB_acumulado.path_acumulado
-        self.NOME_TABELA = DB_acumulado.db_8041
+        self.NOME_TABELA = DB_acumulado.db_pedidos
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_ACUMULADO};")
 
         self.list_path = [Wms.wms_67]
@@ -144,6 +145,7 @@ class corte(auxiliar):
             return False
     def pipeline(self):
         try: # Extração dos dados nessecario 
+            inicio_fase = time.time()
             files_pedidos = glob.glob(os.path.join(Directory.dir_41, '*.xls*'))
 
             query_select = f"SELECT {'NOME_ARQUIVO'} FROM {self.NOME_TABELA}"

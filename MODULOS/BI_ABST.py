@@ -1,4 +1,4 @@
-from MODULOS.config_path import Power_BI,Outros
+from config_path import Power_BI,Outros
 import datetime as dt
 import pandas as pd
 import os
@@ -93,8 +93,9 @@ class BI_ABST(auxiliar):
         self.data_limite = self.data_atual - dt.timedelta(days= 90)
         self.data_filtro = pd.to_datetime(self.data_limite)
 
-        self.mes_relatorio = self.data_atual.month()
+        self.mes_relatorio = self.data_atual.month
 
+        self.pipeline()
 
     def carregamento(self):
         lista_de_logs = []
@@ -124,17 +125,18 @@ class BI_ABST(auxiliar):
             print("inicio")
             cols_28 = ['NUMOS', 'DATA', 'CODROTINA', 'POSICAO', 'CODFUNCGER', 'FUNCGER', 
             'DTFIMOS', 'CODFUNCOS', 'FUNCOSFIM', 'Tipo O.S.', 'TIPOABAST']
-
             cols_64 = ['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR', 'EMPILHADOR']
 
             # Execução da leitura
-            func = pd.read_excel(Outros.ou_func, sheet_name='FUNC', usecols=['CODFUNC', 'NOME', 'AREA'], engine='openpyxl')
-
             cons28 = pd.read_excel(Power_BI.abst_cons28, usecols=cols_28, engine='openpyxl')
+            print("cons28")
             m_atual28 = pd.read_excel(Power_BI.abst_atual28, usecols=cols_28, engine='openpyxl')
+            print("m_atual28")
 
             cons64 = pd.read_excel(Power_BI.abst_cons64, usecols=cols_64, engine='openpyxl')
+            print("cons64")
             m_atual64 = pd.read_excel(Power_BI.abst_atual64, usecols=cols_64, engine='openpyxl')
+            print("m_atual64")
             print("passou 1")
         except Exception as e:
             self.validar_erro(e, "EXTRAIR")
@@ -178,8 +180,6 @@ class BI_ABST(auxiliar):
                 self.validar_erro(e, "TRATAMENTO_64")
                 return False
             try:
-                func = func.loc[func['AREA'] == 'EXPEDICAO']
-
                 """Ordem de serviço pendentes"""
                 temp28 = os_pedentes28[['DATA','CODFUNCGER','QTDE_OS']]
                 temp64 = os_pedentes64[['DATA','CODFUNCGER','OS_RECEB']]

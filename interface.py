@@ -84,8 +84,13 @@ class Auxiliares:
                 inicio_fase = time.time()
                 ID = 1
                 print(
+                    f"{"-" *78}"
+                    f"\n"
                     f"depuração\n"
-                    f"fase_{ID} {nome}"
+                    f"fase_{ID}\n"
+                    f">>{nome}"
+                    f"\n"
+                    f"{"-" *78}"
                 )
 
                 progresso_anterior = (i / total_scripts) * 100
@@ -96,8 +101,13 @@ class Auxiliares:
 
                 ID +=1
                 print(
-                    f"\ndepuração\n"
-                    f"fase_{ID} {nome}"
+                    f"{"-" *78}"
+                    f"\n"
+                    f"depuração\n"
+                    f"fase_{ID}\n"
+                    f">>{nome}"
+                    f"\n"
+                    f"{"-" *78}"
                 )
 
 
@@ -106,10 +116,13 @@ class Auxiliares:
 
                 ID +=1
                 print(
+                    f"{"-" *78}"
                     f"\ndepuração\n"
-                    f"fase_{ID} {nome}"
-                    f"fase_{ID} {log_arquivo}"
-                    f"fase_{ID} {status_pipeline}"
+                    f"fase_{ID}\n"
+                    f"\n>>{nome}"
+                    f"\n>>{log_arquivo}"
+                    f"\n>>{status_pipeline}\n"
+                    f"{"-" *78}"
                 )
 
 
@@ -121,10 +134,13 @@ class Auxiliares:
 
                     ID +=1
                     print(
+                        f"{"-" *78}"
                         f"\ndepuração\n"
-                        f"fase_{ID} {nome}"
-                        f"fase_{ID} {log_arquivo}"
-                        f"fase_{ID} {status_pipeline}"
+                        f"fase_{ID}\n"
+                        f"\n>>{nome}"
+                        f"\n>>{log_arquivo}"
+                        f"\n>>{status_pipeline}\n"
+                        f"{"-" *78}"
                     )
 
                 elif not status_pipeline:
@@ -134,10 +150,13 @@ class Auxiliares:
 
                     ID +=1
                     print(
+                        f"{"-" *78}"
                         f"\ndepuração\n"
-                        f"fase_{ID} {nome}"
-                        f"fase_{ID} {log_arquivo}"
-                        f"fase_{ID} {status_pipeline}"
+                        f"fase_{ID}\n"
+                        f"\n>>{nome}"
+                        f"\n>>{log_arquivo}"
+                        f"\n>>{status_pipeline}\n"
+                        f"{"-" *78}"
                     )
 
                     lista_de_logs.extend(log_arquivo)
@@ -147,9 +166,9 @@ class Auxiliares:
                 progresso_atual = ((i + 1) / total_scripts) * 100
                 txt_final = f"{progresso_atual:.0f}% -> {nome}"
                 self.retorno.after(0, lambda p=txt_final: self.contador.config(text=p))
-                
+
                 fim_fase = time.time()
-                print(f"DEBUG: Fase {ID} finalizada em {fim_fase - inicio_fase:.2f} segundos")  
+                print(f"\nDEBUG: Fase {ID} finalizada em {fim_fase - inicio_fase:.2f} segundos\n")  
             except Exception as e:
                 dic_log[nome] = "Falha Crítica"
                 self.validar_erro(e, f"Módulo: {nome}")
@@ -257,7 +276,7 @@ class Principal(Auxiliares):
     def __init__(self):
         super().__init__()
         root = tk.Tk()
-        root.title("Tela principal")
+        root.title("SISTEMA DE CONTROLE DE TAREFA")
         root.geometry("580x500")
         root.resizable(False,True)
         root.config(bg= background)

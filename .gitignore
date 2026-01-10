@@ -1,22 +1,27 @@
-
-# Diretórios e arquivos de compilação/cache
-__pycache__/
-DB_ACCESS/
-JUPYTER/
-dados_files/
-
-# Arquivos temporarios
-*.ipynb
-*.md
-log_erros.txt
+# --- Dados e Saídas (Onde os arquivos pesados ficam) ---
 *.xlsx
 *.xls
-
-# Dependências (ambientes virtuais)
-# Editores e IDEs (Integração de Ambiente de Desenvolvimento)
+*.csv
+# Ignora as pastas de saída e dados
 OUTPUT/
-.vscode/
+dados_files/
+DB_ACCESS/
+
+# --- Python & Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
 .meu_ambiente/
+venv/
+
+# --- IDEs e Ferramentas ---
+.vscode/
 .idea/
-.ipynb_checkpoints
-.vscode
+.ipynb_checkpoints/
+JUPYTER/
+
+# --- Logs e Temporários ---
+log_erros.txt
+*.log
+# Cuidado: se tiver um README.md, ele será ignorado pela linha abaixo:
+*.md
