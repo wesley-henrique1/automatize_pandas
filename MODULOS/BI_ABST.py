@@ -1,4 +1,4 @@
-from config_path import Power_BI,Outros
+from MODULOS.config_path import Power_BI,Outros
 import datetime as dt
 import pandas as pd
 import os
@@ -95,7 +95,6 @@ class BI_ABST(auxiliar):
 
         self.mes_relatorio = self.data_atual.month
 
-        self.pipeline()
 
     def carregamento(self):
         lista_de_logs = []

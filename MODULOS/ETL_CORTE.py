@@ -176,7 +176,7 @@ class corte(auxiliar):
                 var_dia = df_dia.groupby('data').agg(
                             vl_corte=('vl_corte', 'sum'),
                             qtde_corte=('qtde_corte', 'count'),
-                            qtde_item=('desc', 'nunique')
+                            qtde_item=('cod', 'nunique')
                         ).reset_index()
                 
                 var_dia = self.extrair_e_ordenar_data(var_dia, 'data')
@@ -195,7 +195,7 @@ class corte(auxiliar):
                 var_noite = df_noite.groupby('data_turno').agg(
                     vl_corte=('vl_corte', 'sum'),
                     qtde_corte=('qtde_corte', 'count'),
-                    qtde_item=('desc', 'nunique')
+                    qtde_item=('cod', 'nunique')
                 ).reset_index()
                 var_noite = self.extrair_e_ordenar_data(var_noite, 'data_turno')
                 var_noite['vl_corte'] = var_noite['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
@@ -326,9 +326,9 @@ class corte(auxiliar):
                 f"|{"DATA":^12} |"
                 f" {"VL_CORTE":^19} |" 
                 f" {"QTDE DIA E NOITE":16} |"
-                f" {"CORTE DIA E NOITE":^17} |" 
                 f" {"PEDIDO":^10} |"
                 f" {"DIVERGENCIA":^11} |"
+                f" {"CORTE DIA E NOITE":^17} |" 
                 f" {"DIA":<13} |"
                 f" {"MES":<10} |"
                 f" {"ANO":<4} |\n"
@@ -346,9 +346,9 @@ class corte(auxiliar):
                     f"|{data_formatada:<12} |"
                     f" {celula_vl:^18} |"
                     f" {celula_qt:^16} |"
-                    f" {celula_item:^17} |"
                     f" {str(celula.QTDE_PED):^10} |"
                     f" {str(celula.ped_imperfeito):^11} |"
+                    f" {celula_item:^17} |"
                     f" {celula.dia:<13} |"
                     f" {celula.mes:<10} |"
                     f" {celula.ano:<4} |\n"

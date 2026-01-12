@@ -1,8 +1,5 @@
-import sys
-caminho_env = r'C:\Users\wesley.oliveira\WS_OLIVEIRA\SCRIPTS\.meu_ambiente\Lib\site-packages'
-if caminho_env not in sys.path:
-    sys.path.insert(0, caminho_env)
 from MODULOS.config_path import Directory, DB_acumulado
+import datetime as dt
 import pandas as pd
 import glob
 import os
@@ -10,24 +7,36 @@ import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
-
-class cheio_vazio:
-    def __init__(self):
-        DRIVER = DB_acumulado.drive
-        DB_ACUMULADO = DB_acumulado.path_acumulado
-        self.NOME_TABELA = DB_ACUMULADO.tb_vz_ch
-
-        self.ODBC_CONN_STR = (
-            f"DRIVER={DRIVER};"
-            f"DBQ={DB_ACUMULADO};"
+class auxiliar:
+    def validar_erro(self, e, etapa):
+        largura = 78
+        mapeamento = {
+            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
+            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
+            KeyError: f"Coluna ou chave não encontrada: {e}",
+            TypeError: f"Incompatibilidade de tipo: {e}",
+            ValueError: f"Formato de dado inválido: {e}",
+            NameError: f"Variável ou função não definida: {e}"
+        }
+        
+        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
+        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        
+        log_conteudo = (
+            f"{'='* largura}\n"
+            f"FONTE: cheio_vazio | ETAPA: {etapa} | DATA: {agora}\n"
+            f"TIPO: {type(e).__name__}\n"
+            f"MENSAGEM: {msg}\n"
+            f"{'='* largura}\n\n"
         )
 
-        self.dados = self.pipeline()
-
-
-    def conectar_db(self, tabela):
-        query_select = f"SELECT NOME_RELATORIO FROM {tabela}"
-
+        try:
+            print("Verificar log de erro")
+            with open("log_erros.txt", "a", encoding="utf-8") as f:
+                f.write(log_conteudo)
+        except Exception as erro_f:
+            print(f"Falha crítica ao gravar log: {erro_f}")
+    def cosultar_db(self, consulta):
         try:
             connection_url = URL.create(
             "access+pyodbc",
@@ -35,15 +44,19 @@ class cheio_vazio:
             )
             self.engine = create_engine(connection_url)
             with self.engine.connect() as connection:
-                result = connection.execute(text(query_select))
+                result = connection.execute(text(consulta))
                 dados_existentes = result.fetchall()
-                print("Conectado com sucesso ao Access!")
+
+                nomes_colunas = result.keys()
+                db_dados = pd.DataFrame(
+                    dados_existentes,
+                    columns=nomes_colunas
+                )
         except Exception as e:
-            error = Funcao.validar_erro(e)
-            print(error)
-            exit()
-            
-        return dados_existentes
+            self.validar_erro(e, "Consulta_banco_dados")
+            return pd.DataFrame()
+
+        return db_dados        
     def atualizar(self, df, tabela):
         try:            
             df.to_sql(
@@ -52,28 +65,36 @@ class cheio_vazio:
                 if_exists='append',
                 index=False,
             )
-            print(f"DataFrame salvo com sucesso na tabela '{tabela}' no Access.")
         except Exception as e:
-            error = Funcao.validar_erro(e)
-            print(error)
-            exit()
+            self.validar_erro(e, "Atualizar_banco_dados")
+            return False
+
+class cheio_vazio(auxiliar):
+    def __init__(self):
+        DRIVER = DB_acumulado.drive
+        self.DB_ACUMULADO = DB_acumulado.path_acumulado
+        self.NOME_TABELA = DB_acumulado.tb_vz_ch
+
+        self.ODBC_CONN_STR = (
+            f"DRIVER={DRIVER};"
+            f"DBQ={self.DB_ACUMULADO};"
+        )
+        self.pipeline()
 
     def pipeline(self):
         try:  # EXTRAÇÃO DOS DADOS
-            dados_db = self.conectar_db(self.NOME_TABELA)
+            query_select = f"SELECT {'NOME_RELATORIO'} FROM {self.NOME_TABELA}"
+            names_db = self.cosultar_db(query_select)
+            arquivos_processados = set(names_db['NOME_RELATORIO'].str.strip().tolist())
 
             pasta_files = glob.glob(os.path.join(Directory.dir_cheio_vazio, "*xls*"))
-
             list_processado = []
             list_files_db = []
-            list_erros = {}
         except Exception as e:
-            error = Funcao.validar_erro(e)
-            print(error)
-            exit()
-
+            self.validar_erro(e, "EXTRAÇÃO")
+            return False
+        
         try: # TRATAMENTO DOS DADOS
-            arquivos_processados = set([tupla[0] for tupla in dados_db])
             
             for file in pasta_files:
                 NAME_FILE = os.path.basename(file)
@@ -81,17 +102,22 @@ class cheio_vazio:
                     list_files_db.append(NAME_FILE)
                     continue
                 try:
-                    df = pd.read_excel(file, header= 2)
-                    df_filtrado = df.loc[df['Retorno'].isin(['CHEIO', 'VAZIO'])]
-                    df_filtrado = df_filtrado[['END', 'COD', 'DESCRIÇÃO', 'RUA', 'PREDIO', 'NIVEL', 'APTO', 'Retorno', 'data_relatorio']]
-                    df_filtrado['NAME_FILE'] = NAME_FILE
-                    list_processado.append(df_filtrado)
+                    df_TEMPORARIO = pd.read_excel(file, header= 2)
+                    df_TEMPORARIO = df_TEMPORARIO.loc[df_TEMPORARIO['Retorno'].isin(['CHEIO', 'VAZIO'])]
+                    df_TEMPORARIO = df_TEMPORARIO[['END', 'COD', 'DESCRIÇÃO', 'RUA', 'PREDIO', 'NIVEL', 'APTO', 'Retorno', 'data_relatorio']]
+                    df_TEMPORARIO['NAME_FILE'] = NAME_FILE
+                    list_processado.append(df_TEMPORARIO)
                 except Exception as e:
-                    list_erros['ETAPA_CONSOLIDADO'] = str(NAME_FILE), str(e)
+                    self.validar_erro(e, f"\n{NAME_FILE} - consolidação")
 
             df_consolidado = pd.concat(list_processado, axis= 'index')
 
-            list_renomear = {'DESCRIÇÃO':'DESC', 'data_relatorio':'DATA_RELATORIO', 'NAME_FILE':'NOME_RELATORIO', 'Retorno':'RETORNO'}
+            list_renomear = {
+                'DESCRIÇÃO':'DESCRICAO'
+                ,'data_relatorio':'DATA_RELATORIO'
+                ,'Retorno':'RETORNO'
+                ,'NAME_FILE':'NOME_RELATORIO'
+            }
             df_consolidado = df_consolidado.rename(columns=list_renomear)
 
             col_int = ['END', 'COD','RUA','PREDIO','NIVEL','APTO']
@@ -99,49 +125,13 @@ class cheio_vazio:
                 try:
                     df_consolidado[col] = df_consolidado[col].fillna(0).astype(int)
                 except Exception as e:
-                    list_erros['LIMPEZA'] = str(col),str(e)
-
-        except Exception as e:
-            error = Funcao.validar_erro(e)
-            print(error)
-            exit()
-
-        try:
-            LARGURA = 50 
-
-            print("\n" + "=" * LARGURA)
-            print(f"{'RELATÓRIO DE PROCESSAMENTO':^{LARGURA}}")
-            print("=" * LARGURA)
-
-            print(f"{'ESTATÍSTICAS DE ARQUIVOS':^{LARGURA}}")
-            print("-" * LARGURA)
-            print(f"| {'Arquivos Processados:':<30}| {len(list_processado):>15}|")
-            print(f"| {'Registros Salvos no Banco:':<30}| {len(list_files_db):>15}|")
-            print("-" * LARGURA)
-
-            if list_erros:
-                print(f"{'RELATÓRIO DE FALHAS':^{LARGURA}}")
-                print("-" * LARGURA)
-                for etapa, detalhe_erro in list_erros.items():
-                    nome_arquivo = detalhe_erro[0]
-                    descricao_erro = detalhe_erro[1]
-                    print(f"ETAPA DA FALHA: {etapa}")
-                    print(f"  > Arquivo Afetado: {nome_arquivo}")
-                    print(f"  > Causa: {descricao_erro}")
-                    print("-" * LARGURA)
-            else:
-                print(f"{'STATUS: PROCESSAMENTO CONCLUÍDO SEM ERROS':^{LARGURA}}")
-
-            print(f"\n{'ATUALIZAÇÃO DE DADOS INICIADA':^{LARGURA}}")
-            print(f"Tentando salvar {len(list_files_db)} registros na tabela '{self.NOME_TABELA}'...")
-            print("-" * LARGURA + "\n")
+                    self.validar_erro(e, f"{col} - tratamento_int")
 
             self.atualizar(df_consolidado, self.NOME_TABELA)
             return True
         except Exception as e:
-            error = Funcao.validar_erro(e)
-            print(error)
-
+            self.validar_erro(e, "EXTRAÇÃO")
+            return False
 
 if __name__ == '__main__':
     cheio_vazio()

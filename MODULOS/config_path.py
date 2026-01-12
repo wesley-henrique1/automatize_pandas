@@ -24,8 +24,7 @@ class DB_acumulado:
     path_acumulado = os.path.join(_fixar, "DB_ACUMULADO.accdb")
     drive = '{Microsoft Access Driver (*.mdb, *.accdb)}'
 
-    tb_vz_ch = "DB_VZ_CH"
-    db_8041 = "DB_8041"
+    tb_vz_ch = "DB_VAZIO_CHEIO"
     db_pedidos = "DB_PEDIDOS"
 
 
