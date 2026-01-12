@@ -1,19 +1,16 @@
 from tkinter import messagebox, scrolledtext
+import datetime as dt
 import tkinter as tk
 import threading
-import datetime as dt
-
-import time 
-
-from MODULOS.BI_ABST import BI_ABST
-from MODULOS.BI_Giro_Status import Giro_Status
-from MODULOS.ETL_ACURACIDADE import acuracidade
-from MODULOS.ETL_CADASTRO import cadastro
-# from MODULOS.ETL_CHEIO_X_VAZIO import cheio_vazio
-from MODULOS.ETL_CORTE import corte
-from MODULOS.ETL_validar_os import validar_os
 from MODULOS.config_path import Path_dados
 
+from MODULOS.ETL_CORTE import corte
+from MODULOS.ETL_CADASTRO import cadastro
+from MODULOS.ETL_validar_os import validar_os
+from MODULOS.BI_Giro_Status import Giro_Status
+from MODULOS.ETL_ACURACIDADE import acuracidade
+from MODULOS.ETL_CHEIO_X_VAZIO import cheio_vazio
+from MODULOS.BI_ABST import BI_ABST
 """
 primeira fase
 background = "#2D2D2D"
@@ -30,10 +27,6 @@ frame_color = "#F0FFFF"
 text_color = "#000000"
 borda_color = "#000000"
 
-
-import datetime as dt
-import threading
-from tkinter import messagebox
 
 class Auxiliares:
     def __init__(self):
@@ -81,84 +74,27 @@ class Auxiliares:
 
         for i, nome in enumerate(argumento):
             try:
-                inicio_fase = time.time()
-                ID = 1
-                print(
-                    f"{"-" *78}"
-                    f"\n"
-                    f"depuração\n"
-                    f"fase_{ID}\n"
-                    f">>{nome}"
-                    f"\n"
-                    f"{"-" *78}"
-                )
-
                 progresso_anterior = (i / total_scripts) * 100
                 self.retorno.after(0, lambda p=progresso_anterior, n=nome: self.contador.config(text=f"{p:.0f}% -> {n}"))
 
                 classe_do_script = self.scripts_map[nome]
                 instancia = classe_do_script()
 
-                ID +=1
-                print(
-                    f"{"-" *78}"
-                    f"\n"
-                    f"depuração\n"
-                    f"fase_{ID}\n"
-                    f">>{nome}"
-                    f"\n"
-                    f"{"-" *78}"
-                )
-
-
-                log_arquivo = instancia.carregamento()
+                try:
+                    log_arquivo = instancia.carregamento()
+                except Exception as e:
+                    log_arquivo = []
                 status_pipeline = instancia.pipeline()
-
-                ID +=1
-                print(
-                    f"{"-" *78}"
-                    f"\ndepuração\n"
-                    f"fase_{ID}\n"
-                    f"\n>>{nome}"
-                    f"\n>>{log_arquivo}"
-                    f"\n>>{status_pipeline}\n"
-                    f"{"-" *78}"
-                )
-
 
                 if nome == "Corte" and status_pipeline is not False:
                     msg_corte = instancia.apresentar()
                     dic_log[nome] = "Executado"
                 elif status_pipeline:
                     dic_log[nome] = "Executado"
-
-                    ID +=1
-                    print(
-                        f"{"-" *78}"
-                        f"\ndepuração\n"
-                        f"fase_{ID}\n"
-                        f"\n>>{nome}"
-                        f"\n>>{log_arquivo}"
-                        f"\n>>{status_pipeline}\n"
-                        f"{"-" *78}"
-                    )
-
                 elif not status_pipeline:
                     dic_log[nome] = "Travado (Erro Interno)"
 
                 if isinstance(log_arquivo, list):
-
-                    ID +=1
-                    print(
-                        f"{"-" *78}"
-                        f"\ndepuração\n"
-                        f"fase_{ID}\n"
-                        f"\n>>{nome}"
-                        f"\n>>{log_arquivo}"
-                        f"\n>>{status_pipeline}\n"
-                        f"{"-" *78}"
-                    )
-
                     lista_de_logs.extend(log_arquivo)
                 elif isinstance(log_arquivo, dict):
                     lista_de_logs.append(log_arquivo)
@@ -166,9 +102,6 @@ class Auxiliares:
                 progresso_atual = ((i + 1) / total_scripts) * 100
                 txt_final = f"{progresso_atual:.0f}% -> {nome}"
                 self.retorno.after(0, lambda p=txt_final: self.contador.config(text=p))
-
-                fim_fase = time.time()
-                print(f"\nDEBUG: Fase {ID} finalizada em {fim_fase - inicio_fase:.2f} segundos\n")  
             except Exception as e:
                 dic_log[nome] = "Falha Crítica"
                 self.validar_erro(e, f"Módulo: {nome}")
@@ -257,7 +190,7 @@ class Auxiliares:
         janela_info.title(titulo)
         janela_info.geometry("1020x500")
         janela_info.resizable(False,True)
-        janela_info.configure(bg=background)
+        janela_info.configure(bg="#2D2D2D")
         janela_info.iconbitmap(Path_dados.icone_pricipal)
         janela_info.attributes("-topmost", True)
 
@@ -265,8 +198,8 @@ class Auxiliares:
             janela_info, 
             width=110, height=35, 
             font=("Consolas", 10),
-            bg= background, 
-            fg= text_color
+            bg= "#2D2D2D", 
+            fg= "#E0E0E0"
         )
         
         txt_area.insert(tk.INSERT, conteudo_formatado)
@@ -298,16 +231,15 @@ class Principal(Auxiliares):
             ,"Acuracidade": acuracidade
             ,"Cadastro": cadastro
             ,"Giro_estatus": Giro_Status
-            # ,"cheio_vazio": cheio_vazio
+            ,"cheio_vazio": cheio_vazio
             # ,"Contagem": consolidado_inv
             ,"Abastecimento": BI_ABST
         }
 
+
         self.componentes(janela_principal= root)
         self.botoes_layout(janela_principal= root)
         self.localizador()
-
-
         root.mainloop()
         
 
@@ -464,8 +396,6 @@ class Principal(Auxiliares):
             ,highlightbackground=borda_color
             ,command=lambda: self.resetar_ui()
         )
-
-
     def localizador(self):
         self.container.place(relx=0.01, rely=0.01, relheight=0.20, relwidth=0.98)
 
