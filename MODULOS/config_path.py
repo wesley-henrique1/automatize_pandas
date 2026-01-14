@@ -26,6 +26,8 @@ class DB_acumulado:
 
     tb_vz_ch = "DB_VAZIO_CHEIO"
     db_pedidos = "DB_PEDIDOS"
+    db_contagem = "DB_CONTAGEM"
+    db_tempoINV = "DB_TEMPO"
 
 
 class Relatorios:
