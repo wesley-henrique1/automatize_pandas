@@ -7,6 +7,7 @@ from MODULOS.config_path import Path_dados
 from MODULOS.ETL_CORTE import corte
 from MODULOS.ETL_CADASTRO import cadastro
 from MODULOS.ETL_validar_os import validar_os
+from MODULOS.ETL_CONTAGEM import Contagem_inv
 from MODULOS.BI_Giro_Status import Giro_Status
 from MODULOS.ETL_ACURACIDADE import acuracidade
 from MODULOS.ETL_CHEIO_X_VAZIO import cheio_vazio
@@ -232,7 +233,7 @@ class Principal(Auxiliares):
             ,"Cadastro": cadastro
             ,"Giro_estatus": Giro_Status
             ,"cheio_vazio": cheio_vazio
-            # ,"Contagem": consolidado_inv
+            ,"Contagem": Contagem_inv
             ,"Abastecimento": BI_ABST
         }
 

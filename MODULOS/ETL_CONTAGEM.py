@@ -1,4 +1,4 @@
-from config_path import Directory, DB_acumulado
+from MODULOS.config_path import Directory, DB_acumulado
 import datetime as dt
 import pandas as pd
 import glob
@@ -26,7 +26,7 @@ class auxiliares:
         
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: corte | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: Contagem | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
@@ -70,39 +70,65 @@ class auxiliares:
         except Exception as e:
             self.validar_erro(e, "Consulta_banco_dados")
             return False
-
 class Contagem_inv(auxiliares):
     def __init__(self):
         super().__init__()
-
         DRIVER = DB_acumulado.drive
         DB_PATH = DB_acumulado.path_acumulado
         self.TABELA_CONT = DB_acumulado.db_contagem
-        self.TABELA_TEMP = DB_acumulado.db_tempoINV
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH};")
-        self.list_direct = [Directory.dir_div, Directory.dir_temp]
+        self.list_direct = [Directory.dir_div]
+
         self.pipeline()
+
     def pipeline(self):
         try:
-            pasta_cont = glob.glob(os.path.join(self.list_direct[0]))
-            pasta_temp = glob.glob(os.path.join(self.list_direct[1]))
+            pasta_cont = glob.glob(os.path.join(self.list_direct[0], "*.xls*"))
 
-            triagem_cont = f"SELECT NOME_ARQUIVOS FROM {self.TABELA_CONT}"
-            triagem_temp = f"SELECT NOME_ARQUIVO FROM {self.TABELA_TEMP}"
+            triagem_cont = f"SELECT NOME_ARQ FROM {self.TABELA_CONT}"
+            names_db = self.cosultar_db(triagem_cont)
+            dados_db = set(names_db['NOME_ARQ'].str.strip().tolist())
         except Exception as e:
             self.validar_erro(e, "Etração")
             return False
         
         try:
-            pass
+            listagem = []
+            # Iniciando a leitura das contagem
+            for file in pasta_cont:
+                nome_file = os.path.basename(file)
+                if file in dados_db:
+                    continue
+                try:
+                    inv_cod = os.path.splitext(nome_file)
+                    codigo_limpo = int((inv_cod[0]).strip())
+                    buffer_df = pd.read_excel(file,header= 1, usecols= ["Código", "Descrição", "Rua", "Inventário"])
+                except Exception as e:
+                    self.validar_erro(e, nome_file)
+                    continue
+
+                buffer_df = buffer_df.rename(columns={
+                    "Código": "COD_PROD"
+                    ,"Rua": "RUA"
+                    ,"Descrição": "DESC"
+                    ,"Inventário": "CONTAGEM"
+                })
+                buffer_df['NOME_ARQ'] = nome_file
+                buffer_df['COD_INV'] = codigo_limpo
+                buffer_df = buffer_df[['COD_INV', "COD_PROD","DESC", "RUA", "CONTAGEM", "NOME_ARQ"]]
+                listagem.append(buffer_df)
         except Exception as e:
             self.validar_erro(e, "Tratamento")
             return False
         
         try:
-            pass
+            if listagem:
+                df_final = pd.concat(listagem)
+                self.atualizar(df_final,self.TABELA_CONT)
+                return True
         except Exception as e:
             self.validar_erro(e, "Carga")
             return False
-
-
+if __name__ == "__main__":
+    Contagem_inv()
+    input()
