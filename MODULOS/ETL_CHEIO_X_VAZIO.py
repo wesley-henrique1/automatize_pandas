@@ -102,7 +102,7 @@ class cheio_vazio(auxiliar):
                     list_files_db.append(NAME_FILE)
                     continue
                 try:
-                    df_TEMPORARIO = pd.read_excel(file, header= 2)
+                    df_TEMPORARIO = pd.read_excel(file, header= 2, sheet_name= "RELATORIO")
                     df_TEMPORARIO = df_TEMPORARIO.loc[df_TEMPORARIO['Retorno'].isin(['CHEIO', 'VAZIO'])]
                     df_TEMPORARIO = df_TEMPORARIO[['END', 'COD', 'DESCRIÇÃO', 'RUA', 'PREDIO', 'NIVEL', 'APTO', 'Retorno', 'data_relatorio']]
                     df_TEMPORARIO['NAME_FILE'] = NAME_FILE
