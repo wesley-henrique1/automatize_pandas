@@ -234,7 +234,6 @@ class Giro_Status(auxiliar):
                 QT_AE = ('COD_END', 'nunique')
             ).reset_index()
 
-            aereo_filtrado = ENDERECO.loc[(ENDERECO['COD'].isin(df_completo['CODPROD'].unique()))]
             df_completo = df_completo.merge(grupo_endereco, left_on= 'CODPROD', right_on= 'COD', how= 'left').drop(columns= 'COD').fillna({'QT_AE': 0})
             col_classificar = [
                 'CODPROD'
@@ -276,6 +275,15 @@ class Giro_Status(auxiliar):
                 (df_completo['QTESTGER'] > 0) 
                 & (df_completo['DIAS_PEDENTE'] > 30) 
                 & (df_completo['DIAS_ULT_ENTRADA'] > 30)].copy()
+            
+            todos_cods = pd.concat([
+                FL_zerado["CODPROD"],
+                FL_ativo["CODPROD"],
+                ativo_zerado["CODPROD"],
+                ger_parado["CODPROD"]
+            ])
+            lista_cod_unica = set(todos_cods)
+            aereo_filtrado = ENDERECO.loc[(ENDERECO['COD'].isin(lista_cod_unica))]
         except Exception as e:
             self.validar_erro(e, "TRATAMENTO")
             return False

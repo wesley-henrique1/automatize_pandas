@@ -6,6 +6,7 @@ import warnings
 import os
 import re
 warnings.simplefilter(action='ignore', category=UserWarning)
+
 class auxiliar:
     def validar_erro(self, e, etapa):
         largura = 78
@@ -23,7 +24,7 @@ class auxiliar:
         
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: cadastro | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
@@ -48,6 +49,13 @@ class auxiliar:
 class cadastro(auxiliar):
     def __init__(self):
         self.lista_files = [Relatorios.rel_96, Outros.ou_end]
+        self.chekout = [27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
+        self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
+        
+        largura = 100
+        comprimento = 120
+        self.area_pl = (largura * comprimento) + 100
+
 
     def carregamento(self):
         lista_de_logs = []
@@ -76,12 +84,13 @@ class cadastro(auxiliar):
             base = pd.read_excel(self.lista_files[0])
             endereco = pd.read_excel(self.lista_files[1], sheet_name= 'STATUS')
         except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
+            self.validar_erro(e, "Extract")
             return False
 
         try:
             TEMP = base.merge(endereco, left_on= 'RUA', right_on= 'RUA', how= 'inner')
             df = TEMP.loc[TEMP['RUA'].between(1,39)].copy()
+            concat = df['RUA'].astype(str) + " - " + df['PREDIO'].astype(str)
 
             dic_raname = {
                 'ABASTECEPALETE' : 'FLEG_ABST',
@@ -90,46 +99,79 @@ class cadastro(auxiliar):
                 'QTUNITCX' : 'FATOR'
             }
             df = df.rename(columns=dic_raname)
-            concat = df['RUA'].astype(str) + " - " + df['PREDIO'].astype(str)
 
-            df['extrator'] = df['EMBALAGEMMASTER'].str.extract(r'(\d+)').astype(int)
-            df['volume_master'] = df['ALTURAARM'].astype(float) * df['LARGURAARM'].astype(float) * df['COMPRIMENTOARM'].astype(float) 
-            df['volume_venda'] = (df['ALTURAM3'].astype(float) * df['LARGURAM3'].astype(float) * df['COMPRIMENTOM3'].astype(float)) * df['extrator']
+            df['AREA_LT'] = round((df['LARGURAARM'] * df['COMPRIMENTOARM']) * df['LASTROPAL'],0)
             df['CONT_AP'] = concat.map(concat.value_counts())
-
-            list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
-            df['STATUS_PROD'] = np.where((df['CONT_AP'] <= 2) & (df['PK_END'].isin(list_int)), "INT", 
-                np.where(df['CONT_AP'] > 3,"DIV", "VAL"))
-
+            df['STATUS_PROD'] = np.where(
+                (df['CONT_AP'] <= 2) & (df['PK_END'].isin(self.list_int))
+                ,"INT"
+                , np.where(
+                    df['CONT_AP'] > 3 & (df['PK_END'].isin(~self.list_int))
+                    ,"DIV"
+                    ,"VAL"
+                )
+            )
             df['GRAMATURA_GR'] = df["DESCRICAO"].apply(self.extrair_e_converter_peso).fillna(0)
-            chekout = [13, 27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
             
             try:
-                df["VAL_CAP"] = np.where((df['CAP'] < df['QTTOTPAL']) & (df['STATUS_PROD'] == "INT"), "DIVERGENCIA",
-                                        np.where((df['CAP'] > df['QTTOTPAL']) & (df['STATUS_PROD'] == "DIV"),"DIVERGENCIA", "NORMAL"))
-                df['VAL_FLEG'] = np.where((df['FLEG_ABST'] == 'SIM') & (df['STATUS_PROD'] == "INT"), "NORMAL", 
-                                        np.where((df['FLEG_ABST']== 'NÃO') & (df['STATUS_PROD'] == "DIV"), "NORMAL", "DIVERGENCIA"))
-                df['VAL_CUBAGEM'] = np.where(df['volume_master'] < df['volume_venda'], "DIVERGENCIA", "NORMAL")
-                df['VAL_CARACT'] = np.where(df['CARACTERISTICA'] != df['CARACT'], "DIVERGENCIA","NORMAL")
-                df['VAL_PESO'] = np.where((df["GRAMATURA_GR"] >= 1000) & (df['APTO'] > 200) & (~df['RUA'].isin([31,32])), "ACIMA DA BANDEJA", "NORMAL")
-                df['VAL_TIPO'] = np.where((df['TIPO_1'] == '1 - GRANDEZA') & (df['RUA'].isin(chekout)), "DIVERGENCIA", "NORMAL")
-
-                df['VAL_PROD'] = np.where(
-                    (df['TIPO_RUA'] == 'UN') & (df['FATOR'] == 1), "DIVERGENCIA",
-                    np.where((df['TIPO_RUA'] == 'CX') & (df['FATOR'] != 1), "DIVERGENCIA", "NORMAL")
+                df["VAL_CAP"] = np.where(
+                    (df['CAP'] < df['QTTOTPAL']) & (df['STATUS_PROD'] == "INT")
+                    ,"DIVERGENCIA"
+                    ,np.where(
+                        (df['CAP'] > df['QTTOTPAL']) & (df['STATUS_PROD'] == "DIV")
+                        ,"DIVERGENCIA"
+                        ,"NORMAL"
+                    )
+                )
+                df['VAL_FLEG'] = np.where(
+                    (df['FLEG_ABST'] == 'SIM') & (df['STATUS_PROD'] == "INT")
+                    ,"NORMAL"
+                    ,np.where(
+                        (df['FLEG_ABST']== 'NÃO') & (df['STATUS_PROD'] == "DIV")
+                        ,"NORMAL"
+                        ,"DIVERGENCIA"
+                    )
+                )
+                df['VAL_CUBAGEM'] = np.where(
+                    df['AREA_LT'] > self.area_pl
+                    ,"DIVERGENCIA"
+                    ,"NORMAL"
+                )
+                df['VAL_CARACT'] = np.where(
+                    df['CARACTERISTICA'] != df['CARACT']
+                    ,"DIVERGENCIA"
+                    ,"NORMAL"
+                )
+                df['VAL_PESO'] = np.where(
+                    (df["GRAMATURA_GR"] >= 1000) & (df['APTO'] > 200) & (~df['RUA'].isin([31,32]))
+                    ,"ACIMA DA BANDEJA"
+                    ,"NORMAL"
+                )
+                df['VAL_TIPO_OS'] = np.where(
+                    (df['TIPO_1'] == '1 - GRANDEZA') & (df['RUA'].isin(self.chekout))
+                    ,"DIVERGENCIA"
+                    ,"NORMAL"
+                )
+                df['VAL_RUA'] = np.where(
+                    (df['TIPO_RUA'] == 'UN') & (df['FATOR'] == 1)
+                    ,"DIVERGENCIA",
+                    np.where(
+                        (df['TIPO_RUA'] == 'CX') & (df['FATOR'] != 1)
+                        ,"DIVERGENCIA"
+                        ,"NORMAL"
+                    )
                 )
             except Exception as e:
-                self.validar_erro(e, "CARREGAMENTO")
+                self.validar_erro(e, "T-coluna calculadas")
                 return False
 
             try:
-                drop_columns = ['CODFILIAL', 'DTULTENT','CODAUXILIAR2','CODAUXILIAR','PK_END', 'PKESTRU', 'PULMAO','PESOBRUTO', 'PESOLIQ','PESOBRUTOMASTER', 'PESOLIQMASTER', 'CODFORNEC', 'FORNECEDOR', 'CODSEC', 'SECAO', 'PRAZOVAL', 'PERCTOLERANCIAVAL','REVENDA', 'USAWMS','LASTROPAL', 'ALTURAPAL','ALTURAM3', 'LARGURAM3', 'COMPRIMENTOM3', 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM', 'TIPO_1', 'TIPO_NORMA', 'TIPOPROD','EMBALAGEM','EMBALAGEMMASTER','extrator','volume_master', 'volume_venda','TIPO', 'NIVEL','CARACTERISTICA','GRAMATURA_GR']
-
+                drop_columns = ['CODFILIAL', 'DTULTENT','CODAUXILIAR2','CODAUXILIAR','PK_END', 'PKESTRU', 'PULMAO','PESOBRUTO', 'PESOLIQ','PESOBRUTOMASTER', 'PESOLIQMASTER', 'CODFORNEC', 'FORNECEDOR', 'CODSEC', 'SECAO', 'PRAZOVAL', 'PERCTOLERANCIAVAL','REVENDA', 'USAWMS','LASTROPAL', 'ALTURAPAL','ALTURAM3', 'LARGURAM3', 'COMPRIMENTOM3', 'ALTURAARM', 'LARGURAARM', 'COMPRIMENTOARM', 'TIPO_1', 'TIPO_NORMA', 'TIPOPROD','EMBALAGEM','EMBALAGEMMASTER','extrator','TIPO', 'NIVEL','CARACT','GRAMATURA_GR']
                 df_final = df.drop(columns= drop_columns)
 
-                ordem_primaria = ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', 'TIPO_RUA','CARACT']
+                ordem_primaria = ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', 'TIPO_RUA','CARACTERISTICA']
                 capacidade = ['FATOR','QTTOTPAL','CAP', 'P_REP','CONT_AP','FLEG_ABST','STATUS_PROD']
-                validar = ['VAL_CAP', 'VAL_FLEG', 'VAL_CARACT', 'VAL_TIPO', 'VAL_CUBAGEM', 'VAL_PESO', 'VAL_PROD']
+                validar = ['VAL_CAP', 'VAL_FLEG', 'VAL_CARACT', 'VAL_TIPO_OS', 'VAL_CUBAGEM', 'VAL_PESO', 'VAL_RUA']
                 ordem_completa = ordem_primaria + capacidade + validar
                 df_final = df_final[ordem_completa]
 
@@ -149,16 +191,16 @@ class cadastro(auxiliar):
                 df_amostradinho = pd.DataFrame({
                     "CATEGORIA": ["RUAS", "PRODUTOS", "PERC_PROD (%)"],
                     "CONTAGEM":  [contagem, pront_tt, 100],
-                    "MISTO":     [misto, 0, 0], # Misto não tem cálculo de produto no seu código, preenchi com 0
+                    "MISTO":     [misto, 0, 0],
                     "CAIXA":     [caixa, prod_caixa, porcent_cx],
                     "UNITARIO":  [unitario, prod_unitario, porcent_un],
                     "x":         ["x", "x", "x"]
                 })
             except Exception as e:
-                self.validar_erro(e, "CARREGAMENTO")
+                self.validar_erro(e, "T-organizar")
                 return False
         except Exception as e:
-                self.validar_erro(e, "CARREGAMENTO")
+                self.validar_erro(e, "Transform")
                 return False
 
         try:
@@ -168,12 +210,5 @@ class cadastro(auxiliar):
                 df_amostradinho.to_excel(PL, sheet_name= "demostrativo", index= False)
             return True
         except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
+            self.validar_erro(e, "Load")
             return False
-if __name__ == "__main__":
-    cadastro()
-    input("Precione a tecla 'enter'...")
-
-
-    
-    

@@ -1,4 +1,4 @@
-from MODULOS.config_path import Directory, DB_acumulado
+from config_path import Directory, DB_acumulado
 import datetime as dt
 import pandas as pd
 import glob
@@ -11,7 +11,7 @@ from sqlalchemy.engine import URL
 
 class auxiliares:
     def validar_erro(self, e, etapa):
-        largura = 78
+        largura = 64
         mapeamento = {
             PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
             FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
@@ -45,90 +45,142 @@ class auxiliares:
             query={"odbc_connect":  self.ODBC_CONN_STR}
             )
             self.engine = create_engine(connection_url)
-            with self.engine.connect() as connection:
-                result = connection.execute(text(consulta))
-                dados_existentes = result.fetchall()
-
-                nomes_colunas = result.keys()
-                db_dados = pd.DataFrame(
-                    dados_existentes,
-                    columns=nomes_colunas
-                )
+            db_dados = pd.read_sql(text(consulta), self.engine)
+            return db_dados
         except Exception as e:
             self.validar_erro(e, "Consulta_banco_dados")
             return pd.DataFrame()
-
-        return db_dados        
     def atualizar(self, df, tabela):
         try:            
             df.to_sql(
-                name= tabela,
-                con= self.engine,
-                if_exists='append',
-                index=False,
+                name= tabela
+                ,con= self.engine
+                ,if_exists='append'
+                ,index=False
+                ,chunksize=1000
+                ,method='multi'
             )
         except Exception as e:
-            self.validar_erro(e, "Consulta_banco_dados")
+            self.validar_erro(e, f"Load_{tabela}")
             return False
 class Contagem_inv(auxiliares):
     def __init__(self):
         super().__init__()
         DRIVER = DB_acumulado.drive
         DB_PATH = DB_acumulado.path_acumulado
-        self.TABELA_CONT = DB_acumulado.db_contagem
+
+        self.TABELA_PROD = DB_acumulado.db_prod
+        self.TABELA_CONT = DB_acumulado.db_cont
+
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH};")
-        self.list_direct = [Directory.dir_div]
+        self.list_direct = [Directory.dir_PROD, Directory.dir_CONT]
 
         self.pipeline()
 
     def pipeline(self):
         try:
-            pasta_cont = glob.glob(os.path.join(self.list_direct[0], "*.xls*"))
+            inv_prod = glob.glob(os.path.join(self.list_direct[0], "*.xls*"))
+            inv_cont = glob.glob(os.path.join(self.list_direct[1], "*.xls*"))
 
-            triagem_cont = f"SELECT NOME_ARQ FROM {self.TABELA_CONT}"
-            names_db = self.cosultar_db(triagem_cont)
-            dados_db = set(names_db['NOME_ARQ'].str.strip().tolist())
+            db_prod = self.cosultar_db(f"SELECT NOME_ARQ FROM {self.TABELA_PROD}")
+            dados_prod = set(db_prod['NOME_ARQ'].str.strip().tolist())
+
+            db_cont =self.cosultar_db(f"SELECT COD_INV FROM {self.TABELA_CONT}")
+            dados_cont = set(db_cont['COD_INV'].str.strip().astype(int).tolist())
         except Exception as e:
-            self.validar_erro(e, "Etração")
+            self.validar_erro(e, "Extract")
             return False
         
         try:
-            listagem = []
-            # Iniciando a leitura das contagem
-            for file in pasta_cont:
-                nome_file = os.path.basename(file)
-                if file in dados_db:
-                    continue
-                try:
-                    inv_cod = os.path.splitext(nome_file)
-                    codigo_limpo = int((inv_cod[0]).strip())
-                    buffer_df = pd.read_excel(file,header= 1, usecols= ["Código", "Descrição", "Rua", "Inventário"])
-                except Exception as e:
-                    self.validar_erro(e, nome_file)
-                    continue
+            try:
+                listagem_prod = []
+                for file in inv_prod:
+                    if file in dados_prod:
+                        continue
+                    nome_file = os.path.basename(file)
+                    try:
+                        inv_cod = os.path.splitext(nome_file)
+                        codigo_limpo = int((inv_cod[0]).strip())
+                        ficante_df = pd.read_excel(file, header= 1, usecols= ["Código", "Descrição", "Rua", "Inventário"])
+                    except Exception as e:
+                        self.validar_erro(e, nome_file)
+                        continue
 
-                buffer_df = buffer_df.rename(columns={
-                    "Código": "COD_PROD"
-                    ,"Rua": "RUA"
-                    ,"Descrição": "DESC"
-                    ,"Inventário": "CONTAGEM"
-                })
-                buffer_df['NOME_ARQ'] = nome_file
-                buffer_df['COD_INV'] = codigo_limpo
-                buffer_df = buffer_df[['COD_INV', "COD_PROD","DESC", "RUA", "CONTAGEM", "NOME_ARQ"]]
-                listagem.append(buffer_df)
+                    ficante_df = ficante_df.rename(columns={
+                        "Código": "COD_PROD"
+                        ,"Rua": "RUA"
+                        ,"Descrição": "DESC"
+                        ,"Inventário": "CONTAGEM"
+                    })
+                    ficante_df['NOME_ARQ'] = nome_file
+                    ficante_df['COD_INV'] = codigo_limpo
+                    ficante_df = ficante_df[['COD_INV', "COD_PROD","DESC", "RUA", "CONTAGEM", "NOME_ARQ"]]
+                    listagem_prod.append(ficante_df)
+                if listagem_prod:
+                    df_PROD = pd.concat(listagem_prod, ignore_index=True)
+                    self.atualizar(df_PROD, self.TABELA_PROD)
+            except Exception as e:
+                self.validar_erro(e, "T-INV_PROD")
+           
+            try:
+                listagem_cont = []
+
+                for file in inv_cont:
+                    try:
+                        nome_file = os.path.basename(file)
+
+                        nome_sem_ext = os.path.splitext(nome_file)
+                        partes = (nome_sem_ext[0]).split('_')
+                        cod_limpo = int((partes[0]).strip())
+                        num_contagem = int(partes[1].strip())
+                    except Exception as e:
+                        self.validar_erro(e, f"T-INV_CONT:{file}")
+
+                    if cod_limpo in dados_cont:
+                        continue
+                    try:
+                        ficante_df = pd.read_excel(file, usecols= ["Contador", "End. OS", "Inicio Cont.", "Fim cont."])
+
+                        cont_func = ficante_df['Contador'].nunique()
+                        qt_end = ficante_df['End. OS'].sum()
+                        inicio_dt = ficante_df['Inicio Cont.'].min()
+                        fim_dt = ficante_df['Fim cont.'].max()
+                        df_analitico = pd.DataFrame({
+                            "COD_INV": [cod_limpo]
+                            ,"QT_FUNC": [cont_func]
+                            ,"QT_END": [qt_end]
+                            ,"INICIO": [inicio_dt]
+                            ,"FIM": [fim_dt]
+                            ,"contagem": [num_contagem]
+                        })
+                        listagem_cont.append(df_analitico)
+                    except Exception as e:
+                        self.validar_erro(e, nome_file)
+                        continue
+
+                if listagem_cont:
+                    df_CONT = pd.concat(listagem_cont, ignore_index= True)
+
+                    cont_final = df_CONT.groupby("COD_INV").agg(
+                        QT_FUNC = ("QT_FUNC", "nunique")
+                        ,QT_END = ("QT_END", "sum")
+                        ,INICIO = ("INICIO", "min")
+                        ,FIM = ("FIM", "max")
+                        ,CONT = ("contagem", "nunique")
+                    ).reset_index()
+                    delta = cont_final["FIM"] - cont_final["INICIO"]
+                    cont_final["TEMPO"] = delta.dt.total_seconds() / 60         
+
+                    self.atualizar(cont_final)
+            except Exception as e:
+                self.validar_erro(e, "T-INV_CONT")
+
+            return True
         except Exception as e:
-            self.validar_erro(e, "Tratamento")
+            self.validar_erro(e, "Transform")
             return False
         
-        try:
-            if listagem:
-                df_final = pd.concat(listagem)
-                self.atualizar(df_final,self.TABELA_CONT)
-                return True
-        except Exception as e:
-            self.validar_erro(e, "Carga")
-            return False
+
 if __name__ == "__main__":
     Contagem_inv()
-    input()
+    input("\n\n\nTHE END...")

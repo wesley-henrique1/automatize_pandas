@@ -26,7 +26,8 @@ class DB_acumulado:
 
     tb_vz_ch = "DB_VAZIO_CHEIO"
     db_pedidos = "DB_PEDIDOS"
-    db_contagem = "DB_CONTAGEM"
+    db_prod = "DB_INVPROD"
+    db_cont = "DB_INVCONT"
 
 
 class Relatorios:
@@ -68,7 +69,8 @@ class Directory:
     dir_cheio_vazio = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.5 - Relatório Cheio x vazio\RETORNO'
 
     # Diretórios dentro da Base de Dados
-    dir_div     = os.path.join(PASTA_DADOS, 'BASE_1733')
+    dir_PROD    = os.path.join(PASTA_DADOS, 'BASE_1733', 'INV_PROD')
+    dir_CONT     = os.path.join(PASTA_DADOS, 'BASE_1733', "INV_CONT")
     dir_acum    = os.path.join(PASTA_DADOS, 'ACUMULADOS')
     dir_82      = os.path.join(PASTA_DADOS, 'BASE_1782')
     dir_41      = os.path.join(PASTA_DADOS, 'BASE_8041')
