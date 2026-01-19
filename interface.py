@@ -1,17 +1,18 @@
 from tkinter import messagebox, scrolledtext
-import datetime as dt
 import tkinter as tk
 import threading
-from MODULOS.config_path import Path_dados
+import datetime as dt
 
-from MODULOS.ETL_CORTE import corte
-from MODULOS.ETL_CADASTRO import cadastro
-from MODULOS.ETL_validar_os import validar_os
-from MODULOS.ETL_CONTAGEM import Contagem_inv
-from MODULOS.BI_Giro_Status import Giro_Status
-from MODULOS.ETL_ACURACIDADE import acuracidade
-from MODULOS.ETL_CHEIO_X_VAZIO import cheio_vazio
-from MODULOS.BI_ABST import BI_ABST
+from modulos._settings import Path_dados
+
+from modulos.abastecimento import Abastecimento
+from modulos.acuracidade import Acuracidade
+from modulos.cont_prod import Contagem_INV
+from modulos.giro_st import Giro_Status
+from modulos.ch_vz import Cheio_Vazio
+from modulos.os_check import Os_check
+from modulos.cadastro import Cadastro
+from modulos.corte import Corte
 """
 primeira fase
 background = "#2D2D2D"
@@ -27,7 +28,6 @@ frame_color = "#F0FFFF"
 
 text_color = "#000000"
 borda_color = "#000000"
-
 
 class Auxiliares:
     def __init__(self):
@@ -76,19 +76,20 @@ class Auxiliares:
         for i, nome in enumerate(argumento):
             try:
                 progresso_anterior = (i / total_scripts) * 100
-                self.retorno.after(0, lambda p=progresso_anterior, n=nome: self.contador.config(text=f"{p:.0f}% -> {n}"))
+                self.retorno.after(
+                    0
+                    , lambda p=progresso_anterior
+                    , n=nome: self.contador.config(text=f"{p:.0f}% -> {n}")
+                )
 
                 classe_do_script = self.scripts_map[nome]
                 instancia = classe_do_script()
 
-                try:
-                    log_arquivo = instancia.carregamento()
-                except Exception as e:
-                    log_arquivo = []
+                log_arquivo = instancia.carregamento()
                 status_pipeline = instancia.pipeline()
 
                 if nome == "Corte" and status_pipeline is not False:
-                    msg_corte = instancia.apresentar()
+                    msg_corte = instancia.Log_Retorno()
                     dic_log[nome] = "Executado"
                 elif status_pipeline:
                     dic_log[nome] = "Executado"
@@ -118,6 +119,7 @@ class Auxiliares:
             self.retorno.after(200, lambda: self.segunda_tela("Relatório de Corte", msg_corte))
 
         self.retorno.after(300, finalizar)
+    
     def atualizar_log(self, dados_arquivos):
         try:
             dados_validos = [d for d in dados_arquivos if isinstance(d, dict)]
@@ -184,14 +186,13 @@ class Auxiliares:
                 f.write(log_conteudo)
         except Exception as erro_f:
             print(f"Falha crítica ao gravar log: {erro_f}")
-
     def segunda_tela(self, titulo, conteudo_formatado):
         # Cria a janela pop-up
         janela_info = tk.Toplevel()
         janela_info.title(titulo)
         janela_info.geometry("1020x500")
         janela_info.resizable(False,True)
-        janela_info.configure(bg="#2D2D2D")
+        janela_info.configure(bg=background)
         janela_info.iconbitmap(Path_dados.icone_pricipal)
         janela_info.attributes("-topmost", True)
 
@@ -199,8 +200,8 @@ class Auxiliares:
             janela_info, 
             width=110, height=35, 
             font=("Consolas", 10),
-            bg= "#2D2D2D", 
-            fg= "#E0E0E0"
+            bg= background, 
+            fg= text_color
         )
         
         txt_area.insert(tk.INSERT, conteudo_formatado)
@@ -210,7 +211,7 @@ class Principal(Auxiliares):
     def __init__(self):
         super().__init__()
         root = tk.Tk()
-        root.title("SISTEMA DE CONTROLE DE TAREFA")
+        root.title("Tela principal")
         root.geometry("580x500")
         root.resizable(False,True)
         root.config(bg= background)
@@ -227,20 +228,20 @@ class Principal(Auxiliares):
             "Contagem": tk.BooleanVar(value=False)
         }
         self.scripts_map = {
-            "Corte": corte
-            ,"Validar_os": validar_os
-            ,"Acuracidade": acuracidade
-            ,"Cadastro": cadastro
+            "Corte": Corte
+            ,"Validar_os": Os_check
+            ,"Acuracidade": Acuracidade
+            ,"Cadastro": Cadastro
             ,"Giro_estatus": Giro_Status
-            ,"cheio_vazio": cheio_vazio
-            ,"Contagem": Contagem_inv
-            ,"Abastecimento": BI_ABST
+            ,"cheio_vazio": Cheio_Vazio
+            ,"Contagem": Contagem_INV
+            ,"Abastecimento": Abastecimento
         }
-
-
         self.componentes(janela_principal= root)
         self.botoes_layout(janela_principal= root)
         self.localizador()
+
+
         root.mainloop()
         
 

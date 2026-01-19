@@ -1,27 +1,22 @@
-# --- Dados e Saídas (Onde os arquivos pesados ficam) ---
+# --- DataBase ---
 *.xlsx
 *.xls
 *.csv
-# Ignora as pastas de saída e dados
+*.txt
+*.accdb
+
+# Pasta de retornos 
 OUTPUT/
-dados_files/
-DB_ACCESS/
 
 # --- Python & Cache ---
 __pycache__/
 *.py[cod]
 *$py.class
 .meu_ambiente/
-venv/
+.venv/
 
 # --- IDEs e Ferramentas ---
 .vscode/
 .idea/
 .ipynb_checkpoints/
 JUPYTER/
-
-# --- Logs e Temporários ---
-log_erros.txt
-*.log
-# Cuidado: se tiver um README.md, ele será ignorado pela linha abaixo:
-*.md
