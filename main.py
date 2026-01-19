@@ -253,7 +253,7 @@ class JanelaPrincipal:
         janela_info.geometry("1020x500")
         janela_info.resizable(False,True)
         janela_info.configure(bg=self.back_2)
-        janela_info.iconbitmap(Path_dados.icone_pricipal)
+        janela_info.iconbitmap(Path_dados.icone_corte)
         janela_info.attributes("-topmost", True)
 
         txt_area = scrolledtext.ScrolledText(

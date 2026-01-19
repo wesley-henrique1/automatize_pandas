@@ -15,9 +15,8 @@ FILE_RETORNO = os.path.join(BASE_DIR, 'RESULTADO_FINAL.xlsx')
 
 class Path_dados:
     icone_pricipal = os.path.join(PASTA_STYLE, 'flesh_icone.ico')
-    icone_segundario = os.path.join(PASTA_STYLE, 'flesh_inteiro.ico')
+    icone_corte = os.path.join(PASTA_STYLE, 'corte_img.ico')
     png_jc = os.path.join(PASTA_STYLE, 'JC_Distribuição.png')
-    back_img = os.path.join(PASTA_STYLE, 'back_2.png')
 class DB_acumulado:
     _fixar = os.path.join(PASTA_DADOS, 'BASE_FIXAR')
     path_acumulado = os.path.join(_fixar, "DB_ACUMULADO.accdb")

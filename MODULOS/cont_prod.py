@@ -1,4 +1,4 @@
-from modulos._settings import Directory, DB_acumulado
+from _settings import Directory, DB_acumulado
 import datetime as dt
 import pandas as pd
 import glob
@@ -55,8 +55,7 @@ class auxiliares:
                 ,con= self.engine
                 ,if_exists='append'
                 ,index=False
-                ,chunksize=1000
-                ,method='multi'
+                ,chunksize=100
             )
         except Exception as e:
             self.validar_erro(e, f"Load_{tabela}")
@@ -73,8 +72,9 @@ class Contagem_INV(auxiliares):
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH};")
         self.list_direct = [Directory.dir_PROD, Directory.dir_CONT]
 
-        self.pipeline()
 
+    def carregamento(self):
+        return []
     def pipeline(self):
         try:
             inv_prod = glob.glob(os.path.join(self.list_direct[0], "*.xls*"))
@@ -165,7 +165,7 @@ class Contagem_INV(auxiliares):
                         ,QT_END = ("QT_END", "sum")
                         ,INICIO = ("INICIO", "min")
                         ,FIM = ("FIM", "max")
-                        ,CONT = ("contagem", "nunique")
+                        ,CONTAGEM = ("contagem", "nunique") 
                     ).reset_index()
                     delta = cont_final["FIM"] - cont_final["INICIO"]
                     cont_final["TEMPO"] = delta.dt.total_seconds() / 60         
@@ -179,15 +179,13 @@ class Contagem_INV(auxiliares):
         try:
             if BOOL_PROD:
                 self.atualizar(df_PROD, self.TABELA_PROD)
+                print("prod_val")
 
             if BOOL_CONT:
                 self.atualizar(cont_final, self.TABELA_CONT)
+                print("pcont_val")
 
             return True
         except Exception as e:
             self.validar_erro(e, "Laod")
             return False
-
-if __name__ == "__main__":
-    Contagem_INV()
-    input("\n\n\nTHE END...")
