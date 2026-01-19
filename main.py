@@ -19,19 +19,20 @@ class JanelaPrincipal:
     def __init__(self):
         root = tk.Tk()
         self.logica_UI = ProcessadorLogica(self)
-        self.background = "#87CEFA"
+        self.background = "#2F4F4F"
         self.frame_color = "#F0FFFF"
 
-        self.text_color = "#000000"
         self.borda_color = "#000000"
+
+        self.back_2 = "#363636"
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
+
 
         root.title("Tela principal")
         root.geometry("580x500")
         root.resizable(False,True)
         root.config(bg= self.background)
         root.iconbitmap(Path_dados.icone_pricipal)
-
         
         self.estados = {
             "Corte": tk.BooleanVar(value=False),
@@ -68,93 +69,102 @@ class JanelaPrincipal:
             ,highlightthickness=3              
         )
         # --- 2. WIDGETS ---
+        font = ("verdana", 9,"bold")
         self.check_abst = tk.Checkbutton(
             self.container
             ,text="Abastecimento"
+            ,font= font
             ,bg= self.frame_color
-            ,fg= self.text_color
+            ,fg= self.borda_color
             ,variable=self.estados["Abastecimento"]
 
             ,selectcolor=self.frame_color
             ,activebackground=self.frame_color
-            ,activeforeground=self.text_color
+            ,activeforeground=self.borda_color
         )
         self.check_Giro_estatus = tk.Checkbutton(
             self.container
             ,text="Relatorio Giro Status"
+            ,font= font
             ,bg= self.frame_color
-            ,fg= self.text_color
+            ,fg= self.borda_color
             ,variable=self.estados["Giro_estatus"]
 
             ,selectcolor=self.frame_color
             ,activebackground=self.frame_color
-            ,activeforeground=self.text_color
+            ,activeforeground=self.borda_color
         )
         self.check_acuracidade = tk.Checkbutton(
             self.container
             ,text="Acuracidade"
+            ,font= font
             ,bg= self.frame_color
-            ,fg= self.text_color
+            ,fg= self.borda_color
             ,variable=self.estados["Acuracidade"]
 
             ,selectcolor=self.frame_color
             ,activebackground=self.frame_color
-            ,activeforeground=self.text_color
+            ,activeforeground=self.borda_color
         )
         self.check_cadastro = tk.Checkbutton(
             self.container
             ,text="Cadastro"
+            ,font= font
             ,bg= self.frame_color
-            ,fg= self.text_color
+            ,fg= self.borda_color
             ,variable=self.estados["Cadastro"]
 
             ,selectcolor=self.frame_color
             ,activebackground=self.frame_color
-            ,activeforeground=self.text_color
+            ,activeforeground=self.borda_color
         )
         self.check_ch_vz = tk.Checkbutton(
             self.container
             ,text="Relatorio cheio vazio"
+            ,font= font
             ,bg= self.frame_color
-            ,fg= self.text_color
+            ,fg= self.borda_color
             ,variable= self.estados['cheio_vazio']
 
             ,selectcolor=self.frame_color
             ,activebackground=self.frame_color
-            ,activeforeground=self.text_color
+            ,activeforeground=self.borda_color
         )
         self.check_corte = tk.Checkbutton(
             self.container
             ,text="Relatorio Corte"
+            ,font= font
             ,bg= self.frame_color
-            ,fg= self.text_color
+            ,fg= self.borda_color
             ,variable=self.estados["Corte"]
 
             ,selectcolor=self.frame_color
             ,activebackground=self.frame_color
-            ,activeforeground=self.text_color
+            ,activeforeground=self.borda_color
         )
         self.check_validar_os = tk.Checkbutton(
             self.container
-            ,text="Validar ordem de serviço"
+            ,text="Ordem de serviço"
+            ,font= font
             ,bg= self.frame_color
-            ,fg= self.text_color
+            ,fg= self.borda_color
             ,variable=self.estados["Validar_os"]
 
             ,selectcolor=self.frame_color
             ,activebackground=self.frame_color
-            ,activeforeground=self.text_color
+            ,activeforeground=self.borda_color
         )
         self.check_contagem = tk.Checkbutton(
             self.container
             ,text="Contagem inventario"
+            ,font= font
             ,bg= self.frame_color
-            ,fg= self.text_color
+            ,fg= self.borda_color
             ,variable=self.estados["Contagem"]
 
             ,selectcolor=self.frame_color
             ,activebackground=self.frame_color
-            ,activeforeground=self.text_color
+            ,activeforeground=self.borda_color
         )
 
         # --- 3. WIDGETS RETORNO---
@@ -162,7 +172,7 @@ class JanelaPrincipal:
             janela_principal
             ,font=("Consolas", 10)
             ,bg=self.frame_color
-            ,fg=self.text_color
+            ,fg=self.borda_color
             ,highlightbackground=self.borda_color
             ,highlightthickness=2
             ,padx=10, pady=10
@@ -172,7 +182,7 @@ class JanelaPrincipal:
             janela_principal
             ,text= "PROGRESSO >>"
             ,font= ("Consolas", 14)
-            ,fg= self.text_color
+            ,fg= self.frame_color
             ,bg= self.background
             ,anchor = "w"
         )
@@ -180,7 +190,7 @@ class JanelaPrincipal:
             janela_principal
             ,text= "100%"
             ,font= ("Consolas", 12)
-            ,fg= self.text_color
+            ,fg= self.frame_color
             ,bg= self.background
             ,anchor = "w"
         )
@@ -193,8 +203,8 @@ class JanelaPrincipal:
             ,font=("Arial", 10, "bold")
             ,highlightthickness=3
             
-            ,bg=self.background
-            ,fg=self.text_color
+            ,bg=self.frame_color
+            ,fg=self.borda_color
             ,highlightbackground=self.borda_color
             ,command=lambda: self.start_UI()
         )
@@ -206,8 +216,8 @@ class JanelaPrincipal:
             ,font=("Arial", 10, "bold")
             ,highlightthickness=3
             
-            ,bg=self.background
-            ,fg=self.text_color
+            ,bg=self.frame_color
+            ,fg=self.borda_color
             ,highlightbackground=self.borda_color
             ,command=lambda: self.resetar_UI()
         )
@@ -242,7 +252,7 @@ class JanelaPrincipal:
         janela_info.title(titulo)
         janela_info.geometry("1020x500")
         janela_info.resizable(False,True)
-        janela_info.configure(bg=self.background)
+        janela_info.configure(bg=self.back_2)
         janela_info.iconbitmap(Path_dados.icone_pricipal)
         janela_info.attributes("-topmost", True)
 
@@ -250,13 +260,14 @@ class JanelaPrincipal:
             janela_info, 
             width=110, height=35, 
             font=("Consolas", 10),
-            bg= self.background, 
-            fg= self.text_color
+            bg= self.back_2, 
+            fg= self.frame_color
         )
         
         txt_area.insert(tk.INSERT, conteudo_formatado)
         txt_area.configure(state='disabled') # Somente leitura
         txt_area.pack(padx=10, pady=10, expand=True, fill="both")
+    
     def _exibir_mensagem_status(self, mensagem):
         self.retorno.config(state="normal")
         self.retorno.delete("1.0", "end")
@@ -264,7 +275,6 @@ class JanelaPrincipal:
         self.retorno.tag_add("alerta", "1.0", "end")
         self.retorno.tag_config("alerta", **self.estilo_alerta)
         self.retorno.config(state="disabled")        
-
     def start_UI(self):
         selecionados = [nome for nome, var in self.estados.items() if var.get()]
         try:

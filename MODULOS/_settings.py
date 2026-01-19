@@ -10,13 +10,14 @@ else:
     INTERNAL_DIR = BASE_DIR
 
 PASTA_DADOS = os.path.join(BASE_DIR, "DataBase")
-FILE_RETORNO = os.path.join(BASE_DIR, 'RESULTADO_FINAL.xlsx')
 PASTA_STYLE = os.path.join(BASE_DIR, "styles")
+FILE_RETORNO = os.path.join(BASE_DIR, 'RESULTADO_FINAL.xlsx')
 
 class Path_dados:
-    icone_pricipal = os.path.join(PASTA_STYLE, 'flesh_perfil.ico')
-    icone_segundario = os.path.join(PASTA_STYLE, 'sloth_icon.ico')
+    icone_pricipal = os.path.join(PASTA_STYLE, 'flesh_icone.ico')
+    icone_segundario = os.path.join(PASTA_STYLE, 'flesh_inteiro.ico')
     png_jc = os.path.join(PASTA_STYLE, 'JC_Distribuição.png')
+    back_img = os.path.join(PASTA_STYLE, 'back_2.png')
 class DB_acumulado:
     _fixar = os.path.join(PASTA_DADOS, 'BASE_FIXAR')
     path_acumulado = os.path.join(_fixar, "DB_ACUMULADO.accdb")
@@ -74,7 +75,7 @@ class Directory:
     dir_fixar   = os.path.join(PASTA_DADOS, 'BASE_FIXAR')
 
     # Diretórios de Output (BI)
-    _out  = os.path.join(BASE_DIR, "OUTPUT")
+    _out  = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
     dir_acuracidade = os.path.join(_out, 'BI_ACURACIDADE')
     dir_acesso      = os.path.join(_out, 'BI_ACESSO')
 
@@ -88,7 +89,7 @@ class Directory:
                 print(f"Pasta criada: {pasta}")
 class Power_BI:
     _base_dados = PASTA_DADOS
-    _out = os.path.join(BASE_DIR, "OUTPUT")
+    _out = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
     
     # Relatório de Abastecimentos (Fontes de entrada)
     abst_atual64 = os.path.join(_base_dados, 'BASE_8664', '01- JANEIRO 8664.xlsx')
@@ -121,7 +122,7 @@ class Power_BI:
     # Relatório de Cheio x Vazio (Histórico/Acumulado)
     ch_vz = os.path.join(_base_dados, 'ACUMULADOS', 'acumulado_cheio_vazio.xlsx')
 class Ipynb:
-    _base = os.path.join(BASE_DIR, "OUTPUT")
+    _base = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
     # Salvando os resultados na raiz do projeto (BASE_DIR)
     retorno   = os.path.join(_base, 'RESULTADO.xlsx')
     retorno_1 = os.path.join(_base, 'RESULTADO_FINAL.xlsx')

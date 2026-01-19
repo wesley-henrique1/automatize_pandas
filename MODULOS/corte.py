@@ -59,7 +59,6 @@ class auxiliares:
                 ,if_exists='append'
                 ,index=False
                 ,chunksize=1000
-                ,method='multi'
             )
         except Exception as e:
             self.validar_erro(e, f"Load_{tabela}")
@@ -290,6 +289,9 @@ class Corte(auxiliares):
 
             apresentar_final = self.dia.merge(self.noite, left_on='data',right_on='data_turno', how='left', suffixes=('_DIA', '_NOITE'))
             apresentar_final = apresentar_final.merge(self.divergencia, left_on='data',right_on='DATA', how='left')
+            col_int = ["qtde_corte_DIA","qtde_corte_NOITE","qtde_item_DIA","qtde_item_NOITE", "QTDE_PED", "ped_imperfeito"]
+            for col in col_int:
+                apresentar_final[col] = apresentar_final[col].fillna(0).astype(int)
         
             data = ['data']
             valor_corte =['vl_corte_DIA', 'vl_corte_NOITE']

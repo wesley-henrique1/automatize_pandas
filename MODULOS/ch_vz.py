@@ -55,8 +55,7 @@ class auxiliar:
                 ,con= self.engine
                 ,if_exists='append'
                 ,index=False
-                ,chunksize=1000
-                ,method='multi'
+                ,chunksize=100
             )
         except Exception as e:
             self.validar_erro(e, f"Load_{tabela}")
@@ -69,6 +68,8 @@ class Cheio_Vazio(auxiliar):
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH };")
         self.list_dados = [Directory.dir_cheio_vazio]
 
+    def carregamento(self):
+        return []
     def pipeline(self):
         try:  # EXTRAÇÃO DOS DADOS
             names_db = self.cosultar_db(
