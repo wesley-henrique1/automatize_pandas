@@ -87,6 +87,7 @@ class Contagem_INV(auxiliares):
 
             db_cont =self.cosultar_db(f"SELECT COD_INV FROM {self.TABELA_CONT}")
             dados_cont = set(db_cont['COD_INV'].tolist())
+            msg_db = []
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -121,6 +122,13 @@ class Contagem_INV(auxiliares):
                 if listagem_prod:
                     df_PROD = pd.concat(listagem_prod, ignore_index=True)
                     BOOL_PROD = True
+                    total = len(listagem_prod)
+                    retorno_bd = {
+                        "ID": "INV_PROD"
+                        ,"QTDE": total
+                    }
+                    msg_db.append(retorno_bd)
+
             except Exception as e:
                 self.validar_erro(e, "T-INV_PROD")
             try:
@@ -173,6 +181,13 @@ class Contagem_INV(auxiliares):
                     delta = cont_final["FIM"] - cont_final["INICIO"]
                     cont_final["TEMPO"] = delta.dt.total_seconds() / 60         
                     BOOL_CONT = True
+
+                    total = len(listagem_cont)
+                    retorno_bd = {
+                        "ID": "INV_CONT"
+                        ,"QTDE": total
+                    }
+                    msg_db.append(retorno_bd)
             except Exception as e:
                 self.validar_erro(e, "T-INV_CONT")
         except Exception as e:
@@ -182,9 +197,11 @@ class Contagem_INV(auxiliares):
         try:
             if BOOL_PROD:
                 self.atualizar(df_PROD, self.TABELA_PROD)
-
+                
             if BOOL_CONT:
                 self.atualizar(cont_final, self.TABELA_CONT)
+            
+            
 
             return True
         except Exception as e:
