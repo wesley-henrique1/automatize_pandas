@@ -1,4 +1,4 @@
-from _settings import Directory, DB_acumulado
+from modulos._settings import Directory, DB_acumulado
 import datetime as dt
 import pandas as pd
 import glob
