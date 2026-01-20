@@ -1,4 +1,4 @@
-from modulos._settings import Directory, DB_acumulado
+from _settings import Directory, DB_acumulado
 import datetime as dt
 import pandas as pd
 import glob
@@ -72,6 +72,8 @@ class Contagem_INV(auxiliares):
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH};")
         self.list_direct = [Directory.dir_PROD, Directory.dir_CONT]
 
+        self.pipeline()
+
 
     def carregamento(self):
         return []
@@ -84,7 +86,7 @@ class Contagem_INV(auxiliares):
             dados_prod = set(db_prod['NOME_ARQ'].str.strip().tolist())
 
             db_cont =self.cosultar_db(f"SELECT COD_INV FROM {self.TABELA_CONT}")
-            dados_cont = set(db_cont['COD_INV'].str.strip().astype(int).tolist())
+            dados_cont = set(db_cont['COD_INV'].tolist())
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -93,7 +95,7 @@ class Contagem_INV(auxiliares):
             try:
                 BOOL_PROD = False
                 listagem_prod = []
-                for file in inv_prod:
+                for w, file in enumerate(inv_prod, 1):
                     if file in dados_prod:
                         continue
                     nome_file = os.path.basename(file)
@@ -114,6 +116,7 @@ class Contagem_INV(auxiliares):
                     ficante_df['NOME_ARQ'] = nome_file
                     ficante_df['COD_INV'] = codigo_limpo
                     ficante_df = ficante_df[['COD_INV', "COD_PROD","DESC", "RUA", "CONTAGEM", "NOME_ARQ"]]
+
                     listagem_prod.append(ficante_df)
                 if listagem_prod:
                     df_PROD = pd.concat(listagem_prod, ignore_index=True)
@@ -179,13 +182,15 @@ class Contagem_INV(auxiliares):
         try:
             if BOOL_PROD:
                 self.atualizar(df_PROD, self.TABELA_PROD)
-                print("prod_val")
 
             if BOOL_CONT:
                 self.atualizar(cont_final, self.TABELA_CONT)
-                print("pcont_val")
 
             return True
         except Exception as e:
             self.validar_erro(e, "Laod")
             return False
+        
+if __name__ == "__main__":
+    Contagem_INV()
+    

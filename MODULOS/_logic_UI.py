@@ -79,7 +79,7 @@ class ProcessadorLogica:
         try:
             dados_validos = [d for d in dados_arquivos if isinstance(d, dict)]
             if not dados_validos:
-                self._exibir_mensagem_status(" >>> NENHUM DADO PROCESSADO")
+                self.mainUI._exibir_mensagem_status(" >>> NENHUM DADO PROCESSADO")
                 return
 
             conteudo = f"{'ID':^3} | {'ARQUIVO':^46} | {'DATA':^10} | {'HORA':^8}\n"
@@ -100,7 +100,7 @@ class ProcessadorLogica:
             self.mainUI.retorno.see("end")
         except Exception as e:
             self.validar_erro(e, "Atualizar LOG")
-            self._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
+            self.mainUI._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
     
     def validar_erro(self, e, etapa):
         largura = 78
