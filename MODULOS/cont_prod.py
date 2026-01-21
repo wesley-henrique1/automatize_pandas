@@ -1,4 +1,4 @@
-from _settings import Directory, DB_acumulado
+from modulos._settings import Directory, DB_acumulado
 import datetime as dt
 import pandas as pd
 import glob
@@ -201,13 +201,8 @@ class Contagem_INV(auxiliares):
             if BOOL_CONT:
                 self.atualizar(cont_final, self.TABELA_CONT)
             
-            
-
             return True
         except Exception as e:
             self.validar_erro(e, "Laod")
             return False
         
-if __name__ == "__main__":
-    Contagem_INV()
-    
