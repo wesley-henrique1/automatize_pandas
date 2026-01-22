@@ -194,6 +194,27 @@ class JanelaPrincipal:
             ,bg= self.background
             ,anchor = "w"
         )
+
+        self.retorno_db = tk.Text(
+            janela_principal
+            ,font=("Consolas", 10)
+            ,bg=self.frame_color
+            ,fg=self.borda_color
+            ,highlightbackground=self.borda_color
+            ,highlightthickness=2
+            ,padx=10, pady=10
+            ,state="disabled"
+        )
+        self.retorno_file = tk.Text(
+            janela_principal
+            ,font=("Consolas", 10)
+            ,bg=self.frame_color
+            ,fg=self.borda_color
+            ,highlightbackground=self.borda_color
+            ,highlightthickness=2
+            ,padx=10, pady=10
+            ,state="disabled"
+        )
     def botoes_layout(self, janela_principal):
         self.bt_iniciar = tk.Button(
             janela_principal
@@ -239,9 +260,12 @@ class JanelaPrincipal:
         self.check_contagem.place(relx=0.68, rely=0.35)
 
         # Retorno dos scripts
-        self.retorno.place(relx=0.01, rely=0.32, relwidth=0.98, relheight=0.65)
+        self.retorno.place(relx=0.01, rely=0.32, relwidth=0.98, relheight=0.32)
         self.text_contador.place(relx=0.01, rely=0.22, relwidth=0.23, relheight=0.08)
         self.contador.place(relx=0.24, rely=0.22, relwidth=0.40, relheight=0.08)
+
+        self.retorno_db.place(relx=0.01, rely=0.65, relwidth=0.49, relheight=0.32)
+        self.retorno_file.place(relx=0.51, rely=0.65, relwidth=0.48, relheight=0.32)
 
         # botão
         self.bt_iniciar.place(relx=0.67, rely=0.22, relwidth=0.15, relheight=0.08)

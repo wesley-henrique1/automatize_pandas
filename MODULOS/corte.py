@@ -102,28 +102,6 @@ class Corte(auxiliares):
         self.list_path = [Wms.wms_67]
         self.ano = dt.datetime.now().year
 
-    def carregamento(self):
-        lista_de_logs = []
-        try:
-            for contador, path in enumerate(self.list_path, 1):
-                data_file = os.path.getmtime(path)
-                nome_file = os.path.basename(path)
-
-                data_modificacao = dt.datetime.fromtimestamp(data_file)
-                data_formatada = data_modificacao.strftime('%d/%m/%Y')
-                horas_formatada = data_modificacao.strftime('%H:%M:%S')
-
-                dic_log = {
-                    "CONTADOR" : contador
-                    ,"ARQUIVO" : nome_file
-                    ,"DATA" : data_formatada
-                    ,"HORAS" : horas_formatada
-                }
-                lista_de_logs.append(dic_log)
-            return lista_de_logs
-        except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
-            return False
     def pipeline(self):
         try: # Extração dos dados nessecario 
             files_pedidos = glob.glob(os.path.join(Directory.dir_41, '*.xls*'))
@@ -233,12 +211,6 @@ class Corte(auxiliares):
                 else :
                     query_dados = f"SELECT {'*'} FROM {self.NOME_TABELA}"
                     db_dados = self.cosultar_db(query_dados)
-                    
-
-                mensagem_ped = (
-                    f"Total de arquivos na pasta: {len(files_pedidos)}\n"
-                    ,f"Total de arquivos tratados: {len(lis_procurados)}\n"
-                )                                
             except Exception as e:
                 self.validar_erro(e, "PEDIDOS")
                 return False
@@ -254,7 +226,6 @@ class Corte(auxiliares):
                 ).reset_index()
                 var_div['data_turno'] = pd.to_datetime(var_div['data_turno'], format='%d-%m-%Y')
                 var_div = var_div.merge(db_dados, left_on= 'data_turno', right_on= 'DATA', how= 'left').drop(columns= {'NOME_ARQUIVO', 'QTDE_PROD'}).sort_values(by="data_turno", ascending= True, axis= 0)
-                
             except Exception as e:
                 self.validar_erro(e, "DIVERGENCIAS")
                 return False
@@ -275,6 +246,8 @@ class Corte(auxiliares):
                 ex_dia.to_excel(destino_corte, sheet_name= 'ex_dia', index= False)
                 ex_noite.to_excel(destino_corte, sheet_name= 'ex_noite', index= False)
             
+            self.qt_files = len(lis_procurados)
+            self.qt_erros = len(files_pedidos)
             self.dia = var_dia
             self.noite = var_noite
             self.divergencia = var_div
@@ -341,4 +314,31 @@ class Corte(auxiliares):
         except Exception as e:
             self.validar_erro(e, "Log_retorno")
             return False
-        
+    def carregamento(self):
+        lista_de_logs = []
+        try:
+            for contador, path in enumerate(self.list_path, 1):
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                dic_log = {
+                    "CONTADOR" : contador
+                    ,"ARQUIVO" : nome_file
+                    ,"DATA" : data_formatada
+                    ,"HORAS" : horas_formatada
+                }
+                lista_de_logs.append(dic_log)
+            
+            dic_retorno = [{
+                "MODULO": "Corte"
+                ,"ARQUIVOS": self.qt_files
+                ,"ERROS": self.qt_erros 
+            }]
+            return lista_de_logs, dic_retorno
+        except Exception as e:
+            self.validar_erro(e, "CARREGAMENTO")
+            return False

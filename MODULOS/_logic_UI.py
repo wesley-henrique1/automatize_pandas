@@ -18,6 +18,8 @@ class ProcessadorLogica:
         thread.start()
     def task_workflow(self, argumento):
         lista_de_logs = []
+        lista_de_file = []
+
         msg_corte = None
         dic_log = {}
         total_scripts = len(argumento)
@@ -41,8 +43,8 @@ class ProcessadorLogica:
                 classe_do_script = self.mainUI.scripts_map[nome]
                 instancia = classe_do_script()
 
-                log_arquivo = instancia.carregamento()
                 status_pipeline = instancia.pipeline()
+                log_arquivo, log_db = instancia.carregamento()
 
                 if nome == "Corte" and status_pipeline is not False:
                     msg_corte = instancia.Log_Retorno()
@@ -54,8 +56,10 @@ class ProcessadorLogica:
 
                 if isinstance(log_arquivo, list):
                     lista_de_logs.extend(log_arquivo)
+                    lista_de_file.extend(log_db)
                 elif isinstance(log_arquivo, dict):
                     lista_de_logs.append(log_arquivo)
+                    lista_de_file.append(log_db)
 
                 progresso_atual = ((i + 1) / total_scripts) * 100
                 txt_final = f"{progresso_atual:.0f}% -> {nome}"
@@ -66,7 +70,8 @@ class ProcessadorLogica:
                 self.mainUI._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
                 
         logs_unicos = {log['ARQUIVO']: log for log in lista_de_logs}.values()
-        self.mainUI.retorno.after(0, lambda: self.atualizar_log(logs_unicos))
+        logs_file = {log['MODULO']: log for log in lista_de_file}.values()
+        self.mainUI.retorno.after(0, lambda: self.atualizar_log(dados_arquivos=logs_unicos, dados_modulos= logs_file))
 
         resumo = "\n".join([f"{modulo}: {status}" for modulo, status in dic_log.items()])
         self.mainUI.retorno.after(100, lambda: messagebox.showinfo("Resumo da Operação", resumo))
@@ -75,29 +80,50 @@ class ProcessadorLogica:
             self.mainUI.retorno.after(200, lambda: self.mainUI.segunda_tela("Relatório de Corte", msg_corte))
 
         self.mainUI.retorno.after(300, finalizar)
-    def atualizar_log(self, dados_arquivos):
+    def atualizar_log(self, dados_arquivos, dados_modulos):
         try:
-            dados_validos = [d for d in dados_arquivos if isinstance(d, dict)]
+            dados_validos = [dados for dados in dados_arquivos if isinstance(dados, dict)]
             if not dados_validos:
                 self.mainUI._exibir_mensagem_status(" >>> NENHUM DADO PROCESSADO")
-                return
+            else:
+                try:
+                    conteudo = f"{'ID':^3} | {'ARQUIVO':^46} | {'DATA':^10} | {'HORA':^8}\n"
+                    conteudo += f"{'-' * 76}\n"
 
-            conteudo = f"{'ID':^3} | {'ARQUIVO':^46} | {'DATA':^10} | {'HORA':^8}\n"
-            conteudo += f"{'-' * 76}\n"
+                    for item in dados_validos:
+                        nome_arq = str(item.get('ARQUIVO', 'DESCONHECIDO'))
+                        if len(nome_arq) > 41:
+                            nome_arq = nome_arq[:43] + "..."
+                        linha = (
+                            f"{item.get('CONTADOR', 0):02d}  | {nome_arq:<46} | "
+                            f"{item.get('DATA', '--/--/----'):<10} | {item.get('HORAS', '--:--'):<8}\n")
+                        conteudo += linha
+                    self.mainUI.retorno.config(state="normal")
+                    self.mainUI.retorno.delete("1.0", "end")
+                    self.mainUI.retorno.insert("end", conteudo)
+                    self.mainUI.retorno.config(state="disabled")
+                    self.mainUI.retorno.see("end")
+                except Exception as e:
+                    self.validar_erro(e, "LOG-RETORNO")
 
-            for item in dados_validos:
-                nome_arq = str(item.get('ARQUIVO', 'DESCONHECIDO'))
-                if len(nome_arq) > 41:
-                    nome_arq = nome_arq[:43] + "..."
-                linha = (
-                    f"{item.get('CONTADOR', 0):02d}  | {nome_arq:<46} | "
-                    f"{item.get('DATA', '--/--/----'):<10} | {item.get('HORAS', '--:--'):<8}\n")
-                conteudo += linha
-            self.mainUI.retorno.config(state="normal")
-            self.mainUI.retorno.delete("1.0", "end")
-            self.mainUI.retorno.insert("end", conteudo)
-            self.mainUI.retorno.config(state="disabled")
-            self.mainUI.retorno.see("end")
+            ar_validos = [modulo for modulo in dados_modulos if isinstance(modulo, dict)]
+            if not ar_validos:
+                self.mainUI._exibir_mensagem_status(" >>> NENHUM ARQUIVO PROCESSADO")
+            else:
+                try:
+                    conteudo_log = f"{"MODULO"} | {"ARQUIVOS"} | {"ERROS"}\n"
+                    for AR in ar_validos:
+                        linha_log = f"{AR} | {"234"} | {"23"}\n"
+                        conteudo_log += linha_log
+
+                    self.mainUI.retorno_db.config(state="normal")
+                    self.mainUI.retorno_db.delete("1.0", "end")
+                    self.mainUI.retorno_db.insert("end", conteudo_log)
+                    self.mainUI.retorno_db.config(state="disabled")
+                    self.mainUI.retorno_db.see("end")
+
+                except Exception as e:
+                    self.validar_erro(e, "LOG-ERRO")
         except Exception as e:
             self.validar_erro(e, "Atualizar LOG")
             self.mainUI._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
