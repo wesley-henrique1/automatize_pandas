@@ -24,11 +24,12 @@ class auxiliar:
         
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: cadastro.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: ch_vz.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
         )
+
         try:
             with open("log_erros.txt", "a", encoding="utf-8") as f:
                 f.write(log_conteudo)
@@ -48,7 +49,7 @@ class auxiliar:
 
 class Cadastro(auxiliar):
     def __init__(self):
-        self.lista_files = [Relatorios.rel_96, Outros.ou_end]
+        self.list_path = [Relatorios.rel_96, Outros.ou_end]
         self.chekout = [27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
         
@@ -56,28 +57,6 @@ class Cadastro(auxiliar):
         comprimento = 120
         self.area_pl = (largura * comprimento) + 100
 
-    def carregamento(self):
-        lista_de_logs = []
-        try:
-            for contador, path in enumerate(self.lista_files, 1):
-                data_file = os.path.getmtime(path)
-                nome_file = os.path.basename(path)
-
-                data_modificacao = dt.datetime.fromtimestamp(data_file)
-                data_formatada = data_modificacao.strftime('%d/%m/%Y')
-                horas_formatada = data_modificacao.strftime('%H:%M:%S')
-
-                dic_log = {
-                    "CONTADOR" : contador
-                    ,"ARQUIVO" : nome_file
-                    ,"DATA" : data_formatada
-                    ,"HORAS" : horas_formatada
-                }
-                lista_de_logs.append(dic_log)
-            return lista_de_logs
-        except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
-            return False
     def pipeline(self):
         try:
             colunas_origem = [
@@ -99,8 +78,8 @@ class Cadastro(auxiliar):
                 ,"APTO"
                 ,"TIPO_1"
             ]
-            dados_prod = pd.read_excel(self.lista_files[0], usecols= colunas_origem)
-            endereco = pd.read_excel(self.lista_files[1], sheet_name= 'STATUS', usecols= ["RUA", "TIPO_RUA", "CARACT"])
+            dados_prod = pd.read_excel(self.list_path[0], usecols= colunas_origem)
+            endereco = pd.read_excel(self.list_path[1], sheet_name= 'STATUS', usecols= ["RUA", "TIPO_RUA", "CARACT"])
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -223,3 +202,28 @@ class Cadastro(auxiliar):
         except Exception as e:
             self.validar_erro(e, "Load")
             return False
+    def carregamento(self):
+        lista_de_logs = []
+        try:
+            for contador, path in enumerate(self.list_path, 1):
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                dic_log = {
+                    "CONTADOR" : contador
+                    ,"ARQUIVO" : nome_file
+                    ,"DATA" : data_formatada
+                    ,"HORAS" : horas_formatada
+                }
+                lista_de_logs.append(dic_log)
+            
+            dic_retorno = []
+            return lista_de_logs, dic_retorno
+        except Exception as e:
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
+

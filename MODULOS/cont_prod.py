@@ -31,7 +31,6 @@ class auxiliares:
         )
 
         try:
-            print("Verificar log de erro")
             with open("log_erros.txt", "a", encoding="utf-8") as f:
                 f.write(log_conteudo)
         except Exception as erro_f:
@@ -72,11 +71,6 @@ class Contagem_INV(auxiliares):
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH};")
         self.list_direct = [Directory.dir_PROD, Directory.dir_CONT]
 
-        self.pipeline()
-
-
-    def carregamento(self):
-        return []
     def pipeline(self):
         try:
             inv_prod = glob.glob(os.path.join(self.list_direct[0], "*.xls*"))
@@ -96,6 +90,7 @@ class Contagem_INV(auxiliares):
             try:
                 BOOL_PROD = False
                 listagem_prod = []
+                erros_prod = []
                 for w, file in enumerate(inv_prod, 1):
                     if file in dados_prod:
                         continue
@@ -105,6 +100,7 @@ class Contagem_INV(auxiliares):
                         codigo_limpo = int((inv_cod[0]).strip())
                         ficante_df = pd.read_excel(file, header= 1, usecols= ["Código", "Descrição", "Rua", "Inventário"])
                     except Exception as e:
+                        erros_prod.append(nome_file)
                         self.validar_erro(e, nome_file)
                         continue
 
@@ -128,12 +124,12 @@ class Contagem_INV(auxiliares):
                         ,"QTDE": total
                     }
                     msg_db.append(retorno_bd)
-
             except Exception as e:
                 self.validar_erro(e, "T-INV_PROD")
             try:
                 BOOL_CONT = False
                 listagem_cont = []
+                erros_cont = []
 
                 for file in inv_cont:
                     try:
@@ -165,6 +161,7 @@ class Contagem_INV(auxiliares):
                         })
                         listagem_cont.append(df_analitico)
                     except Exception as e:
+                        erros_cont.append(nome_file)
                         self.validar_erro(e, nome_file)
                         continue
 
@@ -200,9 +197,31 @@ class Contagem_INV(auxiliares):
                 
             if BOOL_CONT:
                 self.atualizar(cont_final, self.TABELA_CONT)
-            
+
+            self.dic_prod ={
+                "MODULO": "INV_PROD"
+                ,"ARQUIVOS": len(listagem_prod)
+                ,"ERROS": len(erros_prod)
+                ,"LEITURA": len(inv_prod) 
+            }
+            self.dic_count = {
+                "MODULO": "INV_CONT"
+                ,"ARQUIVOS": len(listagem_cont)
+                ,"ERROS": len(erros_cont)
+                ,"LEITURA": len(inv_cont)
+            }
             return True
         except Exception as e:
             self.validar_erro(e, "Laod")
             return False
-        
+    def carregamento(self):
+        lista_de_logs = []
+        dic_retorno = []
+        try:
+            dic_retorno.append(self.dic_prod)
+            dic_retorno.append(self.dic_count)
+            return lista_de_logs, dic_retorno
+        except Exception as e:
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
+

@@ -289,7 +289,7 @@ class JanelaPrincipal:
         )
         
         txt_area.insert(tk.INSERT, conteudo_formatado)
-        txt_area.configure(state='disabled') # Somente leitura
+        txt_area.configure(state='disabled')
         txt_area.pack(padx=10, pady=10, expand=True, fill="both")
     
     def _exibir_mensagem_status(self, mensagem):
@@ -313,6 +313,9 @@ class JanelaPrincipal:
             self.estados[var].set(False)
         
         self._exibir_mensagem_status("Aguardando proximo processo...")
+        self.retorno_db.config(state="normal")
+        self.retorno_db.delete("1.0", "end")
+
         self.contador.config(text="100%")
     def validar_erro(self, e, etapa):
         largura = 78

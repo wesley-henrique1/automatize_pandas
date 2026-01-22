@@ -31,7 +31,8 @@ class auxiliar:
         try:
             with open("log_erros.txt", "a", encoding="utf-8") as f:
                 f.write(log_conteudo)
-        except Exception as erro_f:
+        except Exception as e:
+            print(f"Falha crítica ao gravar log: {e}")
             self.validar_erro(e, "CARREGAMENTO")
             return False
     def organizar_df(self, df_original, col, id):
@@ -102,36 +103,14 @@ class auxiliar:
         return df_copia
 class Acuracidade(auxiliar):
     def __init__(self):
-        self.lista_files = [Outros.ou_86, Wms.wms_07_ger,Wms.wms_07_end,Relatorios.rel_96]
+        self.list_path = [Outros.ou_86, Wms.wms_07_ger,Wms.wms_07_end,Relatorios.rel_96]
 
-    def carregamento(self):
-        lista_de_logs = []
-        try:
-            for contador, path in enumerate(self.lista_files, 1):
-                data_file = os.path.getmtime(path)
-                nome_file = os.path.basename(path)
-
-                data_modificacao = dt.datetime.fromtimestamp(data_file)
-                data_formatada = data_modificacao.strftime('%d/%m/%Y')
-                horas_formatada = data_modificacao.strftime('%H:%M:%S')
-
-                dic_log = {
-                    "CONTADOR" : contador
-                    ,"ARQUIVO" : nome_file
-                    ,"DATA" : data_formatada
-                    ,"HORAS" : horas_formatada
-                }
-                lista_de_logs.append(dic_log)
-            return lista_de_logs
-        except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
-            return False
     def pipeline(self):
         try:
-            df_bloq = pd.read_excel(self.lista_files[0], usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria'])
-            end_ger = pd.read_csv(self.lista_files[1], header= None, names= ColNames.col_ger)  
-            df_end = pd.read_csv(self.lista_files[2], header= None, names= ColNames.col_end)
-            df_prod = pd.read_excel(self.lista_files[3], usecols= ['CODPROD', 'QTUNITCX','QTTOTPAL'])
+            df_bloq = pd.read_excel(self.list_path[0], usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria'])
+            end_ger = pd.read_csv(self.list_path[1], header= None, names= ColNames.col_ger)  
+            df_end = pd.read_csv(self.list_path[2], header= None, names= ColNames.col_end)
+            df_prod = pd.read_excel(self.list_path[3], usecols= ['CODPROD', 'QTUNITCX','QTTOTPAL'])
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -246,3 +225,28 @@ class Acuracidade(auxiliar):
         except Exception as e:
             self.validar_erro(e, "Load")
             return False
+    def carregamento(self):
+        lista_de_logs = []
+        try:
+            for contador, path in enumerate(self.list_path, 1):
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                dic_log = {
+                    "CONTADOR" : contador
+                    ,"ARQUIVO" : nome_file
+                    ,"DATA" : data_formatada
+                    ,"HORAS" : horas_formatada
+                }
+                lista_de_logs.append(dic_log)
+            
+            dic_retorno = []
+            return lista_de_logs, dic_retorno
+        except Exception as e:
+            self.validar_erro(e, "CARREGAMENTO")
+            return False
+

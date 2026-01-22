@@ -46,6 +46,8 @@ class ProcessadorLogica:
                 status_pipeline = instancia.pipeline()
                 log_arquivo, log_db = instancia.carregamento()
 
+                print(f"{nome}>>{log_db}\n")
+
                 if nome == "Corte" and status_pipeline is not False:
                     msg_corte = instancia.Log_Retorno()
                     dic_log[nome] = "Executado"
@@ -54,12 +56,16 @@ class ProcessadorLogica:
                 elif not status_pipeline:
                     dic_log[nome] = "Travado (Erro Interno)"
 
-                if isinstance(log_arquivo, list):
-                    lista_de_logs.extend(log_arquivo)
-                    lista_de_file.extend(log_db)
-                elif isinstance(log_arquivo, dict):
-                    lista_de_logs.append(log_arquivo)
-                    lista_de_file.append(log_db)
+                if log_arquivo:
+                    if isinstance(log_arquivo, list):
+                        lista_de_logs.extend(log_arquivo)
+                    else:
+                        lista_de_logs.append(log_arquivo)
+                if log_db:
+                    if isinstance(log_db, list):
+                        lista_de_file.extend(log_db)
+                    else:
+                        lista_de_file.append(log_db)
 
                 progresso_atual = ((i + 1) / total_scripts) * 100
                 txt_final = f"{progresso_atual:.0f}% -> {nome}"
@@ -114,12 +120,15 @@ class ProcessadorLogica:
                 self.mainUI._exibir_mensagem_status(" >>> NENHUM ARQUIVO PROCESSADO")
             else:
                 try:
-                    conteudo_log = f"{"MODULO":^12} | {"ARQUIVOS":^8} | {"ERROS":6}\n"
+                    conteudo_log = f"{"MODULO":^6} | {"ARQUIVOS":^8} | {"ERROS":5} | {"LEITURAS":^8}\n"
+                    divisa = f"{"-" * 36}\n"
+                    conteudo_log += divisa
                     for file in ar_validos:
                         modulo = file.get("MODULO", "DESCONHECIDO")
-                        qtde = file.get("ARQUIVOS", 0)
+                        contador = file.get("ARQUIVOS", 0)
                         fora = file.get("ERROS", 0)
-                        linha_log = f"{modulo:^12} | {qtde:^8} | {fora:^6}\n"
+                        qtde = file.get("LEITURA", 0)
+                        linha_log = f"{modulo:^6} | {contador:^8} | {fora:^5} | {qtde:^8}\n"
                         conteudo_log += linha_log
 
                     self.mainUI.retorno_db.config(state="normal")

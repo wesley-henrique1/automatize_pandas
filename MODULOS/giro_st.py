@@ -83,33 +83,8 @@ class auxiliar:
 class Giro_Status(auxiliar):
     def __init__(self):
         self.HOJE = dt.datetime.now()
-        self.lista_df = [Relatorios.rel_96,Relatorios.rel_f18,Outros.ou_86, Outros.ou_f18,Wms.wms_07_end, Outros.ou_end]
+        self.list_path = [Relatorios.rel_96,Relatorios.rel_f18,Outros.ou_86, Outros.ou_f18,Wms.wms_07_end, Outros.ou_end]
 
-        self.carregamento()
-        self.pipeline()
-
-    def carregamento(self):
-        lista_de_logs = []
-        try:
-            for contador, path in enumerate(self.lista_df, 1):
-                data_file = os.path.getmtime(path)
-                nome_file = os.path.basename(path)
-
-                data_modificacao = dt.datetime.fromtimestamp(data_file)
-                data_formatada = data_modificacao.strftime('%d/%m/%Y')
-                horas_formatada = data_modificacao.strftime('%H:%M:%S')
-
-                dic_log = {
-                    "CONTADOR" : contador
-                    ,"ARQUIVO" : nome_file
-                    ,"DATA" : data_formatada
-                    ,"HORAS" : horas_formatada
-                }
-                lista_de_logs.append(dic_log)
-            return lista_de_logs
-        except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
-            return False
     def pipeline(self):
         try:
             col_96 = [
@@ -124,8 +99,8 @@ class Giro_Status(auxiliar):
                 'DTULTENT', 
                 'DTULTSAIDA'
             ]
-            PRODUTO_F11 = pd.read_excel(self.lista_df[0], usecols= col_96)
-            PRODUTO_F18 = pd.read_excel(self.lista_df[1], usecols= col_96)
+            PRODUTO_F11 = pd.read_excel(self.list_path[0], usecols= col_96)
+            PRODUTO_F18 = pd.read_excel(self.list_path[1], usecols= col_96)
 
             colunas_estoque = [
                 'Código', 
@@ -136,11 +111,11 @@ class Giro_Status(auxiliar):
                 'Custo real', 
                 'Comprador'
             ]
-            ESTOQUE_F11 = pd.read_excel(self.lista_df[2], usecols= colunas_estoque)
-            ESTOQUE_F18 = pd.read_excel(self.lista_df[3], usecols= colunas_estoque)
+            ESTOQUE_F11 = pd.read_excel(self.list_path[2], usecols= colunas_estoque)
+            ESTOQUE_F18 = pd.read_excel(self.list_path[3], usecols= colunas_estoque)
 
-            ENDERECO = pd.read_csv(self.lista_df[4], header= None, names= ColNames.col_end)
-            BASE_END = pd.read_excel(self.lista_df[5], sheet_name= "AE", usecols= ['COD_END', 'RUA'])
+            ENDERECO = pd.read_csv(self.list_path[4], header= None, names= ColNames.col_end)
+            BASE_END = pd.read_excel(self.list_path[5], sheet_name= "AE", usecols= ['COD_END', 'RUA'])
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -299,4 +274,27 @@ class Giro_Status(auxiliar):
             return True
         except Exception as e:
             self.validar_erro(e, "Laod")
+            return False
+    def carregamento(self):
+        lista_de_logs = []
+        dic_retorno = []
+        try:
+            for contador, path in enumerate(self.list_path, 1):
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                dic_log = {
+                    "CONTADOR" : contador
+                    ,"ARQUIVO" : nome_file
+                    ,"DATA" : data_formatada
+                    ,"HORAS" : horas_formatada
+                }
+                lista_de_logs.append(dic_log)
+            return lista_de_logs, dic_retorno
+        except Exception as e:
+            self.validar_erro(e, "CARREGAMENTO")
             return False

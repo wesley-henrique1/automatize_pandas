@@ -34,7 +34,6 @@ class auxiliares:
         )
 
         try:
-            print("Verificar log de erro")
             with open("log_erros.txt", "a", encoding="utf-8") as f:
                 f.write(log_conteudo)
         except Exception as erro_f:
@@ -243,7 +242,8 @@ class Corte(auxiliares):
                 ex_noite.to_excel(destino_corte, sheet_name= 'ex_noite', index= False)
             
             self.qt_files = len(lis_procurados)
-            self.qt_erros = len(files_pedidos)
+            self.qt_erros = len(list_erros)
+            self.qtde = len(list_achados)
             self.dia = var_dia
             self.noite = var_noite
             self.divergencia = var_div
@@ -332,7 +332,8 @@ class Corte(auxiliares):
             dic_retorno = [{
                 "MODULO": "Corte"
                 ,"ARQUIVOS": self.qt_files
-                ,"ERROS": self.list_erros 
+                ,"ERROS": self.qt_erros
+                ,"LEITURA": self.qtde 
             }]
             return lista_de_logs, dic_retorno
         except Exception as e:

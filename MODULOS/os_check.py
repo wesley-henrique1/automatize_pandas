@@ -23,14 +23,13 @@ class auxiliar:
         
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: cont_prod.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: os_check.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
         )
 
         try:
-            print("Verificar log de erro")
             with open("log_erros.txt", "a", encoding="utf-8") as f:
                 f.write(log_conteudo)
         except Exception as erro_f:
@@ -56,38 +55,15 @@ class auxiliar:
         return df_copia
 class Os_check(auxiliar):
     def __init__(self):
-        self.lista_files = [Outros.ou_func, Wms.wms_07_end, Relatorios.rel_28]
+        self.list_path = [Outros.ou_func, Wms.wms_07_end, Relatorios.rel_28]
 
-    def carregamento(self):
-        lista_de_logs = []
-        try:
-            for contador, path in enumerate(self.lista_files, 1):
-                data_file = os.path.getmtime(path)
-                nome_file = os.path.basename(path)
-
-                data_modificacao = dt.datetime.fromtimestamp(data_file)
-                data_formatada = data_modificacao.strftime('%d/%m/%Y')
-                horas_formatada = data_modificacao.strftime('%H:%M:%S')
-
-                dic_log = {
-                    "CONTADOR" : contador
-                    ,"ARQUIVO" : nome_file
-                    ,"DATA" : data_formatada
-                    ,"HORAS" : horas_formatada
-                }
-                lista_de_logs.append(dic_log)
-                
-            return lista_de_logs
-        except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
-            return False
     def pipeline(self):
         try:
             col_28 = ['NUMOS','CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1','NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.', 'FUNCOSFIM','FUNCGER']
 
-            df_func = pd.read_excel(self.lista_files[0], sheet_name= 'FUNC', usecols= ['ID_FUNC', 'SETOR'])
-            df_aereo = pd.read_csv(self.lista_files[1], header= None, names= ColNames.col_end)
-            df_28 = pd.read_excel(self.lista_files[2], usecols= col_28)
+            df_func = pd.read_excel(self.list_path[0], sheet_name= 'FUNC', usecols= ['ID_FUNC', 'SETOR'])
+            df_aereo = pd.read_csv(self.list_path[1], header= None, names= ColNames.col_end)
+            df_28 = pd.read_excel(self.list_path[2], usecols= col_28)
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -148,8 +124,30 @@ class Os_check(auxiliar):
                     ,index= False
                     ,sheet_name= 'FIM_MESA'
                 )
-
             return True
         except Exception as e:
             self.validar_erro(e, "Laod")
+            return False
+    def carregamento(self):
+        lista_de_logs = []
+        dic_retorno = []
+        try:
+            for contador, path in enumerate(self.list_path, 1):
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                dic_log = {
+                    "CONTADOR" : contador
+                    ,"ARQUIVO" : nome_file
+                    ,"DATA" : data_formatada
+                    ,"HORAS" : horas_formatada
+                }
+                lista_de_logs.append(dic_log)
+            return lista_de_logs, dic_retorno
+        except Exception as e:
+            self.validar_erro(e, "CARREGAMENTO")
             return False

@@ -31,7 +31,6 @@ class auxiliar:
         )
 
         try:
-            print("Verificar log de erro")
             with open("log_erros.txt", "a", encoding="utf-8") as f:
                 f.write(log_conteudo)
         except Exception as erro_f:
@@ -68,8 +67,6 @@ class Cheio_Vazio(auxiliar):
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH };")
         self.list_dados = [Directory.dir_cheio_vazio]
 
-    def carregamento(self):
-        return []
     def pipeline(self):
         try:  # EXTRAÇÃO DOS DADOS
             names_db = self.cosultar_db(
@@ -80,6 +77,7 @@ class Cheio_Vazio(auxiliar):
             pasta_files = glob.glob(os.path.join(self.list_dados[0], "*xls*"))
             list_processado = []
             list_files_db = []
+            list_erros = []
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -96,10 +94,15 @@ class Cheio_Vazio(auxiliar):
                     df_TEMPORARIO['NAME_FILE'] = NAME_FILE
                     list_processado.append(df_TEMPORARIO)
                 except Exception as e:
+                    list_erros.append(NAME_FILE)
                     self.validar_erro(e, f"\n{NAME_FILE} - consolidação")
-
+            if not list_processado:
+                self.qt_files = len(list_processado)
+                self.qt_erros = len(list_erros)
+                self.qtde = len(list_files_db)
+                return True
+            
             df_consolidado = pd.concat(list_processado, axis= 'index')
-
             list_renomear = {
                 'DESCRIÇÃO':'DESCRICAO'
                 ,'data_relatorio':'DATA_RELATORIO'
@@ -107,7 +110,6 @@ class Cheio_Vazio(auxiliar):
                 ,'NAME_FILE':'NOME_RELATORIO'
             }
             df_consolidado = df_consolidado.rename(columns=list_renomear)
-
             col_int = ['END', 'COD','RUA','PREDIO','NIVEL','APTO']
             for col in col_int:
                 try:
@@ -116,7 +118,24 @@ class Cheio_Vazio(auxiliar):
                     self.validar_erro(e, f"{col} - tratamento_int")
 
             self.atualizar(df_consolidado, self.NOME_TABELA)
+            self.qt_files = len(list_processado)
+            self.qt_erros = len(list_erros)
+            self.qtde = len(list_files_db)
             return True
         except Exception as e:
             self.validar_erro(e, "Transform")
+            return False
+    def carregamento(self):
+        lista_de_logs = []
+        dic_retorno = []
+        try:            
+            dic_retorno ={
+                "MODULO": "ch_vz"
+                ,"ARQUIVOS": self.qt_files
+                ,"ERROS": self.qt_erros
+                ,"LEITURA": self.qtde 
+            }
+            return lista_de_logs, dic_retorno
+        except Exception as e:
+            self.validar_erro(e, "CARREGAMENTO")
             return False

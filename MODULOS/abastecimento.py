@@ -51,7 +51,6 @@ class auxiliar:
             df['IS_50'] = (df['Tipo O.S.'] == '50 - Movimentação De Para').astype(int)
             df['IS_61'] = (df['Tipo O.S.'] == '61 - Movimentação De Para Horizontal').astype(int)
             df['IS_58'] = (df['Tipo O.S.'] == '58 - Transferencia de Para Vertical').astype(int)
-            print(df.head(4))
             temp = df.groupby(col).agg(
                 QTDE_OS = ("NUMOS", 'nunique'),
                 OS_50 = ("IS_50", "sum"),
@@ -84,7 +83,6 @@ class auxiliar:
                     TOTAL_BONUS = ("NUMBONUS", "nunique")
                 ).reset_index().sort_values(by=col, ascending= False)  
             return temp 
-
 class Abastecimento(auxiliar):
     def __init__(self):
         self.list_path = [Outros.ou_func, Power_BI.abst_atual28, Power_BI.abst_atual64]
@@ -95,29 +93,6 @@ class Abastecimento(auxiliar):
 
         self.mes_relatorio = self.data_atual.month
 
-
-    def carregamento(self):
-        lista_de_logs = []
-        try:
-            for contador, path in enumerate(self.list_path, 1):
-                data_file = os.path.getmtime(path)
-                nome_file = os.path.basename(path)
-
-                data_modificacao = dt.datetime.fromtimestamp(data_file)
-                data_formatada = data_modificacao.strftime('%d/%m/%Y')
-                horas_formatada = data_modificacao.strftime('%H:%M:%S')
-
-                dic_log = {
-                    "CONTADOR" : contador
-                    ,"ARQUIVO" : nome_file
-                    ,"DATA" : data_formatada
-                    ,"HORAS" : horas_formatada
-                }
-                lista_de_logs.append(dic_log)
-            return lista_de_logs
-        except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
-            return False
     def pipeline(self):
         try:
             cols_28 = ['NUMOS', 'DATA', 'CODROTINA', 'POSICAO', 'CODFUNCGER', 'FUNCGER', 
@@ -146,7 +121,6 @@ class Abastecimento(auxiliar):
 
                 pendencia = concat28.loc[concat28['POSICAO'] =='P']
                 os_pedentes28 = self.agrupar(pendencia, ['DATA','CODFUNCGER'], 1) 
-                print("passou 2")
             except Exception as e:
                 self.validar_erro(e, "TRATAMENTO_28")
                 return False
@@ -198,19 +172,11 @@ class Abastecimento(auxiliar):
             fim_total.to_excel(Power_BI.abst_fim, index= False, sheet_name= "OS_FIM")
             geral_total.to_excel(Power_BI.abst_geral, index= False, sheet_name= "OS_GERAL")
             bonus.to_excel(Power_BI.abst_bonus, index= False, sheet_name= "BONUS")       
-
-            data_max28 = concat28['DATA'].max()
-            data_min28 = concat28['DATA'].min()
-
-            data_max64 = concat64['DATA'].max()
-            data_min64 = concat64['DATA'].min()
-            print("_" * 36)
-            print("\nOperação finalizada...")
-            print("Periodo calculdado de cada base:")
-            print(f"8628: {data_min28:%d-%m-%Y} - {data_max28:%d-%m-%Y}")
-            print(f"8664: {data_min64:%d-%m-%Y} - {data_max64:%d-%m-%Y}")
-            print("passou 5")
             return True
         except Exception as e:
             self.validar_erro(e, "Laod")
             return False
+    def carregamento(self):
+        lista_de_logs = []
+        dic_retorno = []
+        return lista_de_logs, dic_retorno
