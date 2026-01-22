@@ -165,37 +165,33 @@ class Corte(auxiliares):
             try:
                 list_achados = []
                 lis_procurados = []
-                dic_erros = {}
-
-                if not files_pedidos:
-                    aviso = "Nenhum arquivo Excel encontrado na pasta especificada."
+                list_erros = []
                     
                 for file in files_pedidos:
                     name_file = os.path.basename(file)
                     if name_file in arquivos_processados:
                         list_achados.append(name_file)
                         continue
+                    try:
+                        df_var = pd.read_excel(file)
+                        pedido = df_var['NUMPED'].nunique()
+                        produto = df_var['PRODUTO'].nunique()
 
-                    df_var = pd.read_excel(file)
-                    if 'NUMPED' not in df_var.columns:
-                        dic_erros['name_file'] = "COLUNA 'NUMPED' INEXISTENTE"
-                        continue
+                        data_extraida = re.search(r'(\d{2}[-_]\d{2})', name_file).group(1)
+                        data_arrumada = data_extraida.replace('_', '-') + f"-{self.ano}"
+                        data_final = pd.to_datetime(data_arrumada, format='%d-%m-%Y')
+                        novo_nome_arquivo = f"PEDIDOS_{data_arrumada}.xlsx"
 
-                    pedido = df_var['NUMPED'].nunique()
-                    produto = df_var['PRODUTO'].nunique()
-
-                    data_extraida = re.search(r'(\d{2}[-_]\d{2})', name_file).group(1)
-                    data_arrumada = data_extraida.replace('_', '-') + f"-{self.ano}"
-                    data_final = pd.to_datetime(data_arrumada, format='%d-%m-%Y')
-                    novo_nome_arquivo = f"PEDIDOS_{data_arrumada}.xlsx"
-
-                    df_pedidos = pd.DataFrame({
-                        "NOME_ARQUIVO" : [novo_nome_arquivo],
-                        "QTDE_PED"     : [pedido],
-                        "QTDE_PROD"    : [produto],
-                        "DATA"         : [data_final]
-                    })
-                    lis_procurados.append(df_pedidos)
+                        df_pedidos = pd.DataFrame({
+                            "NOME_ARQUIVO" : [novo_nome_arquivo],
+                            "QTDE_PED"     : [pedido],
+                            "QTDE_PROD"    : [produto],
+                            "DATA"         : [data_final]
+                        })
+                        lis_procurados.append(df_pedidos)
+                    except Exception as e:
+                        list_erros.append(name_file)
+                        self.validar_erro(e, f"{name_file}: P-leitura")
                     try:
                         novo_caminho_completo = os.path.join(Directory.dir_41, novo_nome_arquivo)
                         os.rename(file, novo_caminho_completo)
@@ -336,7 +332,7 @@ class Corte(auxiliares):
             dic_retorno = [{
                 "MODULO": "Corte"
                 ,"ARQUIVOS": self.qt_files
-                ,"ERROS": self.qt_erros 
+                ,"ERROS": self.list_erros 
             }]
             return lista_de_logs, dic_retorno
         except Exception as e:

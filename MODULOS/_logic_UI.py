@@ -94,10 +94,13 @@ class ProcessadorLogica:
                         nome_arq = str(item.get('ARQUIVO', 'DESCONHECIDO'))
                         if len(nome_arq) > 41:
                             nome_arq = nome_arq[:43] + "..."
+                        id = item.get('CONTADOR', 0)
+                        date = item.get('DATA', '--/--/----')
+                        hrs = item.get('HORAS', '--:--')
                         linha = (
-                            f"{item.get('CONTADOR', 0):02d}  | {nome_arq:<46} | "
-                            f"{item.get('DATA', '--/--/----'):<10} | {item.get('HORAS', '--:--'):<8}\n")
+                            f"{id:02d} | {nome_arq:<46} | {date:<10} | {hrs:<8}\n")
                         conteudo += linha
+                        
                     self.mainUI.retorno.config(state="normal")
                     self.mainUI.retorno.delete("1.0", "end")
                     self.mainUI.retorno.insert("end", conteudo)
@@ -111,9 +114,12 @@ class ProcessadorLogica:
                 self.mainUI._exibir_mensagem_status(" >>> NENHUM ARQUIVO PROCESSADO")
             else:
                 try:
-                    conteudo_log = f"{"MODULO"} | {"ARQUIVOS"} | {"ERROS"}\n"
-                    for AR in ar_validos:
-                        linha_log = f"{AR} | {"234"} | {"23"}\n"
+                    conteudo_log = f"{"MODULO":^12} | {"ARQUIVOS":^8} | {"ERROS":6}\n"
+                    for file in ar_validos:
+                        modulo = file.get("MODULO", "DESCONHECIDO")
+                        qtde = file.get("ARQUIVOS", 0)
+                        fora = file.get("ERROS", 0)
+                        linha_log = f"{modulo:^12} | {qtde:^8} | {fora:^6}\n"
                         conteudo_log += linha_log
 
                     self.mainUI.retorno_db.config(state="normal")
@@ -121,7 +127,6 @@ class ProcessadorLogica:
                     self.mainUI.retorno_db.insert("end", conteudo_log)
                     self.mainUI.retorno_db.config(state="disabled")
                     self.mainUI.retorno_db.see("end")
-
                 except Exception as e:
                     self.validar_erro(e, "LOG-ERRO")
         except Exception as e:
