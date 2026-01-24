@@ -1,7 +1,6 @@
-from modulos._settings import Power_BI,Outros
+from modulos._settings import Power_BI,Outros, Relatorios
 import datetime as dt
 import pandas as pd
-import os
 import warnings
 warnings.simplefilter(action='ignore', category=UserWarning)
 
@@ -86,12 +85,7 @@ class auxiliar:
 class Abastecimento(auxiliar):
     def __init__(self):
         self.list_path = [Outros.ou_func, Power_BI.abst_atual28, Power_BI.abst_atual64]
-
-        self.data_atual = dt.datetime.now().date()
-        self.data_limite = self.data_atual - dt.timedelta(days= 90)
-        self.data_filtro = pd.to_datetime(self.data_limite)
-
-        self.mes_relatorio = self.data_atual.month
+        self.pipeline()
 
     def pipeline(self):
         try:
@@ -100,10 +94,18 @@ class Abastecimento(auxiliar):
             cols_64 = ['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR', 'EMPILHADOR']
 
             # Execução da leitura
-            cons28 = pd.read_excel(Power_BI.abst_cons28, usecols=cols_28, engine='openpyxl')
-            m_atual28 = pd.read_excel(Power_BI.abst_atual28, usecols=cols_28, engine='openpyxl')
-            cons64 = pd.read_excel(Power_BI.abst_cons64, usecols=cols_64, engine='openpyxl')
-            m_atual64 = pd.read_excel(Power_BI.abst_atual64, usecols=cols_64, engine='openpyxl')
+            m_atual28 = pd.read_excel(Relatorios.rel_28, usecols=cols_28, engine='openpyxl')
+            m_atual64 = pd.read_excel(Relatorios.rel_64, usecols=cols_64, engine='openpyxl')
+
+            dt_maior_28 = m_atual28['DATA'].max()
+            dt_menor_28 = m_atual28['DATA'].min()
+
+            dt_maior_64 = m_atual64['DATAGERACAO'].max()
+            dt_menor_64 = m_atual64['DATAGERACAO'].min()
+            periodo = (
+                f"\n8628 >> {dt_menor_28:%d/%m/%Y} -- {dt_maior_28:%d/%m/%Y}\n"
+                f"8664 >> {dt_menor_64:%d/%m/%Y} -- {dt_maior_64:%d/%m/%Y}"
+            )
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -111,37 +113,26 @@ class Abastecimento(auxiliar):
         try:
             try:
                 m_atual28 = self.organizar_df(m_atual28,'DATA',1)
-                cons28 = self.organizar_df(cons28,'DATA',1)
-                cons28 = cons28.loc[cons28['MES'] != self.mes_relatorio]
-                concat28 = pd.concat([cons28, m_atual28], ignore_index= True)
+                os_geradas28 = self.agrupar(m_atual28, ['DATA','CODFUNCGER'], 1)
+                os_finalizadas28 = self.agrupar(m_atual28, ['DATA','CODFUNCOS'], 1)
 
-                os_geradas28 = self.agrupar(concat28, ['DATA','CODFUNCGER'], 1)
-
-                os_finalizadas28 = self.agrupar(concat28, ['DATA','CODFUNCOS'], 1)
-
-                pendencia = concat28.loc[concat28['POSICAO'] =='P']
-                os_pedentes28 = self.agrupar(pendencia, ['DATA','CODFUNCGER'], 1) 
+                pendencia = m_atual28.loc[m_atual28['POSICAO'] =='P']
+                os_pedentes28 = self.agrupar(pendencia, ['DATA','CODFUNCGER'], 1)
             except Exception as e:
-                self.validar_erro(e, "TRATAMENTO_28")
+                self.validar_erro(e, "T_28")
                 return False
-
-
             try:
                 m_atual64['CODEMPILHADOR'] = m_atual64['CODEMPILHADOR'].fillna(0)  
                 m_atual64 = self.organizar_df(m_atual64, 'DATAGERACAO', 2)
-                cons64 = self.organizar_df(cons64, 'DATAGERACAO', 2)
-
-                cons64 = cons64.loc[cons64['MES'] != self.mes_relatorio]
-                concat64 = pd.concat([cons64, m_atual64], ignore_index= True)
-                concat64 = concat64.rename(columns={'DATAGERACAO' : "DATA"})
-
-                agrupamento = self.agrupar(concat64, ['DATA', 'CODEMPILHADOR'], 2).fillna(0)
+                m_atual64 = m_atual64.rename(columns={'DATAGERACAO' : "DATA"})
+                
+                agrupamento = self.agrupar(m_atual64, ['DATA', 'CODEMPILHADOR'], 2).fillna(0)
                 agrupamento['CODFUNCGER'] = 1
 
                 os_finalizadas64 = agrupamento.loc[agrupamento['CODEMPILHADOR'] != 0]
                 os_pedentes64 = agrupamento.loc[agrupamento['CODEMPILHADOR'] == 0]
             except Exception as e:
-                self.validar_erro(e, "TRATAMENTO_64")
+                self.validar_erro(e, "T_64")
                 return False
             try:
                 """Ordem de serviço pendentes"""
@@ -160,9 +151,9 @@ class Abastecimento(auxiliar):
 
                 geral_total = grupo28.merge(grupo64, left_on='DATA', right_on= 'DATA', how= 'left').fillna(0)
 
-                bonus = self.agrupar(concat64, 'DTLANC', 5)
+                bonus = self.agrupar(m_atual64, 'DTLANC', 5)
             except Exception as e:
-                self.validar_erro(e, "TRATAMENTO_GERAL")
+                self.validar_erro(e, "T_GERAL")
                 return False
         except Exception as e:
             self.validar_erro(e, "Transform")
@@ -171,8 +162,8 @@ class Abastecimento(auxiliar):
             pd_total.to_excel(Power_BI.abst_pd, index= False, sheet_name= "OS_PD")
             fim_total.to_excel(Power_BI.abst_fim, index= False, sheet_name= "OS_FIM")
             geral_total.to_excel(Power_BI.abst_geral, index= False, sheet_name= "OS_GERAL")
-            bonus.to_excel(Power_BI.abst_bonus, index= False, sheet_name= "BONUS")       
-            return True
+            bonus.to_excel(Power_BI.abst_bonus, index= False, sheet_name= "BONUS")
+            return True, periodo
         except Exception as e:
             self.validar_erro(e, "Laod")
             return False
@@ -180,3 +171,6 @@ class Abastecimento(auxiliar):
         lista_de_logs = []
         dic_retorno = []
         return lista_de_logs, dic_retorno
+
+if __name__ == "__main__":
+    Abastecimento()

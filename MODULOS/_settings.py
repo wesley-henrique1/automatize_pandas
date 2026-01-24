@@ -10,11 +10,11 @@ else:
     INTERNAL_DIR = BASE_DIR
 
 PASTA_DADOS = os.path.join(BASE_DIR, "DataBase")
-PASTA_STYLE = os.path.join(BASE_DIR, "styles")
+PASTA_STYLE = os.path.join(BASE_DIR, "Assets")
 FILE_RETORNO = os.path.join(BASE_DIR, 'RESULTADO_FINAL.xlsx')
 
 class Path_dados:
-    icone_pricipal = os.path.join(PASTA_STYLE, 'flesh_icone.ico')
+    icone_pricipal = os.path.join(PASTA_STYLE, 'flesh_perfil.ico')
     icone_corte = os.path.join(PASTA_STYLE, 'corte_img.ico')
     png_jc = os.path.join(PASTA_STYLE, 'JC_Distribuição.png')
 class DB_acumulado:

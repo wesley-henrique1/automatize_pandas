@@ -28,7 +28,7 @@ class JanelaPrincipal:
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
 
 
-        root.title("Tela principal")
+        root.title("GERENCIADOR_8000")
         root.geometry("580x500")
         root.resizable(False,True)
         root.config(bg= self.background)
