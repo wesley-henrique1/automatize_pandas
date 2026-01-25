@@ -43,8 +43,12 @@ class ProcessadorLogica:
                 )
                 classe_do_script = self.mainUI.scripts_map[nome]
                 instancia = classe_do_script()
+                
+                if nome == "Abastecimento":
+                    status_pipeline, log_data = instancia.pipeline()  
+                else:
+                    status_pipeline = instancia.pipeline()  
 
-                status_pipeline = instancia.pipeline()  
 
                 log_arquivo, log_db = instancia.carregamento()
 
@@ -78,25 +82,26 @@ class ProcessadorLogica:
         try:       
             logs_unicos = {log['ARQUIVO']: log for log in lista_de_logs}.values()
             logs_file = {log['MODULO']: log for log in lista_de_file}.values()
-
-            self.mainUI.retorno.after(0, lambda: self.atualizar_log(dados_arquivos=logs_unicos, dados_modulos= logs_file))
-
             resumo = "\n".join([f"{modulo}: {status}" for modulo, status in dic_log.items()])
-            self.mainUI.retorno.after(100, lambda: messagebox.showinfo("Resumo da Operação", resumo))
 
+            self.mainUI.retorno.after(0, lambda: self.atualizar_log(dados_arquivos=logs_unicos, dados_modulos= logs_file, data_periodo= log_data))
+            self.mainUI.retorno.after(100, lambda: messagebox.showinfo("Resumo da Operação", resumo))
             if msg_corte is not None:
                 self.mainUI.retorno.after(200, lambda: self.mainUI.segunda_tela("Relatório de Corte", msg_corte))
 
             self.mainUI.retorno.after(300, finalizar)
         except Exception as e:
             self.validar_erro(e, "TASK_RETORNO")
-    def atualizar_log(self, dados_arquivos, dados_modulos):
+    def atualizar_log(self, dados_arquivos, dados_modulos, data_periodo):
         try:
             dados_validos = [dados for dados in dados_arquivos if isinstance(dados, dict)]
-            print(f"mais que merda:\n{dados_arquivos} \n\n {dados_validos}")
-            if not dados_validos:
-                self.mainUI._exibir_mensagem_status(" >>> NENHUM DADO PROCESSADO")
-            else:
+            ar_validos = [modulo for modulo in dados_modulos if isinstance(modulo, dict)]
+
+            if not dados_validos and not ar_validos:
+                self.mainUI._exibir_mensagem_status(" >>> NENHUM ARQUIVO PROCESSADO")
+                return
+            
+            if dados_validos:
                 try:
                     conteudo = f"{'ID':^3} | {'ARQUIVO':^46} | {'DATA':^10} | {'HORA':^8}\n"
                     conteudo += f"{'-' * 76}\n"
@@ -110,8 +115,10 @@ class ProcessadorLogica:
                         date = item.get('DATA', '--/--/----')
                         hrs = item.get('HORAS', '--:--')
                         linha = (
-                            f"{id:02d} | {nome_arq:<46} | {date:<10} | {hrs:<8}\n")
-                        conteudo += linha                
+                            f"{id:03d} | {nome_arq:<46} | {date:<10} | {hrs:<8}\n")
+                        conteudo += linha 
+
+                    
                     print(conteudo)
                     self.mainUI.retorno.config(state="normal")
                     self.mainUI.retorno.delete("1.0", "end")
@@ -120,11 +127,19 @@ class ProcessadorLogica:
                     self.mainUI.retorno.see("end")
                 except Exception as e:
                     self.validar_erro(e, "LOG-RETORNO")
+            if data_periodo:
+                try:
+                    conteudo_dt = f"{'-' * 76}\n"
+                    conteudo_dt += data_periodo
 
-            ar_validos = [modulo for modulo in dados_modulos if isinstance(modulo, dict)]
-            if not ar_validos:
-                self.mainUI._exibir_mensagem_status(" >>> NENHUM ARQUIVO PROCESSADO")
-            else:
+                    self.mainUI.retorno.config(state="normal")
+                    self.mainUI.retorno.insert("end", conteudo_dt)
+                    self.mainUI.retorno.config(state="disabled")
+                    self.mainUI.retorno.see("end")
+                except Exception as e:
+                    self.validar_erro(e, "LOG-RETORNO")
+
+            if ar_validos:
                 try:
                     conteudo_log = f"{"MODULO":^6} | {"ARQUIVOS":^8} | {"ERROS":5} | {"LEITURAS":^8}\n"
                     divisa = f"{"-" * 36}\n"

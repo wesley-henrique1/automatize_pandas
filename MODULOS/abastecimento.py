@@ -84,7 +84,7 @@ class auxiliar:
             return temp 
 class Abastecimento(auxiliar):
     def __init__(self):
-        self.list_path = [Outros.ou_func, Power_BI.abst_atual28, Power_BI.abst_atual64]
+        self.list_path = [Relatorios.rel_28, Relatorios.rel_64]
         self.pipeline()
 
     def pipeline(self):
@@ -93,7 +93,6 @@ class Abastecimento(auxiliar):
             'DTFIMOS', 'CODFUNCOS', 'FUNCOSFIM', 'Tipo O.S.', 'TIPOABAST']
             cols_64 = ['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR', 'EMPILHADOR']
 
-            # Execução da leitura
             m_atual28 = pd.read_excel(Relatorios.rel_28, usecols=cols_28, engine='openpyxl')
             m_atual64 = pd.read_excel(Relatorios.rel_64, usecols=cols_64, engine='openpyxl')
 
