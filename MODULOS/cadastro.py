@@ -1,4 +1,4 @@
-from modulos._settings import Relatorios, Outros, Output
+from _settings import Relatorios, Outros, Output
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -24,7 +24,7 @@ class auxiliar:
         
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: ch_vz.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: cadastro.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
@@ -52,10 +52,13 @@ class Cadastro(auxiliar):
         self.list_path = [Relatorios.rel_96, Outros.ou_end]
         self.chekout = [27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
+        self.list_div = ['6-PRATELEIRA','5-TERCO (0,46)','4-TERCO (0,56)','7-MEIO PALETE']
+        self.list_meio = ['3-MEDIO (0,80)']
         
         largura = 100
         comprimento = 120
         self.area_pl = (largura * comprimento) + 100
+        self.pipeline()
 
     def pipeline(self):
         try:
@@ -86,8 +89,6 @@ class Cadastro(auxiliar):
         try:
             TEMP = dados_prod.merge(endereco, on= 'RUA', how= 'inner')
             df_prod = TEMP.loc[TEMP['RUA'].between(1,39)].copy()
-            concat = df_prod['RUA'].astype(str) + " - " + df_prod['PREDIO'].astype(str)
-
             dic_raname = {
                 'ABASTECEPALETE' : 'FLEG_ABST',
                 'CAPACIDADE' : 'CAP',
@@ -96,17 +97,21 @@ class Cadastro(auxiliar):
             }
             df_prod = df_prod.rename(columns=dic_raname)
 
+            concat = df_prod['RUA'].astype(str) + " - " + df_prod['PREDIO'].astype(str)
             df_prod['AREA_LT'] = round((df_prod['LARGURAARM'] * df_prod['COMPRIMENTOARM']) * df_prod['LASTROPAL'],0)
-            df_prod['CONT_AP'] = concat.map(concat.value_counts())
+            df_prod['FREQ_PROD'] = concat.map(concat.value_counts())
+
+            condicao_inteiro = (df_prod['FREQ_PROD'] <= 2) & (df_prod['PK_END'].isin(self.list_int))
+            condicao_medio = (df_prod['FREQ_PROD'] <= 2) & (df_prod['PK_END'].isin(self.list_meio))
             df_prod['STATUS_PROD'] = np.where(
-                (df_prod['CONT_AP'] <= 2) & (df_prod['PK_END'].isin(self.list_int))
-                ,"INT"
-                , np.where(
-                    ( df_prod['CONT_AP'] > 3) & (~df_prod['PK_END'].isin(self.list_int))
-                    ,"DIV"
-                    ,"VAL"
+                    condicao_inteiro
+                    ,"INT",
+                    np.where(
+                        condicao_medio,
+                        "MEIO"
+                        ,"DIV"
+                    )
                 )
-            )
             df_prod['GRAMATURA_GR'] = df_prod["DESCRICAO"].apply(self.extrair_e_converter_peso).fillna(0)
             
             try:
@@ -163,7 +168,7 @@ class Cadastro(auxiliar):
 
             try:
                 ordem_primaria = ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', 'TIPO_RUA','CARACTERISTICA']
-                capacidade = ['FATOR','QTTOTPAL','CAP', 'P_REP','CONT_AP','FLEG_ABST','STATUS_PROD']
+                capacidade = ['FATOR','QTTOTPAL','CAP', 'P_REP','FREQ_PROD','FLEG_ABST','STATUS_PROD']
                 validar = ['VAL_CAP', 'VAL_FLEG', 'VAL_CARACT', 'VAL_TIPO_OS', 'VAL_CUBAGEM', 'VAL_PESO', 'VAL_RUA']
                 ordem_completa = ordem_primaria + capacidade + validar
                 df_final = df_prod[ordem_completa]
@@ -220,10 +225,12 @@ class Cadastro(auxiliar):
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
-            
+            print("ok")
             dic_retorno = []
             return lista_de_logs, dic_retorno
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
             return False
 
+if __name__ == "__main__":
+    Cadastro()

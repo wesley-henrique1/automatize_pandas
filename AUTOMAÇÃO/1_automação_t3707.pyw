@@ -82,7 +82,7 @@ class Aplicacao:
                 pag.hotkey("ctrl", "v")
                 for _ in range(3):
                     pag.press('enter')
-                    time.sleep(1)
+                    time.sleep(0.05)
                 
                 self.fila.put(("contador", (i, total_prod)))
                 print(f"Processado: {i}/{total_prod}")
