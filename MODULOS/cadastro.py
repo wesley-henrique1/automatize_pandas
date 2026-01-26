@@ -1,4 +1,4 @@
-from _settings import Relatorios, Outros, Output
+from modulos._settings import Relatorios, Outros, Output
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -57,7 +57,6 @@ class Cadastro(auxiliar):
         largura = 100
         comprimento = 120
         self.area_pl = (largura * comprimento) + 100
-        self.pipeline()
 
     def pipeline(self):
         try:
@@ -95,50 +94,56 @@ class Cadastro(auxiliar):
                 'QTUNITCX' : 'FATOR'
             }
             df_PRODUTO = df_prod.rename(columns=dic_raname)
-            concat_geral = df_PRODUTO['RUA'].astype(str) + " - " + df_PRODUTO['PREDIO'].astype(str)
-            filtro_MEIO = df_PRODUTO['APTO'].between(100,199)
-            concat_meio = filtro_MEIO['RUA'].astype(str) + " - " + filtro_MEIO['PREDIO'].astype(str)
-            cont_meio = concat_meio.map(concat_meio.value_counts())
-
+            df_PRODUTO['TESTE'] = df_PRODUTO['RUA'].astype(str) + " - " + df_PRODUTO['PREDIO'].astype(str)
+            filtro = (df_PRODUTO['APTO'].between(100, 199)) & (df_PRODUTO['PK_END'].isin(self.list_meio))
 
             try:
+                df_PRODUTO.loc[filtro, 'qt_meio'] = df_PRODUTO[filtro].groupby('TESTE')['TESTE'].transform('count')
+                df_PRODUTO['FREQ_PROD'] = df_PRODUTO['TESTE'].map(df_PRODUTO['TESTE'].value_counts())
                 df_PRODUTO['AREA_LT'] = round((df_PRODUTO['LARGURAARM'] * df_PRODUTO['COMPRIMENTOARM']) * df_PRODUTO['LASTROPAL'],0)
                 df_PRODUTO['GRAMATURA_GR'] = df_PRODUTO["DESCRICAO"].apply(self.extrair_e_converter_peso).fillna(0)
-                df_PRODUTO['FREQ_PROD'] = concat_geral.map(concat_geral.value_counts())
             except Exception as e:
                 self.validar_erro(e, "T-SUPORTE")
             try:
-                condicao_INT = (df_PRODUTO['FREQ_PROD'] <= 2) & (df_PRODUTO['PK_END'].isin(self.list_int))
-                condicao_MEIO =(cont_meio <= 2) & (df_PRODUTO['PK_END'].isin(self.list_meio))
-            except Exception as e:
-                self.validar_erro(e, "T-CONDIÇÃO")
-            try:
-                df_PRODUTO['STATUS_PROD'] = np.where(
-                        condicao_INT
-                        ,"INT",
-                        np.where(
-                            condicao_MEIO,
-                            "MEIO"
-                            ,"DIV"
-                        )
-                    )
-                df_PRODUTO["VAL_CAP"] = np.where(
-                    (df_PRODUTO['CAP'] < df_PRODUTO['QTTOTPAL']) & (df_PRODUTO['STATUS_PROD'] == "INT")
-                    ,"DIVERGENCIA"
-                    ,np.where(
-                        (df_PRODUTO['CAP'] > df_PRODUTO['QTTOTPAL']) & (df_PRODUTO['STATUS_PROD'] == "DIV")
-                        ,"DIVERGENCIA"
-                        ,"NORMAL"
-                    )
+                INT = (df_PRODUTO['FREQ_PROD'] <= 2) & (df_PRODUTO['PK_END'].isin(self.list_int))
+                MEIO =(df_PRODUTO['qt_meio'] <= 2) & (df_PRODUTO['PK_END'].isin(self.list_meio))
+                DIV = (df_PRODUTO['FREQ_PROD'] > 2)
+                cond_status = [INT, MEIO, DIV]
+                escolha_STATUS = ["INT","MEIO", "DIV"]
+                df_PRODUTO['STATUS_PROD'] = np.select(
+                    cond_status
+                    ,escolha_STATUS
+                    ,default="VAL"
                 )
-                df_PRODUTO['VAL_FLEG'] = np.where(
-                    (df_PRODUTO['FLEG_ABST'] == 'SIM') & (df_PRODUTO['STATUS_PROD'] == "INT")
-                    ,"NORMAL"
-                    ,np.where(
-                        (df_PRODUTO['FLEG_ABST']== 'NÃO') & (df_PRODUTO['STATUS_PROD'] == "DIV")
-                        ,"NORMAL"
-                        ,"DIVERGENCIA"
-                    )
+
+                val_int = (df_PRODUTO['CAP'] < df_PRODUTO['QTTOTPAL']) & (df_PRODUTO['STATUS_PROD'] == "INT")
+                val_div = (df_PRODUTO['CAP'] > df_PRODUTO['QTTOTPAL']) & (df_PRODUTO['STATUS_PROD'].isin(['MEIO', 'DIV']))
+                cond_cap = [val_int,val_div]
+
+                abst_S = (df_PRODUTO['FLEG_ABST'] == 'NÃO') & (df_PRODUTO['STATUS_PROD'] == "INT")
+                abst_N = (df_PRODUTO['FLEG_ABST']== 'SIM') & (df_PRODUTO['STATUS_PROD'] == "DIV")
+                cond_abst = [abst_S, abst_N]
+
+                rua_UN = (df_PRODUTO['TIPO_RUA'] == 'UN') & (df_PRODUTO['FATOR'] == 1)
+                rua_CX = (df_PRODUTO['TIPO_RUA'] == 'CX') & (df_PRODUTO['FATOR'] != 1)
+                cond_rua = [rua_UN, rua_CX]
+
+                escolha = ['DIVERGENCIA', 'DIVERGENCIA']
+
+                df_PRODUTO["VAL_CAP"] = np.select(
+                    cond_cap
+                    ,escolha
+                    ,default= "NORMAL"
+                )
+                df_PRODUTO['VAL_FLEG'] = np.select(
+                    cond_abst
+                    ,escolha
+                    ,default= "NORMAL"
+                )
+                df_PRODUTO['VAL_RUA'] = np.select(
+                    cond_rua
+                    ,escolha
+                    ,default= "NORMAL"
                 )
                 df_PRODUTO['VAL_CUBAGEM'] = np.where(
                     df_PRODUTO['AREA_LT'] > self.area_pl
@@ -159,15 +164,6 @@ class Cadastro(auxiliar):
                     (df_PRODUTO['TIPO_1'] == '1 - GRANDEZA') & (df_PRODUTO['RUA'].isin(self.chekout))
                     ,"DIVERGENCIA"
                     ,"NORMAL"
-                )
-                df_PRODUTO['VAL_RUA'] = np.where(
-                    (df_PRODUTO['TIPO_RUA'] == 'UN') & (df_PRODUTO['FATOR'] == 1)
-                    ,"DIVERGENCIA",
-                    np.where(
-                        (df_PRODUTO['TIPO_RUA'] == 'CX') & (df_PRODUTO['FATOR'] != 1)
-                        ,"DIVERGENCIA"
-                        ,"NORMAL"
-                    )
                 )
             except Exception as e:
                 self.validar_erro(e, "T-KPI")
@@ -233,6 +229,3 @@ class Cadastro(auxiliar):
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
             return False
-
-if __name__ == "__main__":
-    Cadastro()
