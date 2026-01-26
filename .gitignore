@@ -4,7 +4,6 @@
 *.csv
 *.txt
 *.accdb
-
 # Pasta de retornos 
 OUTPUT/
 

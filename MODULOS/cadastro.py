@@ -46,14 +46,13 @@ class auxiliar:
             elif unidade == 'GR':
                 return valor     
         return None
-
 class Cadastro(auxiliar):
     def __init__(self):
         self.list_path = [Relatorios.rel_96, Outros.ou_end]
         self.chekout = [27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
-        self.list_div = ['6-PRATELEIRA','5-TERCO (0,46)','4-TERCO (0,56)','7-MEIO PALETE']
-        self.list_meio = ['3-MEDIO (0,80)']
+        self.list_div = ['6-PRATELEIRA','5-TERCO (0,46)','4-TERCO (0,56)']
+        self.list_meio = ['3-MEDIO (0,80)', '7-MEIO PALETE']
         
         largura = 100
         comprimento = 120
@@ -95,110 +94,113 @@ class Cadastro(auxiliar):
                 'PONTOREPOSICAO' : 'P_REP',
                 'QTUNITCX' : 'FATOR'
             }
-            df_prod = df_prod.rename(columns=dic_raname)
+            df_PRODUTO = df_prod.rename(columns=dic_raname)
+            concat_geral = df_PRODUTO['RUA'].astype(str) + " - " + df_PRODUTO['PREDIO'].astype(str)
+            filtro_MEIO = df_PRODUTO['APTO'].between(100,199)
+            concat_meio = filtro_MEIO['RUA'].astype(str) + " - " + filtro_MEIO['PREDIO'].astype(str)
+            cont_meio = concat_meio.map(concat_meio.value_counts())
 
-            concat = df_prod['RUA'].astype(str) + " - " + df_prod['PREDIO'].astype(str)
-            df_prod['AREA_LT'] = round((df_prod['LARGURAARM'] * df_prod['COMPRIMENTOARM']) * df_prod['LASTROPAL'],0)
-            df_prod['FREQ_PROD'] = concat.map(concat.value_counts())
 
-            condicao_inteiro = (df_prod['FREQ_PROD'] <= 2) & (df_prod['PK_END'].isin(self.list_int))
-            condicao_medio = (df_prod['FREQ_PROD'] <= 2) & (df_prod['PK_END'].isin(self.list_meio))
-            df_prod['STATUS_PROD'] = np.where(
-                    condicao_inteiro
-                    ,"INT",
-                    np.where(
-                        condicao_medio,
-                        "MEIO"
-                        ,"DIV"
-                    )
-                )
-            df_prod['GRAMATURA_GR'] = df_prod["DESCRICAO"].apply(self.extrair_e_converter_peso).fillna(0)
-            
             try:
-                df_prod["VAL_CAP"] = np.where(
-                    (df_prod['CAP'] < df_prod['QTTOTPAL']) & (df_prod['STATUS_PROD'] == "INT")
+                df_PRODUTO['AREA_LT'] = round((df_PRODUTO['LARGURAARM'] * df_PRODUTO['COMPRIMENTOARM']) * df_PRODUTO['LASTROPAL'],0)
+                df_PRODUTO['GRAMATURA_GR'] = df_PRODUTO["DESCRICAO"].apply(self.extrair_e_converter_peso).fillna(0)
+                df_PRODUTO['FREQ_PROD'] = concat_geral.map(concat_geral.value_counts())
+            except Exception as e:
+                self.validar_erro(e, "T-SUPORTE")
+            try:
+                condicao_INT = (df_PRODUTO['FREQ_PROD'] <= 2) & (df_PRODUTO['PK_END'].isin(self.list_int))
+                condicao_MEIO =(cont_meio <= 2) & (df_PRODUTO['PK_END'].isin(self.list_meio))
+            except Exception as e:
+                self.validar_erro(e, "T-CONDIÇÃO")
+            try:
+                df_PRODUTO['STATUS_PROD'] = np.where(
+                        condicao_INT
+                        ,"INT",
+                        np.where(
+                            condicao_MEIO,
+                            "MEIO"
+                            ,"DIV"
+                        )
+                    )
+                df_PRODUTO["VAL_CAP"] = np.where(
+                    (df_PRODUTO['CAP'] < df_PRODUTO['QTTOTPAL']) & (df_PRODUTO['STATUS_PROD'] == "INT")
                     ,"DIVERGENCIA"
                     ,np.where(
-                        (df_prod['CAP'] > df_prod['QTTOTPAL']) & (df_prod['STATUS_PROD'] == "DIV")
+                        (df_PRODUTO['CAP'] > df_PRODUTO['QTTOTPAL']) & (df_PRODUTO['STATUS_PROD'] == "DIV")
                         ,"DIVERGENCIA"
                         ,"NORMAL"
                     )
                 )
-                df_prod['VAL_FLEG'] = np.where(
-                    (df_prod['FLEG_ABST'] == 'SIM') & (df_prod['STATUS_PROD'] == "INT")
+                df_PRODUTO['VAL_FLEG'] = np.where(
+                    (df_PRODUTO['FLEG_ABST'] == 'SIM') & (df_PRODUTO['STATUS_PROD'] == "INT")
                     ,"NORMAL"
                     ,np.where(
-                        (df_prod['FLEG_ABST']== 'NÃO') & (df_prod['STATUS_PROD'] == "DIV")
+                        (df_PRODUTO['FLEG_ABST']== 'NÃO') & (df_PRODUTO['STATUS_PROD'] == "DIV")
                         ,"NORMAL"
                         ,"DIVERGENCIA"
                     )
                 )
-                df_prod['VAL_CUBAGEM'] = np.where(
-                    df_prod['AREA_LT'] > self.area_pl
+                df_PRODUTO['VAL_CUBAGEM'] = np.where(
+                    df_PRODUTO['AREA_LT'] > self.area_pl
                     ,"DIVERGENCIA"
                     ,"NORMAL"
                 )
-                df_prod['VAL_CARACT'] = np.where(
-                    df_prod['CARACTERISTICA'] != df_prod['CARACT']
+                df_PRODUTO['VAL_CARACT'] = np.where(
+                    df_PRODUTO['CARACTERISTICA'] != df_PRODUTO['CARACT']
                     ,"DIVERGENCIA"
                     ,"NORMAL"
                 )
-                df_prod['VAL_PESO'] = np.where(
-                    (df_prod["GRAMATURA_GR"] >= 1000) & (df_prod['APTO'] > 200) & (~df_prod['RUA'].isin([31,32]))
+                df_PRODUTO['VAL_PESO'] = np.where(
+                    (df_PRODUTO["GRAMATURA_GR"] >= 1000) & (df_PRODUTO['APTO'] > 200) & (~df_PRODUTO['RUA'].isin([31,32]))
                     ,"ACIMA DA BANDEJA"
                     ,"NORMAL"
                 )
-                df_prod['VAL_TIPO_OS'] = np.where(
-                    (df_prod['TIPO_1'] == '1 - GRANDEZA') & (df_prod['RUA'].isin(self.chekout))
+                df_PRODUTO['VAL_TIPO_OS'] = np.where(
+                    (df_PRODUTO['TIPO_1'] == '1 - GRANDEZA') & (df_PRODUTO['RUA'].isin(self.chekout))
                     ,"DIVERGENCIA"
                     ,"NORMAL"
                 )
-                df_prod['VAL_RUA'] = np.where(
-                    (df_prod['TIPO_RUA'] == 'UN') & (df_prod['FATOR'] == 1)
+                df_PRODUTO['VAL_RUA'] = np.where(
+                    (df_PRODUTO['TIPO_RUA'] == 'UN') & (df_PRODUTO['FATOR'] == 1)
                     ,"DIVERGENCIA",
                     np.where(
-                        (df_prod['TIPO_RUA'] == 'CX') & (df_prod['FATOR'] != 1)
+                        (df_PRODUTO['TIPO_RUA'] == 'CX') & (df_PRODUTO['FATOR'] != 1)
                         ,"DIVERGENCIA"
                         ,"NORMAL"
                     )
                 )
             except Exception as e:
-                self.validar_erro(e, "T-coluna calculadas")
-                return False
-
-            try:
-                ordem_primaria = ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', 'TIPO_RUA','CARACTERISTICA']
-                capacidade = ['FATOR','QTTOTPAL','CAP', 'P_REP','FREQ_PROD','FLEG_ABST','STATUS_PROD']
-                validar = ['VAL_CAP', 'VAL_FLEG', 'VAL_CARACT', 'VAL_TIPO_OS', 'VAL_CUBAGEM', 'VAL_PESO', 'VAL_RUA']
-                ordem_completa = ordem_primaria + capacidade + validar
-                df_final = df_prod[ordem_completa]
-
-                contagem = df_final['RUA'].nunique()
-                misto = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'MISTO'].nunique()
-                caixa = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'CX'].nunique()
-                unitario = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'UN'].nunique()
-
-                pront_tt = df_final['CODPROD'].nunique()
-                prod_caixa = df_final['CODPROD'].loc[df_final['FATOR'] == 1].nunique()
-                prod_unitario = df_final['CODPROD'].loc[df_final['FATOR'] != 1].nunique()
-                porcent_cx = round((prod_caixa / pront_tt) * 100, 2)
-                porcent_un = round((prod_unitario / pront_tt) * 100, 2)
-
-                df_amostradinho = pd.DataFrame({
-                    "CATEGORIA": ["RUAS", "PRODUTOS", "PERC_PROD (%)"],
-                    "CONTAGEM":  [contagem, pront_tt, 100],
-                    "MISTO":     [misto, 0, 0],
-                    "CAIXA":     [caixa, prod_caixa, porcent_cx],
-                    "UNITARIO":  [unitario, prod_unitario, porcent_un],
-                    "x":         ["x", "x", "x"]
-                })
-            except Exception as e:
-                self.validar_erro(e, "T-organizar")
+                self.validar_erro(e, "T-KPI")
                 return False
         except Exception as e:
                 self.validar_erro(e, "Transform")
                 return False
         try:
+            ordem_primaria = ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', 'TIPO_RUA','CARACTERISTICA']
+            capacidade = ['FATOR','QTTOTPAL','CAP', 'P_REP','FREQ_PROD','FLEG_ABST','STATUS_PROD']
+            validar = ['VAL_CAP', 'VAL_FLEG', 'VAL_CARACT', 'VAL_TIPO_OS', 'VAL_CUBAGEM', 'VAL_PESO', 'VAL_RUA']
+            ordem_completa = ordem_primaria + capacidade + validar
+            df_final = df_PRODUTO[ordem_completa]
+
+            contagem = df_final['RUA'].nunique()
+            misto = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'MISTO'].nunique()
+            caixa = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'CX'].nunique()
+            unitario = df_final['RUA'].loc[df_final['TIPO_RUA'] == 'UN'].nunique()
+
+            pront_tt = df_final['CODPROD'].nunique()
+            prod_caixa = df_final['CODPROD'].loc[df_final['FATOR'] == 1].nunique()
+            prod_unitario = df_final['CODPROD'].loc[df_final['FATOR'] != 1].nunique()
+            porcent_cx = round((prod_caixa / pront_tt) * 100, 2)
+            porcent_un = round((prod_unitario / pront_tt) * 100, 2)
+
+            df_amostradinho = pd.DataFrame({
+                "CATEGORIA": ["RUAS", "PRODUTOS", "PERC_PROD (%)"],
+                "CONTAGEM":  [contagem, pront_tt, 100],
+                "MISTO":     [misto, 0, 0],
+                "CAIXA":     [caixa, prod_caixa, porcent_cx],
+                "UNITARIO":  [unitario, prod_unitario, porcent_un],
+                "x":         ["x", "x", "x"]
+            })
             df_final = df_final.sort_values(by=['RUA', 'PREDIO'], ascending= True)
             with pd.ExcelWriter(Output.cadastro) as PL:
                 df_final.to_excel(PL, sheet_name= "cadastro", index= False)
