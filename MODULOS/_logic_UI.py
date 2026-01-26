@@ -21,7 +21,7 @@ class ProcessadorLogica:
         lista_de_file = []
 
         msg_corte = None
-        log_dt = ""
+        log_data = None
         dic_log = {}
         total_scripts = len(argumento)
         def finalizar():
