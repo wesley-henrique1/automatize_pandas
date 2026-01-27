@@ -57,9 +57,13 @@ class Os_check(auxiliar):
     def __init__(self):
         self.list_path = [Outros.ou_func, Wms.wms_07_end, Relatorios.rel_28]
 
+        hoje = dt.datetime.now()
+        self.ontem =hoje - dt.timedelta(days=1)
+        self.ontem = self.ontem.date()
+
     def pipeline(self):
         try:
-            col_28 = ['NUMOS','CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1','NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.', 'FUNCOSFIM','FUNCGER']
+            col_28 = ['DATA','NUMOS','CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1','NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.', 'FUNCOSFIM','FUNCGER']
 
             df_func = pd.read_excel(self.list_path[0], sheet_name= 'FUNC', usecols= ['ID_FUNC', 'SETOR'])
             df_aereo = pd.read_csv(self.list_path[1], header= None, names= ColNames.col_end)
@@ -68,6 +72,9 @@ class Os_check(auxiliar):
             self.validar_erro(e, "Extract")
             return False
         try:
+            df_28['DATA'] = pd.to_datetime(df_28['DATA'])
+            df_28 = df_28.loc[df_28['DATA'].dt.date == self.ontem]
+            
             df_28[['CODFUNCESTORNO', 'CODFUNCOS']] = df_28[['CODFUNCESTORNO', 'CODFUNCOS']].fillna(0).astype(int)
             df_28 = df_28.loc[(df_28['NIVEL'].between(2,8)) & (df_28['RUA'] < 40)  & (df_28['CODFUNCESTORNO'] == 0)  & (df_28['RUA_1'] != 50) & (df_28['Tipo O.S.'] == '58 - Transferencia de Para Vertical')]
             df_28['ID_COD'] = df_28['ENDERECO_ORIG'].astype(str) + " - " + df_28['CODPROD'].astype(str)
