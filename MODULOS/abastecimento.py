@@ -3,7 +3,10 @@ import datetime as dt
 import pandas as pd
 import warnings
 warnings.simplefilter(action='ignore', category=UserWarning)
+"""
+    Refazer o script separando os funcionarios por turno e depois realizando a media de saida
 
+"""
 class auxiliar:
     def validar_erro(self, e, etapa):
         largura = 64
