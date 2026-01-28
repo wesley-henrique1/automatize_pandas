@@ -65,7 +65,7 @@ class Os_check(auxiliar):
         try:
             col_28 = ['DATA','NUMOS','CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1','NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.', 'FUNCOSFIM','FUNCGER']
 
-            df_func = pd.read_excel(self.list_path[0], sheet_name= 'FUNC', usecols= ['ID_FUNC', 'SETOR'])
+            df_func = pd.read_excel(self.list_path[0], sheet_name= 'ATIVOS', usecols= ['ID_FUNC', 'TIPO_ABST'])
             df_aereo = pd.read_csv(self.list_path[1], header= None, names= ColNames.col_end)
             df_28 = pd.read_excel(self.list_path[2], usecols= col_28)
         except Exception as e:
@@ -85,7 +85,7 @@ class Os_check(auxiliar):
 
             df_baixa = df_28.merge(df_aereo, on= 'ID_COD', how= 'left').fillna(0).drop(columns=['COD_END'])
             df_baixa = df_baixa.merge(df_func, left_on= 'CODFUNCOS', right_on= 'ID_FUNC', how= 'left').drop(columns=['ID_FUNC'])
-            df_baixa['SETOR'] = df_baixa['SETOR'].fillna("FUNC")  
+            df_baixa['TIPO_ABST'] = df_baixa['TIPO_ABST'].fillna("FUNC")  
 
             col_int = ['QT','QTDE']
             for col in col_int:
@@ -109,11 +109,16 @@ class Os_check(auxiliar):
             )
 
             df_pd = df_baixa.loc[(df_baixa['CODFUNCOS'] == 0)].copy()
+
+            nome_ = df_pd['FUNCGER'].str.split()
+            df_pd["FUNCGER"] = nome_.str[0] + " " + nome_.str[-1]
             df_pd = df_pd[['NUMOS','CODPROD','DESCRICAO','RUA','PREDIO','APTO', 'RUA_1','PREDIO_1','APTO_1','FUNCGER','CATEGORIA','COD']]
             df_pd = df_pd.sort_values(by=['RUA', 'PREDIO'], ascending= True, axis= 0)
 
             col_fim = ['RECEBIMENTO','EMPILHADOR','ABASTECEDOR']
-            df_fim = df_baixa.loc[(~df_baixa['SETOR'].isin(col_fim)) & (df_baixa['CODFUNCOS'] > 0) & (df_baixa['QTDE'] == 0)]
+            df_fim = df_baixa.loc[(~df_baixa['TIPO_ABST'].isin(col_fim)) & (df_baixa['CODFUNCOS'] > 0) & (df_baixa['QTDE'] == 0)]
+            nome_ = df_fim['FUNCOSFIM'].str.split()
+            df_fim["FUNCOSFIM"] = nome_.str[0] + " " + nome_.str[-1]
             df_fim = df_fim[['NUMOS','CODPROD','DESCRICAO','RUA','PREDIO','APTO','RUA_1','PREDIO_1','APTO_1','FUNCOSFIM','CATEGORIA','COD']]
             df_fim = df_fim.sort_values(by=['RUA', 'PREDIO'], ascending= True, axis= 0)
         except Exception as e:
