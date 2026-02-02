@@ -1,6 +1,7 @@
-from modulos._settings import Power_BI,Outros, Relatorios
+from _settings import Power_BI,Outros, Relatorios
 import datetime as dt
 import pandas as pd
+import numpy as np
 import warnings
 warnings.simplefilter(action='ignore', category=UserWarning)
 """
@@ -40,9 +41,8 @@ class auxiliar:
         df['MES'] = df[col].dt.month
 
         if id == 1:
-            df = df[['NUMOS', 'DATA', 'CODROTINA', 'POSICAO', 'CODFUNCGER', 'FUNCGER','DTFIMOS', 'CODFUNCOS', 'FUNCOSFIM', 'Tipo O.S.', 'TIPOABAST', 'MES']].copy()
-            df = df.loc[(df['CODROTINA'] == 1709) | (df['CODROTINA'] == 1723)]
-            return df
+            return df.loc[(df['CODROTINA'] == 1709) | (df['CODROTINA'] == 1723)]
+
         elif id ==2: 
             df = df[['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR','EMPILHADOR', 'MES']].copy()
             df = df.drop_duplicates(subset=['NUMOS'])
@@ -92,7 +92,7 @@ class Abastecimento(auxiliar):
 
     def pipeline(self):
         try:
-            cols_28 = ['NUMOS', 'DATA', 'CODROTINA', 'POSICAO', 'CODFUNCGER', 'FUNCGER', 
+            cols_28 = ['NUMOS', 'DATA','HORA', 'CODROTINA', 'POSICAO', 'CODFUNCGER', 'FUNCGER', 
             'DTFIMOS', 'CODFUNCOS', 'FUNCOSFIM', 'Tipo O.S.', 'TIPOABAST']
             cols_64 = ['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR', 'EMPILHADOR']
 
@@ -108,6 +108,8 @@ class Abastecimento(auxiliar):
                 f"\n8628 >> {dt_menor_28:%d/%m/%Y} -- {dt_maior_28:%d/%m/%Y}\n"
                 f"8664 >> {dt_menor_64:%d/%m/%Y} -- {dt_maior_64:%d/%m/%Y}"
             )
+
+            print(f"debug: Extract")
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -115,13 +117,30 @@ class Abastecimento(auxiliar):
         try:
             try:
                 m_atual28 = self.organizar_df(m_atual28,'DATA',1)
-                os_geradas28 = self.agrupar(m_atual28, ['DATA','CODFUNCGER'], 1)
-                os_finalizadas28 = self.agrupar(m_atual28, ['DATA','CODFUNCOS'], 1)
+                m_atual28['HORA'] = m_atual28['HORA'].astype(str).str.strip()
+                m_atual28['HORA'] = m_atual28['HORA'].apply(lambda item: ':'.join([celula.zfill(2) for celula in item.split(':')]))
+                print(m_atual28.head(4))
+                m_atual28['HORA'] = pd.to_datetime(m_atual28['HORA'], format='%H:%M')
+                cond_turno = (
+                    (m_atual28['HORA'] >= "07:00")  & (m_atual28['HORA'] <= "18:00")
+                    ,(m_atual28['HORA'] >= "18:00") | (m_atual28['HORA'] < "07:00")
+                )
+                result_turno = (
+                    m_atual28['DATA']
+                    ,m_atual28['DATA'] - pd.Timedelta(days= 1)
+                )
+                m_atual28['DT_TURNO'] = np.select(cond_turno, result_turno, default=m_atual28['DATA'])
+
+
+                os_geradas28 = self.agrupar(m_atual28, ['DT_TURNO','CODFUNCGER'], 1)
+                os_finalizadas28 = self.agrupar(m_atual28, ['DT_TURNO','CODFUNCOS'], 1)
 
                 pendencia = m_atual28.loc[m_atual28['POSICAO'] =='P']
-                os_pedentes28 = self.agrupar(pendencia, ['DATA','CODFUNCGER'], 1)
+                os_pedentes28 = self.agrupar(pendencia, ['DT_TURNO','CODFUNCGER'], 1)
+                print(f"debug: T_28")
             except Exception as e:
                 self.validar_erro(e, "T_28")
+                print(f"debug T_28: {e}")
                 return False
             try:
                 m_atual64['CODEMPILHADOR'] = m_atual64['CODEMPILHADOR'].fillna(0)  
@@ -138,23 +157,24 @@ class Abastecimento(auxiliar):
                 return False
             try:
                 """Ordem de serviço pendentes"""
-                temp28 = os_pedentes28[['DATA','CODFUNCGER','QTDE_OS']]
+                temp28 = os_pedentes28[['DT_TURNO','CODFUNCGER','QTDE_OS']]
                 temp64 = os_pedentes64[['DATA','CODFUNCGER','OS_RECEB']]
                 temp64 = temp64.rename(columns={ 'OS_RECEB': 'QTDE_OS'})
                 pd_total = pd.concat([temp28, temp64], ignore_index= True)
 
                 """Ordem de serviço finalizadas"""
                 os_finalizadas64 = os_finalizadas64.rename(columns={'CODEMPILHADOR': 'CODFUNCOS'})
-                fim_total = os_finalizadas28.merge(os_finalizadas64, left_on=['DATA','CODFUNCOS'], right_on= ['DATA','CODFUNCOS'], how= 'left').drop(columns='CODFUNCGER').fillna(0)
+                fim_total = os_finalizadas28.merge(os_finalizadas64, left_on=['DT_TURNO','CODFUNCOS'], right_on= ['DATA','CODFUNCOS'], how= 'left').drop(columns='CODFUNCGER').fillna(0)
 
                 """Ordem de serviço geradas"""
                 grupo64 = self.agrupar(agrupamento, 'DATA', 3)
-                grupo28 = self.agrupar(os_geradas28, 'DATA', 4)
+                grupo28 = self.agrupar(os_geradas28, 'DT_TURNO', 4)
 
-                geral_total = grupo28.merge(grupo64, left_on='DATA', right_on= 'DATA', how= 'left').fillna(0)
+                geral_total = grupo28.merge(grupo64, left_on='DT_TURNO', right_on= 'DATA', how= 'left').fillna(0)
 
-                bonus = self.agrupar(m_atual64, 'DTLANC', 5)
+                bonus = self.agrupar(m_atual64, 'DTLANC', 5) 
             except Exception as e:
+                print(f"debug T_GERAL: {e}")
                 self.validar_erro(e, "T_GERAL")
                 return False
         except Exception as e:
@@ -165,6 +185,7 @@ class Abastecimento(auxiliar):
             fim_total.to_excel(Power_BI.abst_fim, index= False, sheet_name= "OS_FIM")
             geral_total.to_excel(Power_BI.abst_geral, index= False, sheet_name= "OS_GERAL")
             bonus.to_excel(Power_BI.abst_bonus, index= False, sheet_name= "BONUS")
+            print("Laod - finish")
             return True, periodo
         except Exception as e:
             self.validar_erro(e, "Laod")
