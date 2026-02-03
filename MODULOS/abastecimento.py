@@ -1,4 +1,4 @@
-from _settings import Power_BI,Outros, Relatorios
+from modulos._settings import Power_BI, Relatorios
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -85,6 +85,26 @@ class auxiliar:
                     TOTAL_BONUS = ("NUMBONUS", "nunique")
                 ).reset_index().sort_values(by=col, ascending= False)  
             return temp 
+    def corrigir_hr(self, valor):
+        valor = str(valor).strip()
+        
+        separador = valor.split(":")
+        
+        if len(separador) == 2:
+            # Caso: "7:15" -> vira "07:15:00"
+            horas = separador[0].zfill(2)
+            minuto = separador[1].zfill(2)
+            segundo = "00"
+            return f"{horas}:{minuto}:{segundo}"
+        
+        elif len(separador) == 3:
+            # Caso: "7:15:5" -> vira "07:15:05"
+            horas = separador[0].zfill(2)
+            minuto = separador[1].zfill(2)
+            segundo = separador[2].zfill(2)
+            return f"{horas}:{minuto}:{segundo}"
+    
+        return valor
 class Abastecimento(auxiliar):
     def __init__(self):
         self.list_path = [Relatorios.rel_28, Relatorios.rel_64]
@@ -116,14 +136,13 @@ class Abastecimento(auxiliar):
 
         try:
             try:
+                # CORRIGINDO BASE ORIGINAL E SEPARANDO EM OUTRAS PARTE, PARA MELHOR VISUALIZAÇÃO
                 m_atual28 = self.organizar_df(m_atual28,'DATA',1)
-                m_atual28['HORA'] = m_atual28['HORA'].astype(str).str.strip()
-                m_atual28['HORA'] = m_atual28['HORA'].apply(lambda item: ':'.join([celula.zfill(2) for celula in item.split(':')]))
-                print(m_atual28.head(4))
-                m_atual28['HORA'] = pd.to_datetime(m_atual28['HORA'], format='%H:%M')
+                m_atual28['HORA'] = m_atual28["HORA"].apply(self.corrigir_hr)
+                
                 cond_turno = (
-                    (m_atual28['HORA'] >= "07:00")  & (m_atual28['HORA'] <= "18:00")
-                    ,(m_atual28['HORA'] >= "18:00") | (m_atual28['HORA'] < "07:00")
+                    (m_atual28['HORA'] >= "07:00:00")  & (m_atual28['HORA'] <= "18:00:00")
+                    ,(m_atual28['HORA'] >= "18:00:00") | (m_atual28['HORA'] < "07:00:00")
                 )
                 result_turno = (
                     m_atual28['DATA']
@@ -145,9 +164,20 @@ class Abastecimento(auxiliar):
             try:
                 m_atual64['CODEMPILHADOR'] = m_atual64['CODEMPILHADOR'].fillna(0)  
                 m_atual64 = self.organizar_df(m_atual64, 'DATAGERACAO', 2)
-                m_atual64 = m_atual64.rename(columns={'DATAGERACAO' : "DATA"})
+                m_atual64['DATA'] = pd.to_datetime(m_atual64['DATAGERACAO'].dt.date)
+                m_atual64['HORA'] = m_atual64['DATAGERACAO'].dt.time
+                m_atual64['HORA'] = m_atual64["HORA"].apply(self.corrigir_hr)
+                cond_turno = (
+                    (m_atual64['HORA'] >= "07:00:00")  & (m_atual64['HORA'] <= "18:00:00")
+                    ,(m_atual64['HORA'] >= "18:00:00") | (m_atual64['HORA'] < "07:00:00")
+                )
+                result_turno = (
+                    m_atual64['DATA']
+                    ,m_atual64['DATA'] - pd.Timedelta(days= 1)
+                )
+                m_atual64['DT_TURNO'] = np.select(cond_turno, result_turno, default=m_atual64['DATA'])
                 
-                agrupamento = self.agrupar(m_atual64, ['DATA', 'CODEMPILHADOR'], 2).fillna(0)
+                agrupamento = self.agrupar(m_atual64, ['DT_TURNO', 'CODEMPILHADOR'], 2).fillna(0)
                 agrupamento['CODFUNCGER'] = 1
 
                 os_finalizadas64 = agrupamento.loc[agrupamento['CODEMPILHADOR'] != 0]
@@ -158,19 +188,19 @@ class Abastecimento(auxiliar):
             try:
                 """Ordem de serviço pendentes"""
                 temp28 = os_pedentes28[['DT_TURNO','CODFUNCGER','QTDE_OS']]
-                temp64 = os_pedentes64[['DATA','CODFUNCGER','OS_RECEB']]
+                temp64 = os_pedentes64[['DT_TURNO','CODFUNCGER','OS_RECEB']]
                 temp64 = temp64.rename(columns={ 'OS_RECEB': 'QTDE_OS'})
                 pd_total = pd.concat([temp28, temp64], ignore_index= True)
 
                 """Ordem de serviço finalizadas"""
                 os_finalizadas64 = os_finalizadas64.rename(columns={'CODEMPILHADOR': 'CODFUNCOS'})
-                fim_total = os_finalizadas28.merge(os_finalizadas64, left_on=['DT_TURNO','CODFUNCOS'], right_on= ['DATA','CODFUNCOS'], how= 'left').drop(columns='CODFUNCGER').fillna(0)
+                fim_total = os_finalizadas28.merge(os_finalizadas64, left_on=['DT_TURNO','CODFUNCOS'], right_on= ['DT_TURNO','CODFUNCOS'], how= 'left').drop(columns='CODFUNCGER').fillna(0)
 
                 """Ordem de serviço geradas"""
-                grupo64 = self.agrupar(agrupamento, 'DATA', 3)
+                grupo64 = self.agrupar(agrupamento, 'DT_TURNO', 3)
                 grupo28 = self.agrupar(os_geradas28, 'DT_TURNO', 4)
 
-                geral_total = grupo28.merge(grupo64, left_on='DT_TURNO', right_on= 'DATA', how= 'left').fillna(0)
+                geral_total = grupo28.merge(grupo64, left_on='DT_TURNO', right_on= 'DT_TURNO', how= 'left').fillna(0)
 
                 bonus = self.agrupar(m_atual64, 'DTLANC', 5) 
             except Exception as e:
