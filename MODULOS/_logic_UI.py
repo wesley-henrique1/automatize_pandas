@@ -29,7 +29,7 @@ class ProcessadorLogica:
             self.mainUI.bt_limpar.config(state="normal")
 
         if total_scripts == 0:
-            self.mainUI.retorno.after(0, lambda: self.mainUI.contador.config(text="0%"))
+            self.mainUI.retorno.after(0, lambda: self.mainUI.contador.config(text="PROGRESSO >> 0%"))
             self.mainUI.retorno.after(0, finalizar)
             return
 
@@ -39,7 +39,7 @@ class ProcessadorLogica:
                 self.mainUI.retorno.after(
                     0
                     , lambda p=progresso_anterior
-                    , n=nome: self.mainUI.contador.config(text=f"{p:.0f}% -> {n}")
+                    , n=nome: self.mainUI.contador.config(text=f"PROGRESSO >> {p:.0f}% -> {n}")
                 )
                 classe_do_script = self.mainUI.scripts_map[nome]
                 instancia = classe_do_script()
@@ -73,7 +73,7 @@ class ProcessadorLogica:
                         lista_de_file.append(log_db)
 
                 progresso_atual = ((i + 1) / total_scripts) * 100
-                txt_final = f"{progresso_atual:.0f}% -> {nome}"
+                txt_final = f"PROGRESSO >> {progresso_atual:.0f}% -> {nome}"
                 self.mainUI.retorno.after(0, lambda p=txt_final: self.mainUI.contador.config(text=p))
             except Exception as e:
                 dic_log[nome] = "Falha Crítica"

@@ -29,7 +29,7 @@ class JanelaPrincipal:
 
 
         root.title("GERENCIADOR_8000")
-        root.geometry("580x500")
+        root.geometry("1000x500")
         root.resizable(False,True)
         root.config(bg= self.background)
         root.iconbitmap(Path_dados.icone_pricipal)
@@ -55,23 +55,30 @@ class JanelaPrincipal:
             ,"Abastecimento": Abastecimento
         }
         
-        self.componentes(janela_principal= root)
-        self.botoes_layout(janela_principal= root)
+        
+
+        self.quadro_fleg(janela_principal= root)
+        self.quadro_bt(janela_principal= root)
+        self.quadro_retorno(janela_principal= root)
+        # self.componentes(janela_principal= root)
+        # self.botoes_layout(janela_principal= root)
         self.localizador()
+
         root.mainloop()
 
-    def componentes(self, janela_principal):
-        # --- 1. CONTAINER ---
-        self.container = tk.Frame(
+
+    def quadro_fleg(self, janela_principal):
+        font = ("verdana", 9,"bold")
+
+        self.parte_1 = tk.Frame(
             janela_principal
             ,bg= self.frame_color
-            ,highlightbackground=self.borda_color 
-            ,highlightthickness=3              
+            ,highlightbackground= self.borda_color
+            ,highlightthickness= 3
         )
-        # --- 2. WIDGETS ---
-        font = ("verdana", 9,"bold")
+
         self.check_abst = tk.Checkbutton(
-            self.container
+            self.parte_1
             ,text="Abastecimento"
             ,font= font
             ,bg= self.frame_color
@@ -83,7 +90,7 @@ class JanelaPrincipal:
             ,activeforeground=self.borda_color
         )
         self.check_Giro_estatus = tk.Checkbutton(
-            self.container
+            self.parte_1
             ,text="Relatorio Giro Status"
             ,font= font
             ,bg= self.frame_color
@@ -95,7 +102,7 @@ class JanelaPrincipal:
             ,activeforeground=self.borda_color
         )
         self.check_acuracidade = tk.Checkbutton(
-            self.container
+            self.parte_1
             ,text="Acuracidade"
             ,font= font
             ,bg= self.frame_color
@@ -107,7 +114,7 @@ class JanelaPrincipal:
             ,activeforeground=self.borda_color
         )
         self.check_cadastro = tk.Checkbutton(
-            self.container
+            self.parte_1
             ,text="Cadastro"
             ,font= font
             ,bg= self.frame_color
@@ -119,7 +126,7 @@ class JanelaPrincipal:
             ,activeforeground=self.borda_color
         )
         self.check_ch_vz = tk.Checkbutton(
-            self.container
+            self.parte_1
             ,text="Relatorio cheio vazio"
             ,font= font
             ,bg= self.frame_color
@@ -131,7 +138,7 @@ class JanelaPrincipal:
             ,activeforeground=self.borda_color
         )
         self.check_corte = tk.Checkbutton(
-            self.container
+            self.parte_1
             ,text="Relatorio Corte"
             ,font= font
             ,bg= self.frame_color
@@ -143,7 +150,7 @@ class JanelaPrincipal:
             ,activeforeground=self.borda_color
         )
         self.check_validar_os = tk.Checkbutton(
-            self.container
+            self.parte_1
             ,text="Ordem de serviço"
             ,font= font
             ,bg= self.frame_color
@@ -155,7 +162,7 @@ class JanelaPrincipal:
             ,activeforeground=self.borda_color
         )
         self.check_contagem = tk.Checkbutton(
-            self.container
+            self.parte_1
             ,text="Contagem inventario"
             ,font= font
             ,bg= self.frame_color
@@ -166,58 +173,15 @@ class JanelaPrincipal:
             ,activebackground=self.frame_color
             ,activeforeground=self.borda_color
         )
-
-        # --- 3. WIDGETS RETORNO---
-        self.retorno = tk.Text(
+    def quadro_bt(self, janela_principal):
+        self.parte_2 = tk.Frame(
             janela_principal
-            ,font=("Consolas", 10)
-            ,bg=self.frame_color
-            ,fg=self.borda_color
-            ,highlightbackground=self.borda_color
-            ,highlightthickness=2
-            ,padx=10, pady=10
-            ,state="disabled"
+            ,bg= self.frame_color
+            ,highlightbackground= self.borda_color
+            ,highlightthickness= 3
         )
-        self.text_contador = tk.Label(
-            janela_principal
-            ,text= "PROGRESSO >>"
-            ,font= ("Consolas", 14)
-            ,fg= self.frame_color
-            ,bg= self.background
-            ,anchor = "w"
-        )
-        self.contador = tk.Label(
-            janela_principal
-            ,text= "100%"
-            ,font= ("Consolas", 12)
-            ,fg= self.frame_color
-            ,bg= self.background
-            ,anchor = "w"
-        )
-
-        self.retorno_db = tk.Text(
-            janela_principal
-            ,font=("Consolas", 10)
-            ,bg=self.frame_color
-            ,fg=self.borda_color
-            ,highlightbackground=self.borda_color
-            ,highlightthickness=2
-            ,padx=10, pady=10
-            ,state="disabled"
-        )
-        self.retorno_file = tk.Text(
-            janela_principal
-            ,font=("Consolas", 10)
-            ,bg=self.frame_color
-            ,fg=self.borda_color
-            ,highlightbackground=self.borda_color
-            ,highlightthickness=2
-            ,padx=10, pady=10
-            ,state="disabled"
-        )
-    def botoes_layout(self, janela_principal):
         self.bt_iniciar = tk.Button(
-            janela_principal
+            self.parte_2
             ,text="INICIAR"
             ,cursor="hand2"
             ,relief="solid"
@@ -230,7 +194,7 @@ class JanelaPrincipal:
             ,command=lambda: self.start_UI()
         )
         self.bt_limpar = tk.Button(
-            janela_principal
+            self.parte_2
             ,text="LIMPAR"
             ,cursor="hand2"
             ,relief="solid"
@@ -242,34 +206,268 @@ class JanelaPrincipal:
             ,highlightbackground=self.borda_color
             ,command=lambda: self.resetar_UI()
         )
+    def quadro_retorno(self, janela_principal):
+        self.parte_3 = tk.Frame(
+            janela_principal
+            ,bg= self.frame_color
+            ,highlightbackground= self.borda_color
+            ,highlightthickness= 3
+        )
+        self.contador = tk.Label(
+            self.parte_3
+            ,text= "PROGRESSO >> 100%"
+            ,font= ("Consolas", 12)
+            ,fg= self.frame_color
+            ,bg= self.background
+            ,anchor = "w"
+            ,highlightbackground= self.borda_color
+            ,highlightthickness= 3
+        )
+        self.retorno = tk.Text(
+            self.parte_3
+            ,font=("Consolas", 10)
+            ,bg=self.frame_color
+            ,fg=self.borda_color
+            ,highlightbackground=self.borda_color
+            ,highlightthickness=2
+            ,padx=10, pady=10
+            ,state="disabled"
+        )
+        self.retorno_db = tk.Text(
+            self.parte_3
+            ,font=("Consolas", 10)
+            ,bg=self.frame_color
+            ,fg=self.borda_color
+            ,highlightbackground=self.borda_color
+            ,highlightthickness=2
+            ,padx=10, pady=10
+            ,state="disabled"
+        )
+        self.retorno_file = tk.Text(
+            self.parte_3
+            ,font=("Consolas", 10)
+            ,bg=self.frame_color
+            ,fg=self.borda_color
+            ,highlightbackground=self.borda_color
+            ,highlightthickness=2
+            ,padx=10, pady=10
+            ,state="disabled"
+        )
+
+    # def componentes(self, janela_principal):
+    #     # --- 1. CONTAINER ---
+    #     # self.container = tk.Frame(
+    #     #     janela_principal
+    #     #     ,bg= self.frame_color
+    #     #     ,highlightbackground=self.borda_color 
+    #     #     ,highlightthickness=3              
+    #     # )
+    #     self.container = self.self.parte_1
+    #     # --- 2. WIDGETS ---
+    #     font = ("verdana", 9,"bold")
+    #     self.check_abst = tk.Checkbutton(
+    #         self.container
+    #         ,text="Abastecimento"
+    #         ,font= font
+    #         ,bg= self.frame_color
+    #         ,fg= self.borda_color
+    #         ,variable=self.estados["Abastecimento"]
+
+    #         ,selectcolor=self.frame_color
+    #         ,activebackground=self.frame_color
+    #         ,activeforeground=self.borda_color
+    #     )
+    #     self.check_Giro_estatus = tk.Checkbutton(
+    #         self.container
+    #         ,text="Relatorio Giro Status"
+    #         ,font= font
+    #         ,bg= self.frame_color
+    #         ,fg= self.borda_color
+    #         ,variable=self.estados["Giro_estatus"]
+
+    #         ,selectcolor=self.frame_color
+    #         ,activebackground=self.frame_color
+    #         ,activeforeground=self.borda_color
+    #     )
+    #     self.check_acuracidade = tk.Checkbutton(
+    #         self.container
+    #         ,text="Acuracidade"
+    #         ,font= font
+    #         ,bg= self.frame_color
+    #         ,fg= self.borda_color
+    #         ,variable=self.estados["Acuracidade"]
+
+    #         ,selectcolor=self.frame_color
+    #         ,activebackground=self.frame_color
+    #         ,activeforeground=self.borda_color
+    #     )
+    #     self.check_cadastro = tk.Checkbutton(
+    #         self.container
+    #         ,text="Cadastro"
+    #         ,font= font
+    #         ,bg= self.frame_color
+    #         ,fg= self.borda_color
+    #         ,variable=self.estados["Cadastro"]
+
+    #         ,selectcolor=self.frame_color
+    #         ,activebackground=self.frame_color
+    #         ,activeforeground=self.borda_color
+    #     )
+    #     self.check_ch_vz = tk.Checkbutton(
+    #         self.container
+    #         ,text="Relatorio cheio vazio"
+    #         ,font= font
+    #         ,bg= self.frame_color
+    #         ,fg= self.borda_color
+    #         ,variable= self.estados['cheio_vazio']
+
+    #         ,selectcolor=self.frame_color
+    #         ,activebackground=self.frame_color
+    #         ,activeforeground=self.borda_color
+    #     )
+    #     self.check_corte = tk.Checkbutton(
+    #         self.container
+    #         ,text="Relatorio Corte"
+    #         ,font= font
+    #         ,bg= self.frame_color
+    #         ,fg= self.borda_color
+    #         ,variable=self.estados["Corte"]
+
+    #         ,selectcolor=self.frame_color
+    #         ,activebackground=self.frame_color
+    #         ,activeforeground=self.borda_color
+    #     )
+    #     self.check_validar_os = tk.Checkbutton(
+    #         self.container
+    #         ,text="Ordem de serviço"
+    #         ,font= font
+    #         ,bg= self.frame_color
+    #         ,fg= self.borda_color
+    #         ,variable=self.estados["Validar_os"]
+
+    #         ,selectcolor=self.frame_color
+    #         ,activebackground=self.frame_color
+    #         ,activeforeground=self.borda_color
+    #     )
+    #     self.check_contagem = tk.Checkbutton(
+    #         self.container
+    #         ,text="Contagem inventario"
+    #         ,font= font
+    #         ,bg= self.frame_color
+    #         ,fg= self.borda_color
+    #         ,variable=self.estados["Contagem"]
+
+    #         ,selectcolor=self.frame_color
+    #         ,activebackground=self.frame_color
+    #         ,activeforeground=self.borda_color
+    #     )
+
+    #     # --- 3. WIDGETS RETORNO---
+    #     self.retorno = tk.Text(
+    #         janela_principal
+    #         ,font=("Consolas", 10)
+    #         ,bg=self.frame_color
+    #         ,fg=self.borda_color
+    #         ,highlightbackground=self.borda_color
+    #         ,highlightthickness=2
+    #         ,padx=10, pady=10
+    #         ,state="disabled"
+    #     )
+    #     self.text_contador = tk.Label(
+    #         janela_principal
+    #         ,text= "PROGRESSO >>"
+    #         ,font= ("Consolas", 14)
+    #         ,fg= self.frame_color
+    #         ,bg= self.background
+    #         ,anchor = "w"
+    #     )
+    #     self.contador = tk.Label(
+    #         janela_principal
+    #         ,text= "100%"
+    #         ,font= ("Consolas", 12)
+    #         ,fg= self.frame_color
+    #         ,bg= self.background
+    #         ,anchor = "w"
+    #     )
+
+    #     self.retorno_db = tk.Text(
+    #         janela_principal
+    #         ,font=("Consolas", 10)
+    #         ,bg=self.frame_color
+    #         ,fg=self.borda_color
+    #         ,highlightbackground=self.borda_color
+    #         ,highlightthickness=2
+    #         ,padx=10, pady=10
+    #         ,state="disabled"
+    #     )
+    #     self.retorno_file = tk.Text(
+    #         janela_principal
+    #         ,font=("Consolas", 10)
+    #         ,bg=self.frame_color
+    #         ,fg=self.borda_color
+    #         ,highlightbackground=self.borda_color
+    #         ,highlightthickness=2
+    #         ,padx=10, pady=10
+    #         ,state="disabled"
+    #     )
+    # def botoes_layout(self, janela_principal):
+    #     self.bt_iniciar = tk.Button(
+    #         janela_principal
+    #         ,text="INICIAR"
+    #         ,cursor="hand2"
+    #         ,relief="solid"
+    #         ,font=("Arial", 10, "bold")
+    #         ,highlightthickness=3
+            
+    #         ,bg=self.frame_color
+    #         ,fg=self.borda_color
+    #         ,highlightbackground=self.borda_color
+    #         ,command=lambda: self.start_UI()
+    #     )
+    #     self.bt_limpar = tk.Button(
+    #         janela_principal
+    #         ,text="LIMPAR"
+    #         ,cursor="hand2"
+    #         ,relief="solid"
+    #         ,font=("Arial", 10, "bold")
+    #         ,highlightthickness=3
+            
+    #         ,bg=self.frame_color
+    #         ,fg=self.borda_color
+    #         ,highlightbackground=self.borda_color
+    #         ,command=lambda: self.resetar_UI()
+    #     )
     def localizador(self):
-        self.container.place(relx=0.01, rely=0.01, relheight=0.20, relwidth=0.98)
+        # QUADRO 1 FLEXBOX
+        self.parte_1.place(relx= 0.01, rely= 0.10, relwidth= 0.40, relheight= 0.50)
 
-        # Coluna 1
-        self.check_abst.place(relx=0.02, rely=0.05)
-        self.check_Giro_estatus.place(relx=0.02, rely=0.35)
-        self.check_acuracidade.place(relx=0.02, rely=0.65)
+        self.check_abst.place(relx=0.02, rely=0.03)
+        self.check_corte.place(relx=0.02, rely=0.13)
+        self.check_cadastro.place(relx=0.02, rely=0.23)  
+        self.check_Giro_estatus.place(relx=0.02, rely=0.33)
 
-        # Coluna 2
-        self.check_cadastro.place(relx=0.35, rely=0.05)    
-        self.check_ch_vz.place(relx=0.35, rely=0.35)  
-        self.check_corte.place(relx=0.35, rely=0.65)
+        self.check_acuracidade.place(relx=0.50, rely=0.03)
+        self.check_validar_os.place(relx=0.50, rely=0.13)
+        self.check_ch_vz.place(relx=0.50, rely=0.23)  
+        self.check_contagem.place(relx=0.50, rely=0.33)
 
-        # Coluna 3
-        self.check_validar_os.place(relx=0.68, rely=0.05)
-        self.check_contagem.place(relx=0.68, rely=0.35)
+        # QUADRO 2 BOTÃO
+        self.parte_2.place(relx= 0.01, rely= 0.62, relwidth= 0.40, relheight= 0.36)
 
-        # Retorno dos scripts
-        self.retorno.place(relx=0.01, rely=0.32, relwidth=0.98, relheight=0.32)
-        self.text_contador.place(relx=0.01, rely=0.22, relwidth=0.23, relheight=0.08)
-        self.contador.place(relx=0.24, rely=0.22, relwidth=0.40, relheight=0.08)
+        self.bt_iniciar.place(relx=0.01, rely=0.10, relwidth=0.20, relheight=0.20)
+        self.bt_limpar.place(relx=0.22, rely=0.10, relwidth=0.20, relheight=0.20)
 
-        self.retorno_db.place(relx=0.01, rely=0.65, relwidth=0.49, relheight=0.32)
-        self.retorno_file.place(relx=0.51, rely=0.65, relwidth=0.48, relheight=0.32)
+        # QUADRO 3 RETORNOS
+        self.parte_3.place(relx= 0.42, rely= 0.10, relwidth= 0.57, relheight= 0.88)
+
+        self.contador.place(relx=0.01, rely=0.01, relwidth=0.98, relheight=0.10)
+
+        self.retorno.place(relx=0.01, rely=0.15, relwidth=0.98, relheight=0.45)
+        self.retorno_db.place(relx=0.01, rely=0.61, relwidth=0.49, relheight=0.38)
+        self.retorno_file.place(relx=0.51, rely=0.61, relwidth=0.48, relheight=0.38)
 
         # botão
-        self.bt_iniciar.place(relx=0.67, rely=0.22, relwidth=0.15, relheight=0.08)
-        self.bt_limpar.place(relx=0.84, rely=0.22, relwidth=0.15, relheight=0.08)
+    
     def segunda_tela(self, titulo, conteudo_formatado):
         # Cria a janela pop-up
         janela_info = tk.Toplevel()
@@ -290,7 +488,7 @@ class JanelaPrincipal:
         
         txt_area.insert(tk.INSERT, conteudo_formatado)
         txt_area.configure(state='disabled')
-        txt_area.pack(padx=10, pady=10, expand=True, fill="both")
+        txt_area.pack(padx=10, pady=10, expand=True, fill="both") 
     
     def _exibir_mensagem_status(self, mensagem):
         self.retorno.config(state="normal")
