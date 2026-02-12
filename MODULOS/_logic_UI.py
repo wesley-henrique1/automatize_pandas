@@ -103,19 +103,19 @@ class ProcessadorLogica:
             
             if dados_validos:
                 try:
-                    conteudo = f"{'ID':^3} | {'ARQUIVO':^46} | {'DATA':^10} | {'HORA':^8}\n"
-                    conteudo += f"{'-' * 76}\n"
+                    conteudo = f"{'ID':^3} | {'ARQUIVO':^45} | {'DATA':^10} | {'HORA':^8}\n"
+                    conteudo += f"{'-' * 75}\n"
                     print(type(conteudo))
 
                     for item in dados_validos:
                         nome_arq = str(item.get('ARQUIVO', 'DESCONHECIDO'))
                         if len(nome_arq) > 41:
-                            nome_arq = nome_arq[:43] + "..."
+                            nome_arq = nome_arq[:42] + "..."
                         id = item.get('CONTADOR', 0)
                         date = item.get('DATA', '--/--/----')
                         hrs = item.get('HORAS', '--:--')
                         linha = (
-                            f"{id:03d} | {nome_arq:<46} | {date:<10} | {hrs:<8}\n")
+                            f"{id:03d} | {nome_arq:<45} | {date:<10} | {hrs:<8}\n")
                         conteudo += linha 
 
                     
@@ -129,7 +129,7 @@ class ProcessadorLogica:
                     self.validar_erro(e, "LOG-RETORNO")
             if data_periodo:
                 try:
-                    conteudo_dt = f"{'-' * 76}\n"
+                    conteudo_dt = f"{'-' * 75}\n"
                     conteudo_dt += data_periodo
 
                     self.mainUI.retorno.config(state="normal")
@@ -141,7 +141,7 @@ class ProcessadorLogica:
 
             if ar_validos:
                 try:
-                    conteudo_log = f"{"MODULO":^6} | {"ARQUIVOS":^8} | {"ERROS":5} | {"LEITURAS":^8}\n"
+                    conteudo_log = f"{"MODULO":^6} | {"ARQUIVOS":^7} | {"ERROS":5} | {"LEITURAS":^8}\n"
                     divisa = f"{"-" * 36}\n"
                     conteudo_log += divisa
                     for file in ar_validos:
