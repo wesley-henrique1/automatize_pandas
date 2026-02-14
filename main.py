@@ -3,9 +3,10 @@ import datetime as dt
 from tkinter import messagebox
 from tkinter import scrolledtext
 
+from Assets.checklist import Demandas
+
 from modulos._logic_UI import ProcessadorLogica
 from modulos._settings import Path_dados
-
 from modulos.abastecimento import Abastecimento
 from modulos.acuracidade import Acuracidade
 from modulos.cont_prod import Contagem_INV
@@ -14,20 +15,67 @@ from modulos.ch_vz import Cheio_Vazio
 from modulos.os_check import Os_check
 from modulos.cadastro import Cadastro
 from modulos.corte import Corte
-from Assets.checklist import Demandas
 
-class JanelaPrincipal:
+class auxiliar:   
+    def _exibir_mensagem_status(self, mensagem):
+        self.retorno.config(state="normal")
+        self.retorno.delete("1.0", "end")
+        self.retorno.insert("1.0", mensagem)
+        self.retorno.tag_add("alerta", "1.0", "end")
+        self.retorno.tag_config("alerta", **self.estilo_alerta)
+        self.retorno.config(state="disabled")        
+    def start_UI(self):
+        selecionados = [nome for nome, var in self.estados.items() if var.get()]
+        try:
+            if not selecionados:
+                messagebox.showwarning("Aviso", "Selecione ao menos uma opção!")
+                return
+            self.logica_UI.executar_threads(selecionados)
+        except Exception as e:
+            self.validar_erro(e, "Main-start_UI")
+    def resetar_UI(self):
+        for var in self.estados:
+            self.estados[var].set(False)
+        
+        self._exibir_mensagem_status("Aguardando proximo processo...")
+        self.retorno_db.config(state="normal")
+        self.retorno_db.delete("1.0", "end")
+
+        self.contador.config(text="PROGRESSO >> 100% || 0/0 OPERAÇÃO")
+    def validar_erro(self, e, etapa):
+        largura = 78
+        mapeamento = {
+            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
+            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
+            KeyError: f"Coluna ou chave não encontrada: {e}",
+            TypeError: f"Incompatibilidade de tipo: {e}",
+            ValueError: f"Formato de dado inválido: {e}",
+            NameError: f"Variável ou função não definida: {e}"
+        }
+        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
+        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        log_conteudo = (
+            f"{'='* largura}\n"
+            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"TIPO: {type(e).__name__}\n"
+            f"MENSAGEM: {msg}\n"
+            f"{'='* largura}\n\n"
+        )
+        try:
+            with open("log_erros.txt", "a", encoding="utf-8") as f:
+                f.write(log_conteudo)
+        except Exception as erro_f:
+            print(f"Falha crítica ao gravar log: {erro_f}")
+    pass
+class JanelaPrincipal(auxiliar):
     def __init__(self):
         root = tk.Tk()
         self.logica_UI = ProcessadorLogica(self)
         self.background = "#2F4F4F"
         self.frame_color = "#F0FFFF"
-
         self.borda_color = "#000000"
-
         self.back_2 = "#363636"
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
-
 
         root.title("GERENCIADOR_8000")
         root.geometry("1000x500")
@@ -54,18 +102,14 @@ class JanelaPrincipal:
             ,"cheio_vazio": Cheio_Vazio
             ,"Contagem": Contagem_INV
             ,"Abastecimento": Abastecimento
-        }
-        
-        
+        }    
 
         self.quadro_fleg(janela_principal= root)
         self.quadro_bt(janela_principal= root)
         self.quadro_retorno(janela_principal= root)
-        # self.componentes(janela_principal= root)
-        # self.botoes_layout(janela_principal= root)
         self.localizador()
-
         root.mainloop()
+        pass
 
     def quadro_fleg(self, janela_principal):
         font = ("verdana", 9,"bold")
@@ -173,6 +217,7 @@ class JanelaPrincipal:
             ,activebackground=self.frame_color
             ,activeforeground=self.borda_color
         )
+        pass
     def quadro_bt(self, janela_principal):
         self.parte_2 = tk.Frame(
             janela_principal
@@ -232,6 +277,13 @@ class JanelaPrincipal:
             ,highlightbackground=self.borda_color
             ,command=lambda: self.resetar_UI()
         )
+        
+        self.automact = tk.Label(
+            self.parte_2
+            ,text= "AUTOMAÇÃO"
+            ,font= ("verdana", 10, "bold")
+        )
+        pass
     def quadro_retorno(self, janela_principal):
         self.parte_3 = tk.Frame(
             janela_principal
@@ -279,6 +331,68 @@ class JanelaPrincipal:
             ,padx=10, pady=10
             ,state="disabled"
         )
+        pass
+    def tela_ROTINAS(self):
+        # Cria a janela pop-up
+        janela_info = tk.Toplevel()
+        janela_info.title("ROTINAS")
+        janela_info.geometry("400x300")
+        janela_info.resizable(False,False)
+        janela_info.configure(bg=self.background)
+        janela_info.iconbitmap(Path_dados.icone_pricipal)
+
+        self.frame_rotina = tk.Frame(
+            janela_info
+            ,bg= self.frame_color
+            ,highlightbackground= self.borda_color
+            ,highlightthickness= 3
+        )
+        self.conteudo_rotina = scrolledtext.ScrolledText(
+            self.frame_rotina
+            ,width=110, height=35
+            ,font=("Consolas", 14)
+        )
+        conteudo_formatado = (
+            f"{"_" * 34}\n"
+            f"|{"Abastecimento: 8628, 8664.":<}\n"
+            f"|{"Corte: 1767, 8041.":<}\n"
+            f"|{"Cadastro: 8596.":<}\n"
+            f"|{"Giro estoque: 8596, 286, 1707.":<}\n"
+            f"|{"Acuracidade: 286, 8596, 1707.":<}\n"
+            f"|{"Ordem de serviço: 8628, 1707.":<}\n"
+            f"|{"Cheio x Vazio: sem rotinas.":<}\n"
+            f"|{"Inventario: 1733.":<}\n"
+            f"{"_" * 34}\n"
+        )
+        self.conteudo_rotina.insert(tk.INSERT, conteudo_formatado)
+        self.conteudo_rotina.configure(state='disabled')
+
+        self.frame_rotina.place(relx= 0.02, rely= 0.01, relheight= 0.96, relwidth= 0.96)
+        self.conteudo_rotina.place(relx= 0.01, rely= 0.01, relheight= 0.98, relwidth= 0.98)
+        pass
+    def tela_CORTE(self, titulo, conteudo_formatado):
+        # Cria a janela pop-up
+        janela_info = tk.Toplevel()
+        janela_info.title(titulo)
+        janela_info.geometry("1020x500")
+        janela_info.resizable(False,True)
+        janela_info.configure(bg=self.back_2)
+        janela_info.iconbitmap(Path_dados.icone_corte)
+        janela_info.attributes("-topmost", True)
+
+        self.conteudo_corte = scrolledtext.ScrolledText(
+            janela_info, 
+            width=110, height=35, 
+            font=("Consolas", 10),
+            bg= self.back_2, 
+            fg= self.frame_color
+        )
+        self.conteudo_corte.insert(tk.INSERT, conteudo_formatado)
+        self.conteudo_corte.configure(state='disabled')
+
+        self.conteudo_corte.place(relx= 0.01, rely= 0.01, relheight= 0.98, relwidth= 0.98)
+        pass
+    
     def localizador(self):
         # QUADRO 1 FLEXBOX
         self.parte_1.place(relx= 0.01, rely= 0.10, relwidth= 0.40, relheight= 0.50)
@@ -305,125 +419,10 @@ class JanelaPrincipal:
         self.parte_3.place(relx= 0.42, rely= 0.10, relwidth= 0.57, relheight= 0.88)
 
         self.contador.place(relx=0.01, rely=0.01, relwidth=0.98, relheight=0.10)
-
         self.retorno.place(relx=0.01, rely=0.15, relwidth=0.98, relheight=0.45)
         self.retorno_db.place(relx=0.01, rely=0.61, relwidth=0.50, relheight=0.38)
         self.retorno_file.place(relx=0.52, rely=0.61, relwidth=0.47, relheight=0.38)
-
-        # botão
-    
-    def tela_ROTINAS(self):
-        # Cria a janela pop-up
-        janela_info = tk.Toplevel()
-        janela_info.title("ROTINAS")
-        janela_info.geometry("400x300")
-        janela_info.resizable(False,False)
-        janela_info.configure(bg=self.background)
-        janela_info.iconbitmap(Path_dados.icone_pricipal)
-
-        frame_rotina = tk.Frame(
-            janela_info
-            ,bg= self.frame_color
-            ,highlightbackground= self.borda_color
-            ,highlightthickness= 3
-        )
-        txt_area = scrolledtext.ScrolledText(
-            frame_rotina
-            ,width=110, height=35
-            ,font=("Consolas", 14)
-        )
-        conteudo_formatado = (
-            f"{"_" * 34}\n"
-            f"|{"Abastecimento: 8628, 8664.":<}\n"
-            f"|{"Corte: 1767, 8041.":<}\n"
-            f"|{"Cadastro: 8596.":<}\n"
-            f"|{"Giro estoque: 8596, 286, 1707.":<}\n"
-            f"|{"Acuracidade: 286, 8596, 1707.":<}\n"
-            f"|{"Ordem de serviço: 8628, 1707.":<}\n"
-            f"|{"Cheio x Vazio: sem rotinas.":<}\n"
-            f"|{"Inventario: 1733.":<}\n"
-            f"{"_" * 34}\n"
-
-        )
-
-        txt_area.insert(tk.INSERT, conteudo_formatado)
-        txt_area.configure(state='disabled')
-        frame_rotina.place(relx= 0.02, rely= 0.01, relheight= 0.96, relwidth= 0.96)
-        txt_area.place(relx= 0.01, rely= 0.01, relheight= 0.98, relwidth= 0.98)
-    def tela_CORTE(self, titulo, conteudo_formatado):
-        # Cria a janela pop-up
-        janela_info = tk.Toplevel()
-        janela_info.title(titulo)
-        janela_info.geometry("1020x500")
-        janela_info.resizable(False,True)
-        janela_info.configure(bg=self.back_2)
-        janela_info.iconbitmap(Path_dados.icone_corte)
-        janela_info.attributes("-topmost", True)
-
-        txt_area = scrolledtext.ScrolledText(
-            janela_info, 
-            width=110, height=35, 
-            font=("Consolas", 10),
-            bg= self.back_2, 
-            fg= self.frame_color
-        )
-        
-        txt_area.insert(tk.INSERT, conteudo_formatado)
-        txt_area.configure(state='disabled')
-        txt_area.pack(padx=10, pady=10, expand=True, fill="both") 
-    
-    def _exibir_mensagem_status(self, mensagem):
-        self.retorno.config(state="normal")
-        self.retorno.delete("1.0", "end")
-        self.retorno.insert("1.0", mensagem)
-        self.retorno.tag_add("alerta", "1.0", "end")
-        self.retorno.tag_config("alerta", **self.estilo_alerta)
-        self.retorno.config(state="disabled")        
-    def start_UI(self):
-        selecionados = [nome for nome, var in self.estados.items() if var.get()]
-        try:
-            if not selecionados:
-                messagebox.showwarning("Aviso", "Selecione ao menos uma opção!")
-                return
-            self.logica_UI.executar_threads(selecionados)
-        except Exception as e:
-            self.validar_erro(e, "Main-start_UI")
-    def resetar_UI(self):
-        for var in self.estados:
-            self.estados[var].set(False)
-        
-        self._exibir_mensagem_status("Aguardando proximo processo...")
-        self.retorno_db.config(state="normal")
-        self.retorno_db.delete("1.0", "end")
-
-        self.contador.config(text="PROGRESSO >> 100% || 0/0 OPERAÇÃO")
-    def validar_erro(self, e, etapa):
-        largura = 78
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
-
+        pass
+    pass
 if __name__ == "__main__":
     JanelaPrincipal()
