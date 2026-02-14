@@ -14,6 +14,7 @@ from modulos.ch_vz import Cheio_Vazio
 from modulos.os_check import Os_check
 from modulos.cadastro import Cadastro
 from modulos.corte import Corte
+from Assets.checklist import Demandas
 
 class JanelaPrincipal:
     def __init__(self):
@@ -65,7 +66,6 @@ class JanelaPrincipal:
         self.localizador()
 
         root.mainloop()
-
 
     def quadro_fleg(self, janela_principal):
         font = ("verdana", 9,"bold")
@@ -193,6 +193,32 @@ class JanelaPrincipal:
             ,highlightbackground=self.borda_color
             ,command=lambda: self.start_UI()
         )
+        self.bt_demanda = tk.Button(
+            self.parte_2
+            ,text= "CHECKLIST"
+            ,cursor= "hand2"
+            ,relief="solid"
+            ,font=("Arial", 10, "bold")
+            ,highlightthickness=3
+            
+            ,bg=self.frame_color
+            ,fg=self.borda_color
+            ,highlightbackground=self.borda_color
+            ,command=lambda: Demandas()
+        )
+        self.bt_info = tk.Button(
+            self.parte_2
+            ,text= "ROTINAS"
+            ,cursor="hand2"
+            ,relief="solid"
+            ,font=("Arial", 10, "bold")
+            ,highlightthickness=3
+            
+            ,bg=self.frame_color
+            ,fg=self.borda_color
+            ,highlightbackground=self.borda_color
+            ,command=lambda: self.tela_ROTINAS()
+        )
         self.bt_limpar = tk.Button(
             self.parte_2
             ,text="LIMPAR"
@@ -215,7 +241,7 @@ class JanelaPrincipal:
         )
         self.contador = tk.Label(
             self.parte_3
-            ,text= "PROGRESSO >> 100%"
+            ,text= "PROGRESSO >> 100% || 0/0 OPERAÇÃO"
             ,font= ("Consolas", 12)
             ,fg= self.frame_color
             ,bg= self.background
@@ -270,8 +296,10 @@ class JanelaPrincipal:
         # QUADRO 2 BOTÃO
         self.parte_2.place(relx= 0.01, rely= 0.62, relwidth= 0.40, relheight= 0.36)
 
-        self.bt_iniciar.place(relx=0.01, rely=0.10, relwidth=0.20, relheight=0.20)
-        self.bt_limpar.place(relx=0.22, rely=0.10, relwidth=0.20, relheight=0.20)
+        self.bt_iniciar.place(relx=0.02, rely=0.10, relwidth=0.20, relheight=0.20)
+        self.bt_demanda.place(relx=0.24, rely=0.10, relwidth=0.22, relheight=0.20)
+        self.bt_info.place(relx=0.48, rely=0.10, relwidth=0.22, relheight=0.20)
+        self.bt_limpar.place(relx=0.78, rely=0.10, relwidth=0.20, relheight=0.20)
 
         # QUADRO 3 RETORNOS
         self.parte_3.place(relx= 0.42, rely= 0.10, relwidth= 0.57, relheight= 0.88)
@@ -284,7 +312,45 @@ class JanelaPrincipal:
 
         # botão
     
-    def segunda_tela(self, titulo, conteudo_formatado):
+    def tela_ROTINAS(self):
+        # Cria a janela pop-up
+        janela_info = tk.Toplevel()
+        janela_info.title("ROTINAS")
+        janela_info.geometry("400x300")
+        janela_info.resizable(False,False)
+        janela_info.configure(bg=self.background)
+        janela_info.iconbitmap(Path_dados.icone_pricipal)
+
+        frame_rotina = tk.Frame(
+            janela_info
+            ,bg= self.frame_color
+            ,highlightbackground= self.borda_color
+            ,highlightthickness= 3
+        )
+        txt_area = scrolledtext.ScrolledText(
+            frame_rotina
+            ,width=110, height=35
+            ,font=("Consolas", 14)
+        )
+        conteudo_formatado = (
+            f"{"_" * 34}\n"
+            f"|{"Abastecimento: 8628, 8664.":<}\n"
+            f"|{"Corte: 1767, 8041.":<}\n"
+            f"|{"Cadastro: 8596.":<}\n"
+            f"|{"Giro estoque: 8596, 286, 1707.":<}\n"
+            f"|{"Acuracidade: 286, 8596, 1707.":<}\n"
+            f"|{"Ordem de serviço: 8628, 1707.":<}\n"
+            f"|{"Cheio x Vazio: sem rotinas.":<}\n"
+            f"|{"Inventario: 1733.":<}\n"
+            f"{"_" * 34}\n"
+
+        )
+
+        txt_area.insert(tk.INSERT, conteudo_formatado)
+        txt_area.configure(state='disabled')
+        frame_rotina.place(relx= 0.02, rely= 0.01, relheight= 0.96, relwidth= 0.96)
+        txt_area.place(relx= 0.01, rely= 0.01, relheight= 0.98, relwidth= 0.98)
+    def tela_CORTE(self, titulo, conteudo_formatado):
         # Cria a janela pop-up
         janela_info = tk.Toplevel()
         janela_info.title(titulo)
@@ -330,7 +396,7 @@ class JanelaPrincipal:
         self.retorno_db.config(state="normal")
         self.retorno_db.delete("1.0", "end")
 
-        self.contador.config(text="100%")
+        self.contador.config(text="PROGRESSO >> 100% || 0/0 OPERAÇÃO")
     def validar_erro(self, e, etapa):
         largura = 78
         mapeamento = {

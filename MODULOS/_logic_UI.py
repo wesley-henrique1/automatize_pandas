@@ -29,17 +29,17 @@ class ProcessadorLogica:
             self.mainUI.bt_limpar.config(state="normal")
 
         if total_scripts == 0:
-            self.mainUI.retorno.after(0, lambda: self.mainUI.contador.config(text="PROGRESSO >> 0%"))
+            self.mainUI.retorno.after(0, lambda: self.mainUI.contador.config(text="PROGRESSO >> 0% || 0/0 OPERAÇÃO"))
             self.mainUI.retorno.after(0, finalizar)
             return
-
+        total_argumentos = len(argumento)
         for i, nome in enumerate(argumento):
             try:
                 progresso_anterior = (i / total_scripts) * 100
                 self.mainUI.retorno.after(
                     0
                     , lambda p=progresso_anterior
-                    , n=nome: self.mainUI.contador.config(text=f"PROGRESSO >> {p:.0f}% -> {n}")
+                    , n=nome: self.mainUI.contador.config(text=f"PROGRESSO >> {p:.0f}% -> {n} || {i}/{total_argumentos} OPERAÇÃO")
                 )
                 classe_do_script = self.mainUI.scripts_map[nome]
                 instancia = classe_do_script()
@@ -73,7 +73,7 @@ class ProcessadorLogica:
                         lista_de_file.append(log_db)
 
                 progresso_atual = ((i + 1) / total_scripts) * 100
-                txt_final = f"PROGRESSO >> {progresso_atual:.0f}% -> {nome}"
+                txt_final = f"PROGRESSO >> {progresso_atual:.0f}% -> {nome} || {i + 1}/{total_argumentos} OPERAÇÃO"
                 self.mainUI.retorno.after(0, lambda p=txt_final: self.mainUI.contador.config(text=p))
             except Exception as e:
                 dic_log[nome] = "Falha Crítica"
@@ -87,7 +87,7 @@ class ProcessadorLogica:
             self.mainUI.retorno.after(0, lambda: self.atualizar_log(dados_arquivos=logs_unicos, dados_modulos= logs_file, data_periodo= log_data))
             self.mainUI.retorno.after(100, lambda: messagebox.showinfo("Resumo da Operação", resumo))
             if msg_corte is not None:
-                self.mainUI.retorno.after(200, lambda: self.mainUI.segunda_tela("Relatório de Corte", msg_corte))
+                self.mainUI.retorno.after(200, lambda: self.mainUI.tela_CORTE("Relatório de Corte", msg_corte))
 
             self.mainUI.retorno.after(300, finalizar)
         except Exception as e:

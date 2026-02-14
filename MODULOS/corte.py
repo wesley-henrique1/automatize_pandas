@@ -90,7 +90,6 @@ class auxiliares:
                 return 0.0
         df_copia[coluna] = df_copia[coluna].apply(ajustar)
         return df_copia
-
 class Corte(auxiliares):
     def __init__(self):
         DRIVER = DB_acumulado.drive
