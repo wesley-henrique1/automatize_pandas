@@ -70,9 +70,8 @@ class Demandas:
         self.borda_color = "#000000"
         self.back_2 = "#363636"
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
-        hoje = dt.now() + timedelta(days=4)
-        print(hoje)
-        dia_hoje = hoje.weekday() + 2  # Converte 0-4 para 2-6
+        hoje = dt.now()
+        dia_hoje = hoje.weekday() + 2
         self.demandas = self.DEMANDAS_SEMANAIS.get(dia_hoje, ["Sem tarefas hoje"])
         self.nome_dia = self.dias_nome.get(dia_hoje, "Final de Semana")
 
