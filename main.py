@@ -5,6 +5,7 @@ from tkinter import scrolledtext
 
 from Assets.checklist import Demandas
 
+
 from modulos._logic_UI import ProcessadorLogica
 from modulos._settings import Path_dados
 from modulos.abastecimento import Abastecimento
@@ -15,6 +16,9 @@ from modulos.ch_vz import Cheio_Vazio
 from modulos.os_check import Os_check
 from modulos.cadastro import Cadastro
 from modulos.corte import Corte
+
+from modulos.auto_inv import AUTO_INV
+from modulos.auto_3707 import AUTO_3707
 
 class auxiliar:   
     def _exibir_mensagem_status(self, mensagem):
@@ -282,8 +286,41 @@ class JanelaPrincipal(auxiliar):
             self.parte_2
             ,text= "AUTOMAÇÃO"
             ,font= ("verdana", 10, "bold")
+            ,anchor= "n"
+            ,bg= self.back_2
+            ,fg= self.frame_color
+            ,highlightbackground= self.borda_color
+            ,highlightthickness= 3
         )
+        self.bt_inv = tk.Button(
+            self.automact
+            ,text="INVENTARIO"
+            ,cursor="hand2"
+            ,relief="solid"
+            ,font=("Arial", 10, "bold")
+            ,highlightthickness=3
+            
+            ,bg=self.frame_color
+            ,fg=self.borda_color
+            ,highlightbackground=self.borda_color
+            ,command=lambda: AUTO_INV()
+        )
+        self.bt_07 = tk.Button(
+            self.automact
+            ,text="3707"
+            ,cursor="hand2"
+            ,relief="solid"
+            ,font=("Arial", 10, "bold")
+            ,highlightthickness=3
+            
+            ,bg=self.frame_color
+            ,fg=self.borda_color
+            ,highlightbackground=self.borda_color
+            ,command=lambda: AUTO_3707()
+        )
+
         pass
+    
     def quadro_retorno(self, janela_principal):
         self.parte_3 = tk.Frame(
             janela_principal
@@ -410,10 +447,15 @@ class JanelaPrincipal(auxiliar):
         # QUADRO 2 BOTÃO
         self.parte_2.place(relx= 0.01, rely= 0.62, relwidth= 0.40, relheight= 0.36)
 
-        self.bt_iniciar.place(relx=0.02, rely=0.10, relwidth=0.20, relheight=0.20)
-        self.bt_demanda.place(relx=0.24, rely=0.10, relwidth=0.22, relheight=0.20)
-        self.bt_info.place(relx=0.48, rely=0.10, relwidth=0.22, relheight=0.20)
-        self.bt_limpar.place(relx=0.78, rely=0.10, relwidth=0.20, relheight=0.20)
+        self.bt_iniciar.place(relx=0.02, rely=0.10, relwidth=0.22, relheight=0.20)
+        self.bt_demanda.place(relx=0.266, rely=0.10, relwidth=0.22, relheight=0.20)
+        self.bt_info.place(relx=0.512, rely=0.10, relwidth=0.22, relheight=0.20)
+        self.bt_limpar.place(relx=0.758, rely=0.10, relwidth=0.22, relheight=0.20)
+
+        self.automact.place(relx=0.01, rely=0.34, relwidth=0.98, relheight=0.65)
+        self.bt_inv.place(relx=0.01, rely=0.20, relwidth=0.30, relheight=0.30)
+        self.bt_07.place(relx=0.35, rely=0.20, relwidth=0.30, relheight=0.30)
+
 
         # QUADRO 3 RETORNOS
         self.parte_3.place(relx= 0.42, rely= 0.10, relwidth= 0.57, relheight= 0.88)
