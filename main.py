@@ -83,7 +83,7 @@ class JanelaPrincipal(auxiliar):
 
         root.title("GERENCIADOR_8000")
         root.geometry("1000x500")
-        root.resizable(False,True)
+        root.resizable(False,False)
         root.config(bg= self.background)
         root.iconbitmap(Path_dados.icone_pricipal)
         

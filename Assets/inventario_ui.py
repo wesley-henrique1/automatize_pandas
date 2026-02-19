@@ -5,7 +5,6 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from modulos._settings import Path_dados
-from modulos._settings import Path_dados
 from tkinter import messagebox
 import tkinter as tk
 

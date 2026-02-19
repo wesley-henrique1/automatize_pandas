@@ -36,7 +36,7 @@ class Demandas:
             ,"RELATORIO: ABASTECIMENTO"
             ,"RELATORIO: O.S PEDENTES || FIM MESA"
             ,"RELATORIO: CHEIO X VAZIO"
-            ,"FEFO: ANÁLISE 'CURVA DE SHELF' E DIVERGÊNCIAS (SISTEMA X FISICO)"
+            ,"FEFO:(SISTEMA X FISICO)"
             ,"CADASTRO: CORREÇÃO"
             ,"INVENTARIO: ESTOQUE PARADO"
         ]
