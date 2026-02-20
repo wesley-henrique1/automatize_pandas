@@ -1,12 +1,11 @@
 # --- DataBase ---
-*.xlsx
-*.xls
+
 *.csv
 *.txt
 *.accdb
 # Pasta de retornos 
-OUTPUT/
-
+DataBase/
+ARQUIVOS_GERADOS/
 # --- Python & Cache ---
 __pycache__/
 *.py[cod]
