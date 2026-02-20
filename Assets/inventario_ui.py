@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Adds the parent directory (TRABALHO_JC) to the python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from modulos._settings import Path_dados
@@ -20,13 +19,15 @@ class UI_inv:
 
         root = tk.Tk()
         root.title("FLOW-MASTER")
-        root.geometry("360x360")
+        root.geometry("260x200")
         root.resizable(False, False)
         root.config(bg=self.back_2)
         root.iconbitmap(Path_dados.icone_pricipal)
 
         self.componentes(root)
+        self.widgets_clicaveis()
         self.localizador()
+
         root.mainloop()
         pass
 
@@ -34,7 +35,7 @@ class UI_inv:
         self.frame_fundo = tk.Frame(
             janela
             ,bg= self.background
-            ,highlightbackground= self.borda_color
+            ,highlightbackground= self.frame_color
             ,highlightthickness= 3
         )
         self.entry_cod = tk.Text(
@@ -46,7 +47,23 @@ class UI_inv:
             ,highlightthickness=2
             ,padx=10, pady=10
         )
-
+        self.contador = tk.Label(
+            self.frame_fundo
+            ,text= (f"{">> PROGRESSO: 0 - 0 || 0%":<}\n"
+                    f"{">> PRODUTO: ______":<}")
+            ,font= ("verdana", 10, "bold")
+            ,bg= self.back_2
+            ,fg= self.frame_color
+            ,highlightbackground= self.borda_color
+            ,highlightthickness= 3
+            ,anchor= "nw"
+            ,justify="left"
+            ,padx=5
+            ,pady=5
+        )
+        
+        pass
+    def widgets_clicaveis(self): 
         self.bt_iniciar = tk.Button(
             self.frame_fundo
             ,text="INICIAR"
@@ -76,11 +93,14 @@ class UI_inv:
 
         pass
     def localizador(self):
-        self.frame_fundo.place(relx= 0.01, rely= 0.01, relwidth= 0.98, relheight= 0.98)
-        self.entry_cod.place(relx= 0.01, rely= 0.01, relwidth= 0.98, relheight= 0.10)
-        self.bt_iniciar.place(relx= 0.01, rely= 0.50, relwidth= 0.20, relheight= 0.10)
-        self.bt_parar.place(relx= 0.22, rely= 0.50, relwidth= 0.20, relheight= 0.10)
-        
+        self.frame_fundo.place(relx= 0.02, rely= 0.01, relwidth= 0.96, relheight= 0.98)
+
+        self.entry_cod.place(relx= 0.01, rely= 0.01, relwidth= 0.98, relheight= 0.20)
+        self.contador.place(relx= 0.01, rely= 0.32, relwidth= 0.98, relheight= 0.40)
+
+        self.bt_iniciar.place(relx= 0.01, rely= 0.78, relwidth= 0.48, relheight= 0.20)
+        self.bt_parar.place(relx= 0.51, rely= 0.78, relwidth= 0.48, relheight= 0.20)
+
         pass
 
 if __name__ == "__main__":
