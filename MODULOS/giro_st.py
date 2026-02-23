@@ -114,7 +114,7 @@ class Giro_Status(auxiliar):
             ESTOQUE_F11 = pd.read_excel(self.list_path[2], usecols= colunas_estoque)
             ESTOQUE_F18 = pd.read_excel(self.list_path[3], usecols= colunas_estoque)
 
-            ENDERECO = pd.read_csv(self.list_path[4], header= None, names= ColNames.col_end)
+            enderecado = pd.read_csv(self.list_path[4], header= None, names= ColNames.col_end)
             BASE_END = pd.read_excel(self.list_path[5], sheet_name= "AE", usecols= ['COD_END', 'RUA'])
         except Exception as e:
             self.validar_erro(e, "Extract")
@@ -135,7 +135,6 @@ class Giro_Status(auxiliar):
             except Exception as e: 
                 self.validar_erro(e, "AJUSTE_PROD")
                 return False
-
             try:
                 ESTOQUE_F18 = ESTOQUE_F18[['Código', 'Estoque','Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria','Comprador']]
                 renomear = {
@@ -148,17 +147,19 @@ class Giro_Status(auxiliar):
                 df_val = ESTOQUE_F18.rename(columns= renomear)
 
                 df_estoque = ESTOQUE_F11.merge(df_val, left_on= 'Código', right_on= 'COD_F18', how= 'left')
-                df_estoque = df_estoque.fillna(0)
+                df_estoque = df_estoque.fillna(0)                
             except Exception as e: 
                 self.validar_erro(e, "AJUSTE_ESTOQUE")
                 return False
-
 
             df_estoque['Estoque'] += df_estoque['EST_F18']
             df_estoque['Bloqueado(Qt.Bloq.-Qt.Avaria)'] += df_estoque['BLOQ_F18']
             df_estoque['Qt.Avaria'] += df_estoque['AV_F18']  
             df_estoque['BLOQUEADO'] = (df_estoque['Qt.Avaria'].fillna(0) + df_estoque['Bloqueado(Qt.Bloq.-Qt.Avaria)'].fillna(0)).astype(int)
-            df_estoque['CUSTO_PROD'] = round(df_estoque['Custo real'].fillna(0).astype(float) * df_estoque['Estoque'].fillna(0).astype(float), 2) 
+            df_estoque['CUSTO_PROD'] = round(
+                df_estoque['Custo real'].fillna(0).astype(float) * df_estoque['Estoque'].fillna(0).astype(float)
+                ,2
+            ) 
             df_estoque['DISPONIVEL'] = (df_estoque['Estoque'] - df_estoque['BLOQUEADO']).fillna(0).astype(int)
             nomes_separados = df_estoque['Comprador'].str.split()
 
@@ -169,7 +170,7 @@ class Giro_Status(auxiliar):
                 (nomes_separados.str[0] + " " + nomes_separados.str[-1]),
                 (nomes_separados.str[0])                                
             )
-
+            
             df_prod['DTULTSAIDA'] = pd.to_datetime(df_prod['DTULTSAIDA'], errors= 'coerce')
             df_prod['DTULTENT'] = pd.to_datetime(df_prod['DTULTENT'], errors= 'coerce')
 
@@ -182,7 +183,6 @@ class Giro_Status(auxiliar):
 
             ruas_fora = [50, 60, 70, 80, 100]
             df_prod = df_prod.loc[~df_prod['RUA'].isin(ruas_fora)] 
-
             col_classificar = [
                 'Código'
                 ,'Estoque'
@@ -193,19 +193,31 @@ class Giro_Status(auxiliar):
                 ,'COMPRADOR'
                 ]
             df_ordenado = df_estoque[col_classificar]   
-            df_completo = df_prod.merge(df_ordenado, left_on= 'CODPROD', right_on= 'Código', how= 'left').drop(columns= ['Código'])
+            df_completo = df_prod.merge(
+                df_ordenado
+                ,left_on= 'CODPROD'
+                ,right_on= 'Código'
+                ,how= 'left'
+            ).drop(columns= ['Código'])
             df_completo['QTESTGER'] += df_completo['Estoque']
-
-            ENDERECO = ENDERECO.merge(BASE_END, on='COD_END', how= 'left')
-            cols = list(ENDERECO.columns)
+            enderecado = enderecado.merge(
+                BASE_END
+                ,on='COD_END'
+                ,how= 'left'
+            )
+            cols = list(enderecado.columns)
             cols.insert(1, cols.pop(cols.index('RUA'))) 
-            ENDERECO = ENDERECO[cols]
+            enderecado = enderecado[cols]
 
-            grupo_endereco = ENDERECO.groupby('COD').agg(
+            grupo_endereco = enderecado.groupby('COD').agg(
                 QT_AE = ('COD_END', 'nunique')
             ).reset_index()
-
-            df_completo = df_completo.merge(grupo_endereco, left_on= 'CODPROD', right_on= 'COD', how= 'left').drop(columns= 'COD').fillna({'QT_AE': 0})
+            df_completo = df_completo.merge(
+                grupo_endereco
+                ,left_on= 'CODPROD'
+                ,right_on= 'COD'
+                ,how= 'left'
+            ).drop(columns= 'COD').fillna({'QT_AE': 0})
             col_classificar = [
                 'CODPROD'
                 ,'DESCRICAO'
@@ -254,7 +266,7 @@ class Giro_Status(auxiliar):
                 ger_parado["CODPROD"]
             ])
             lista_cod_unica = set(todos_cods)
-            aereo_filtrado = ENDERECO.loc[(ENDERECO['COD'].isin(lista_cod_unica))]
+            aereo_filtrado = enderecado.loc[(enderecado['COD'].isin(lista_cod_unica))]
         except Exception as e:
             self.validar_erro(e, "Transform")
             return False

@@ -97,7 +97,7 @@ class ProcessadorLogica:
             dados_validos = [dados for dados in dados_arquivos if isinstance(dados, dict)]
             ar_validos = [modulo for modulo in dados_modulos if isinstance(modulo, dict)]
 
-            if not dados_validos and not ar_validos:
+            if not dados_validos and not ar_validos and not data_periodo:
                 self.mainUI._exibir_mensagem_status(" >>> NENHUM ARQUIVO PROCESSADO")
                 return
             
