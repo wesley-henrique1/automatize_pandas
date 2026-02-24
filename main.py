@@ -17,6 +17,8 @@ from modulos.os_check import Os_check
 from modulos.cadastro import Cadastro
 from modulos.corte import Corte
 
+from modulos.fefo import Fefo_ABST, Fefo_curva, Fefo_WMS
+
 from modulos.auto_inv import AUTO_INV
 from modulos.auto_3707 import AUTO_3707
 
@@ -88,17 +90,27 @@ class JanelaPrincipal(auxiliar):
         root.iconbitmap(Path_dados.icone_pricipal)
         
         self.estados = {
-            "Corte": tk.BooleanVar(value=False),
-            "Acuracidade": tk.BooleanVar(value=False),
-            "Validar_os": tk.BooleanVar(value=False),
-            "Cadastro": tk.BooleanVar(value=False),
-            "Giro_estatus": tk.BooleanVar(value=False),
-            "cheio_vazio": tk.BooleanVar(value=False),
-            "Abastecimento": tk.BooleanVar(value=False),
-            "Contagem": tk.BooleanVar(value=False)
+            "Corte": tk.BooleanVar(value=False)
+
+            ,"Fefo_abst": tk.BooleanVar(value= False)
+            ,"Fefo_Curva": tk.BooleanVar(value= False)
+            ,"Fefo_Wms": tk.BooleanVar(value= False)
+
+            ,"Acuracidade": tk.BooleanVar(value=False)
+            ,"Validar_os": tk.BooleanVar(value=False)
+            ,"Cadastro": tk.BooleanVar(value=False)
+            ,"Giro_estatus": tk.BooleanVar(value=False)
+            ,"cheio_vazio": tk.BooleanVar(value=False)
+            ,"Abastecimento": tk.BooleanVar(value=False)
+            ,"Contagem": tk.BooleanVar(value=False)
         }
         self.scripts_map = {
             "Corte": Corte
+
+            ,"Fefo_abst": Fefo_ABST
+            ,"Fefo_Curva": Fefo_curva
+            ,"Fefo_Wms": Fefo_WMS
+
             ,"Validar_os": Os_check
             ,"Acuracidade": Acuracidade
             ,"Cadastro": Cadastro
@@ -221,6 +233,46 @@ class JanelaPrincipal(auxiliar):
             ,activebackground=self.frame_color
             ,activeforeground=self.borda_color
         )
+
+        """ checkBox FEFO"""
+        self.check_FAbst = tk.Checkbutton(
+            self.parte_1
+            ,text="FEFO Abastecimento"
+            ,font= font
+            ,bg= self.frame_color
+            ,fg= self.borda_color
+            ,variable=self.estados["Fefo_abst"]
+
+            ,selectcolor=self.frame_color
+            ,activebackground=self.frame_color
+            ,activeforeground=self.borda_color
+        )
+        self.check_FCurva = tk.Checkbutton(
+            self.parte_1
+            ,text="FEFO Curva ABC"
+            ,font= font
+            ,bg= self.frame_color
+            ,fg= self.borda_color
+            ,variable=self.estados["Fefo_Curva"]
+
+            ,selectcolor=self.frame_color
+            ,activebackground=self.frame_color
+            ,activeforeground=self.borda_color
+        )
+        self.check_FWMS = tk.Checkbutton(
+            self.parte_1
+            ,text="FEFO WMS"
+            ,font= font
+            ,bg= self.frame_color
+            ,fg= self.borda_color
+            ,variable=self.estados["Fefo_Wms"]
+
+            ,selectcolor=self.frame_color
+            ,activebackground=self.frame_color
+            ,activeforeground=self.borda_color
+        )
+
+
         pass
     def quadro_bt(self, janela_principal):
         self.parte_2 = tk.Frame(
@@ -438,11 +490,14 @@ class JanelaPrincipal(auxiliar):
         self.check_corte.place(relx=0.02, rely=0.13)
         self.check_cadastro.place(relx=0.02, rely=0.23)  
         self.check_Giro_estatus.place(relx=0.02, rely=0.33)
+        self.check_FAbst.place(relx=0.02, rely=0.43)
+        self.check_FWMS.place(relx=0.02, rely=0.53)
 
         self.check_acuracidade.place(relx=0.50, rely=0.03)
         self.check_validar_os.place(relx=0.50, rely=0.13)
         self.check_ch_vz.place(relx=0.50, rely=0.23)  
         self.check_contagem.place(relx=0.50, rely=0.33)
+        self.check_FCurva.place(relx=0.50, rely=0.43)
 
         # QUADRO 2 BOTÃO
         self.parte_2.place(relx= 0.01, rely= 0.62, relwidth= 0.40, relheight= 0.36)
