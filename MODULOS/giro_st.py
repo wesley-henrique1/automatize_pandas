@@ -151,6 +151,8 @@ class Giro_Status(auxiliar):
             except Exception as e: 
                 self.validar_erro(e, "AJUSTE_ESTOQUE")
                 return False
+            
+            enderecado = enderecado.loc[enderecado['TIPO_PK'] == "AE"]
 
             df_estoque['Estoque'] += df_estoque['EST_F18']
             df_estoque['Bloqueado(Qt.Bloq.-Qt.Avaria)'] += df_estoque['BLOQ_F18']

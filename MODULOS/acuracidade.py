@@ -126,6 +126,7 @@ class Acuracidade(auxiliar):
 
             dic_end = {"COD" : "CODPROD"}
             df_end = df_end.rename(columns= dic_end)
+            df_end = df_end.loc[df_end['TIPO_PK'] == "AE"]
             df_end = df_end[['CODPROD','ENTRADA', 'SAIDA', 'DISP','QTDE']]
             
             col_ajuste = ['CODPROD','ENTRADA', 'SAIDA', 'DISP','QTDE']
