@@ -5,10 +5,26 @@ import threading
 class ProcessadorLogica:
     def __init__(self, UI):
         self.mainUI = UI
+        self._widget_ancora = self.mainUI.retorno
 
+        pass
+
+    def _executar_na_main_thread(self, func, *args, **kwargs):
+        self._widget_ancora.after(0, lambda: func(*args, **kwargs))
+        
+        pass
+    def _alterar_estado_botoes(self, estado):
+        self.mainUI.bt_iniciar.config(state=estado)
+        self.mainUI.bt_limpar.config(state=estado)
+        
+        pass
+    def _atualizar_contador(self, texto):
+        self.mainUI.contador.config(text=texto)
+        pass
+    
+    
     def executar_threads(self, selecionados):
-        self.mainUI.bt_iniciar.config(state="disabled")
-        self.mainUI.bt_limpar.config(state="disabled")
+        self._alterar_estado_botoes("disabled")
         
         thread = threading.Thread(
             target=self.task_workflow, 
@@ -16,153 +32,143 @@ class ProcessadorLogica:
             daemon=True
         )
         thread.start()
+        
+        pass
     def task_workflow(self, argumento):
         lista_de_logs = []
         lista_de_file = []
-
+        dic_log = {}
         msg_corte = None
         log_data = None
-        dic_log = {}
+        
         total_scripts = len(argumento)
-        def finalizar():
-            self.mainUI.bt_iniciar.config(state="normal")
-            self.mainUI.bt_limpar.config(state="normal")
 
         if total_scripts == 0:
-            self.mainUI.retorno.after(0, lambda: self.mainUI.contador.config(text="PROGRESSO >> 0% || 0/0 OPERAÇÃO"))
-            self.mainUI.retorno.after(0, finalizar)
+            self._executar_na_main_thread(self._atualizar_contador, "PROGRESSO >> 0% || 0/0 OPERAÇÃO")
+            self._executar_na_main_thread(self._alterar_estado_botoes, "normal")
             return
-        total_argumentos = len(argumento)
+
         for i, nome in enumerate(argumento):
             try:
                 progresso_anterior = (i / total_scripts) * 100
-                self.mainUI.retorno.after(
-                    0
-                    , lambda p=progresso_anterior
-                    , n=nome: self.mainUI.contador.config(text=f"PROGRESSO >> {p:.0f}% -> {n} || {i}/{total_argumentos} OPERAÇÃO")
-                )
+                txt_progresso = f"PROGRESSO >> {progresso_anterior:.0f}% -> {nome} || {i}/{total_scripts} OPERAÇÃO"
+                self._executar_na_main_thread(self._atualizar_contador, txt_progresso)
+
                 classe_do_script = self.mainUI.scripts_map[nome]
                 instancia = classe_do_script()
                 
                 if nome == "Abastecimento":
-                    status_pipeline, log_data = instancia.pipeline()  
+                    status_pipeline, log_data = instancia.pipeline() 
                 else:
-                    status_pipeline = instancia.pipeline()  
-
-
+                    status_pipeline = instancia.pipeline()
                 log_arquivo, log_db = instancia.carregamento()
-
 
                 if nome == "Corte" and status_pipeline is not False:
                     msg_corte = instancia.Log_Retorno()
                     dic_log[nome] = "Executado"
-                elif status_pipeline:
-                    dic_log[nome] = "Executado"
-                elif not status_pipeline:
-                    dic_log[nome] = "Travado (Erro Interno)"
+                else:
+                    dic_log[nome] = "Executado" if status_pipeline else "Travado (Erro Interno)"
 
                 if log_arquivo:
-                    if isinstance(log_arquivo, list):
-                        lista_de_logs.extend(log_arquivo)
-                    else:
-                        lista_de_logs.append(log_arquivo)
+                    lista_de_logs.extend(log_arquivo if isinstance(log_arquivo, list) else [log_arquivo])
                 if log_db:
-                    if isinstance(log_db, list):
-                        lista_de_file.extend(log_db)
-                    else:
-                        lista_de_file.append(log_db)
+                    lista_de_file.extend(log_db if isinstance(log_db, list) else [log_db])
 
                 progresso_atual = ((i + 1) / total_scripts) * 100
-                txt_final = f"PROGRESSO >> {progresso_atual:.0f}% -> {nome} || {i + 1}/{total_argumentos} OPERAÇÃO"
-                self.mainUI.retorno.after(0, lambda p=txt_final: self.mainUI.contador.config(text=p))
+                txt_final = f"PROGRESSO >> {progresso_atual:.0f}% -> {nome} || {i + 1}/{total_scripts} OPERAÇÃO"
+                self._executar_na_main_thread(self._atualizar_contador, txt_final)
+
             except Exception as e:
                 dic_log[nome] = "Falha Crítica"
                 self.validar_erro(e, f"Módulo: {nome}")
-                self.mainUI._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
+                self._executar_na_main_thread(self.mainUI._exibir_mensagem_status, " >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
+
+        self._processar_finalizacao(lista_de_logs, lista_de_file, dic_log, log_data, msg_corte)
+        
+        pass
+    def _processar_finalizacao(self, lista_de_logs, lista_de_file, dic_log, log_data, msg_corte):
         try:       
-            logs_unicos = {log['ARQUIVO']: log for log in lista_de_logs}.values()
-            logs_file = {log['MODULO']: log for log in lista_de_file}.values()
+            logs_unicos = list({log['ARQUIVO']: log for log in lista_de_logs}.values())
+            logs_file = list({log['MODULO']: log for log in lista_de_file}.values())
             resumo = "\n".join([f"{modulo}: {status}" for modulo, status in dic_log.items()])
 
-            self.mainUI.retorno.after(0, lambda: self.atualizar_log(dados_arquivos=logs_unicos, dados_modulos= logs_file, data_periodo= log_data))
-            self.mainUI.retorno.after(100, lambda: messagebox.showinfo("Resumo da Operação", resumo))
+            self._executar_na_main_thread(self.atualizar_log, logs_unicos, log_data)
+            self._executar_na_main_thread(self.Atualizar_db, logs_file)
+            
+            self._widget_ancora.after(100, lambda: messagebox.showinfo("Resumo da Operação", resumo))
+            
             if msg_corte is not None:
-                self.mainUI.retorno.after(200, lambda: self.mainUI.tela_CORTE("Relatório de Corte", msg_corte))
+                self._widget_ancora.after(200, lambda: self.mainUI.tela_CORTE("Relatório de Corte", msg_corte))
 
-            self.mainUI.retorno.after(300, finalizar)
+
+            self._widget_ancora.after(300, lambda: self._alterar_estado_botoes("normal"))
         except Exception as e:
             self.validar_erro(e, "TASK_RETORNO")
-    def atualizar_log(self, dados_arquivos, dados_modulos, data_periodo):
+        
+        pass
+    def atualizar_log(self, dados_arquivos, data_periodo):
         try:
-            dados_validos = [dados for dados in dados_arquivos if isinstance(dados, dict)]
-            ar_validos = [modulo for modulo in dados_modulos if isinstance(modulo, dict)]
+            dados_validos = [d for d in dados_arquivos if isinstance(d, dict)]
 
-            if not dados_validos and not ar_validos and not data_periodo:
+            if not dados_validos and not data_periodo:
                 self.mainUI._exibir_mensagem_status(" >>> NENHUM ARQUIVO PROCESSADO")
                 return
             
             if dados_validos:
-                try:
-                    conteudo = f"{'ID':^3} | {'ARQUIVO':^45} | {'DATA':^10} | {'HORA':^8}\n"
-                    conteudo += f"{'-' * 75}\n"
-                    print(type(conteudo))
+                conteudo = f"{'ID':^3} | {'ARQUIVO':^45} | {'DATA':^10} | {'HORA':^8}\n"
+                conteudo += f"{'-' * 75}\n"
 
-                    for item in dados_validos:
-                        nome_arq = str(item.get('ARQUIVO', 'DESCONHECIDO'))
-                        if len(nome_arq) > 41:
-                            nome_arq = nome_arq[:42] + "..."
-                        id = item.get('CONTADOR', 0)
-                        date = item.get('DATA', '--/--/----')
-                        hrs = item.get('HORAS', '--:--')
-                        linha = (
-                            f"{id:03d} | {nome_arq:<45} | {date:<10} | {hrs:<8}\n")
-                        conteudo += linha 
-
+                for item in dados_validos:
+                    nome_arq = str(item.get('ARQUIVO', 'DESCONHECIDO'))
+                    nome_arq = nome_arq[:42] + "..." if len(nome_arq) > 41 else nome_arq
                     
-                    print(conteudo)
-                    self.mainUI.retorno.config(state="normal")
-                    self.mainUI.retorno.delete("1.0", "end")
-                    self.mainUI.retorno.insert("end", conteudo)
-                    self.mainUI.retorno.config(state="disabled")
-                    self.mainUI.retorno.see("end")
-                except Exception as e:
-                    self.validar_erro(e, "LOG-RETORNO")
+                    id_log = item.get('CONTADOR', 0)
+                    date = item.get('DATA', '--/--/----')
+                    hrs = item.get('HORAS', '--:--')
+                    
+                    conteudo += f"{id_log:03d} | {nome_arq:<45} | {date:<10} | {hrs:<8}\n"
+
+                self._inserir_texto_no_widget(self.mainUI.retorno, conteudo, limpar=True)
+
             if data_periodo:
-                try:
-                    conteudo_dt = f"{'-' * 75}\n"
-                    conteudo_dt += data_periodo
+                conteudo_dt = f"{'-' * 75}\n{data_periodo}"
+                self._inserir_texto_no_widget(self.mainUI.retorno, conteudo_dt, limpar=False)
 
-                    self.mainUI.retorno.config(state="normal")
-                    self.mainUI.retorno.insert("end", conteudo_dt)
-                    self.mainUI.retorno.config(state="disabled")
-                    self.mainUI.retorno.see("end")
-                except Exception as e:
-                    self.validar_erro(e, "LOG-RETORNO")
-
-            if ar_validos:
-                try:
-                    conteudo_log = f"{"MODULO":^6} | {"ARQUIVOS":^7} | {"ERROS":5} | {"LEITURAS":^8}\n"
-                    divisa = f"{"-" * 36}\n"
-                    conteudo_log += divisa
-                    for file in ar_validos:
-                        modulo = file.get("MODULO", "DESCONHECIDO")
-                        contador = file.get("ARQUIVOS", 0)
-                        fora = file.get("ERROS", 0)
-                        qtde = file.get("LEITURA", 0)
-                        linha_log = f"{modulo:^6} | {contador:^8} | {fora:^5} | {qtde:^8}\n"
-                        conteudo_log += linha_log
-
-                    self.mainUI.retorno_db.config(state="normal")
-                    self.mainUI.retorno_db.delete("1.0", "end")
-                    self.mainUI.retorno_db.insert("end", conteudo_log)
-                    self.mainUI.retorno_db.config(state="disabled")
-                    self.mainUI.retorno_db.see("end")
-                except Exception as e:
-                    self.validar_erro(e, "LOG-ERRO")
         except Exception as e:
             self.validar_erro(e, "Atualizar LOG")
             self.mainUI._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
-    
+        
+        pass
+    def Atualizar_db(self, dados_modulos):
+        ar_validos = [modulo for modulo in dados_modulos if isinstance(modulo, dict)]
+        if not ar_validos:
+            return      
+        try:
+            conteudo_log = f"{'MODULO':^6} | {'ARQUIVOS':^7} | {'ERROS':5} | {'LEITURAS':^8}\n"
+            conteudo_log += f"{'-' * 36}\n"
+            
+            for file in ar_validos:
+                modulo = file.get("MODULO", "DESCONHECIDO")
+                contador = file.get("ARQUIVOS", 0)
+                fora = file.get("ERROS", 0)
+                qtde = file.get("LEITURA", 0)
+                
+                conteudo_log += f"{modulo:^6} | {contador:^8} | {fora:^5} | {qtde:^8}\n"
+
+            self._inserir_texto_no_widget(self.mainUI.retorno_db, conteudo_log, limpar=True)
+        except Exception as e:
+            self.validar_erro(e, "LOG-ERRO")
+        
+        pass
+    def _inserir_texto_no_widget(self, widget, conteudo, limpar=True):
+        widget.config(state="normal")
+        if limpar:
+            widget.delete("1.0", "end")
+        widget.insert("end", conteudo)
+        widget.config(state="disabled")
+        widget.see("end")
+        
+        pass
     def validar_erro(self, e, etapa):
         largura = 78
         mapeamento = {
@@ -179,17 +185,13 @@ class ProcessadorLogica:
         
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: _logic_UI.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
         )
-
         try:
             with open("log_erros.txt", "a", encoding="utf-8") as f:
                 f.write(log_conteudo)
         except Exception as erro_f:
             print(f"Falha crítica ao gravar log: {erro_f}")
-    
-    
-    

@@ -72,17 +72,18 @@ class auxiliar:
                 f.write(log_conteudo)
         except Exception as erro_f:
             print(f"Falha crítica ao gravar log: {erro_f}")
+    
     pass
 class JanelaPrincipal(auxiliar):
     def __init__(self):
-        root = tk.Tk()
-        self.logica_UI = ProcessadorLogica(self)
         self.background = "#2F4F4F"
         self.frame_color = "#F0FFFF"
         self.borda_color = "#000000"
         self.back_2 = "#363636"
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
 
+        
+        root = tk.Tk()
         root.title("GERENCIADOR_8000")
         root.geometry("1000x500")
         root.resizable(False,False)
@@ -124,6 +125,7 @@ class JanelaPrincipal(auxiliar):
         self.quadro_bt(janela_principal= root)
         self.quadro_retorno(janela_principal= root)
         self.localizador()
+        self.logica_UI = ProcessadorLogica(self)
         root.mainloop()
         pass
 

@@ -38,8 +38,11 @@ class Relatorios:
     rel_11 = os.path.join(PASTA_DADOS, '8611 - Responsável por gerar o.xlsx')
     rel_28 = os.path.join(PASTA_DADOS, '8628 - Relatorio de abastecimento.xlsx')
     rel_64 = os.path.join(PASTA_DADOS, '8664 - Eficiência do recebimento.xlsx')
+    rel_68 = os.path.join(PASTA_DADOS, '8668 - Produtos Aereo x Picking.xlsx')
     
     rel_f18 = os.path.join(PASTA_DADOS, '8596 - Dados filial_18.xlsx')
+
+    pass
 class Wms:
     wms_02     = os.path.join(PASTA_DADOS, '1702 - Cadastro de Endereços.txt')
     wms_07_ger = os.path.join(PASTA_DADOS, '1707 - Estoque endereçado x Gerencial.txt')
@@ -47,6 +50,8 @@ class Wms:
     wms_33     = os.path.join(PASTA_DADOS, '1733 - Gestão de inventario.xls')
     wms_67     = os.path.join(PASTA_DADOS, '1767 - Relatorio de corte.txt')
     wms_82     = os.path.join(PASTA_DADOS, '1782 - Relatório de curva ABC de produtos.xls')
+
+    pass
 class Outros:
     ou_corte = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.1 Analise de Cortes\2026\# 2 Acompanhamento de produtos cortados.xlsx'
     
@@ -60,6 +65,8 @@ class Outros:
     ou_f18   = os.path.join(PASTA_DADOS, '0286 - Consultar filial_18.xls')
     ou_05    = os.path.join(PASTA_DADOS, '0105 - Posição do estoque.xls')
     ou_718   = os.path.join(PASTA_DADOS, '0718 - Contas pagas.xls')   
+
+    pass
 class Directory:
     dir_cheio_vazio = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.5 - Relatório Cheio x vazio\RETORNO'
 
@@ -86,6 +93,8 @@ class Directory:
             if not os.path.exists(pasta):
                 os.makedirs(pasta)
                 print(f"Pasta criada: {pasta}")
+    
+    pass
 class Power_BI:
     _base_dados = PASTA_DADOS
     _out = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
@@ -120,12 +129,15 @@ class Power_BI:
 
     # Relatório de Cheio x Vazio (Histórico/Acumulado)
     ch_vz = os.path.join(_base_dados, 'ACUMULADOS', 'acumulado_cheio_vazio.xlsx')
+
+    pass
 class Ipynb:
     _base = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
     # Salvando os resultados na raiz do projeto (BASE_DIR)
     retorno   = os.path.join(_base, 'RESULTADO.xlsx')
     retorno_1 = os.path.join(_base, 'RESULTADO_FINAL.xlsx')
-
+    
+    pass
 class Output:
     _base = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
     _acum = os.path.join(PASTA_DADOS, "ACUMULADOS")
