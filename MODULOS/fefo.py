@@ -181,6 +181,7 @@ class Fefo_ABST(auxiliar):
                 print(f"{self.times[i][0]}: {diff:.0f} seg")
 
             print(f"\n>>>>Tempo Total: {end_global - start_global:.0f} seg<<<")
+            end_global = time.perf_counter()
             return True
         except Exception as e:
             self.validar_erro(e, "Laod")

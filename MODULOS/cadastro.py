@@ -2,6 +2,7 @@ from modulos._settings import Relatorios, Outros, Output
 import datetime as dt
 import pandas as pd
 import numpy as np
+import time
 import warnings
 import os
 import re
@@ -48,6 +49,7 @@ class auxiliar:
         return None
 class Cadastro(auxiliar):
     def __init__(self):
+        self.list_time = []
         self.list_path = [Relatorios.rel_96, Outros.ou_end]
         self.chekout = [27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
@@ -60,6 +62,7 @@ class Cadastro(auxiliar):
 
     def pipeline(self):
         try:
+            start_global = time.perf_counter()
             colunas_origem = [
                 "RUA"
                 ,"PREDIO"
@@ -229,3 +232,26 @@ class Cadastro(auxiliar):
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
             return False
+
+        pass
+    def temporizador(self, lista_timestamps):
+        if len(lista_timestamps) == 4:
+            ext = lista_timestamps[1] - lista_timestamps[0]
+            tra = lista_timestamps[2] - lista_timestamps[1]
+            loa = lista_timestamps[3] - lista_timestamps[2]
+            total = lista_timestamps[3] - lista_timestamps[0]
+
+            def formatar(n):
+                if n >= 3600: return f"{n / 3600:.2f}hr"
+                if n >= 60: return f"{n / 60:.2f}min"
+                return f"{n:.2f}seg"
+
+            return [{
+                "Modulo": "Cadastro",
+                "Extract": formatar(ext),
+                "Transform": formatar(tra),
+                "Load": formatar(loa),
+                "Total": formatar(total)
+            }]
+
+        lista_timestamps.append(time.perf_counter())
