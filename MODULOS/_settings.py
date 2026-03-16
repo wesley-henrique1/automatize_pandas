@@ -27,6 +27,12 @@ class DB_acumulado:
     db_prod = "DB_INVPROD"
     db_cont = "DB_INVCONT"
 
+class Filial:
+    F8596 = os.path.join(PASTA_DADOS, '8596 - Dados filial_18.xlsx')
+    F286 = os.path.join(PASTA_DADOS, '0286 - Consultar filial_18.xls')
+    pass
+
+
 class Relatorios:
     rel_41 = os.path.join(PASTA_DADOS, '8041 - Relatorio de picking master.xlsx')
     rel_32 = os.path.join(PASTA_DADOS, '8132 - Relatorio de endereçamento.xlsx')
@@ -41,7 +47,6 @@ class Relatorios:
     rel_68 = os.path.join(PASTA_DADOS, '8668 - Produtos Aereo x Picking.xlsx')
     
     rel_f18 = os.path.join(PASTA_DADOS, '8596 - Dados filial_18.xlsx')
-
     pass
 class Wms:
     wms_02     = os.path.join(PASTA_DADOS, '1702 - Cadastro de Endereços.txt')
@@ -62,10 +67,10 @@ class Outros:
     ou_life  = os.path.join(PASTA_DADOS, '001 - TOTVS_LIFE.xlsx')
     ou_18    = os.path.join(PASTA_DADOS, '1118 - Gerencial 11.xls')
     ou_86    = os.path.join(PASTA_DADOS, '0286 - Consultar Produtos.xls')
-    ou_f18   = os.path.join(PASTA_DADOS, '0286 - Consultar filial_18.xls')
     ou_05    = os.path.join(PASTA_DADOS, '0105 - Posição do estoque.xls')
     ou_718   = os.path.join(PASTA_DADOS, '0718 - Contas pagas.xls')   
 
+    ou_f18   = os.path.join(PASTA_DADOS, '0286 - Consultar filial_18.xls')
     pass
 class Directory:
     dir_cheio_vazio = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.5 - Relatório Cheio x vazio\RETORNO'
@@ -134,8 +139,8 @@ class Power_BI:
 class Ipynb:
     _base = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
     # Salvando os resultados na raiz do projeto (BASE_DIR)
-    retorno   = os.path.join(_base, 'RESULTADO.xlsx')
-    retorno_1 = os.path.join(_base, 'RESULTADO_FINAL.xlsx')
+    retorno   = os.path.join(_base, 'JUPTER_1.xlsx')
+    retorno_1 = os.path.join(_base, 'JUPTER_2.xlsx')
     
     pass
 class Output:
@@ -150,6 +155,11 @@ class Output:
     cheio_vazio  = os.path.join(_base, 'geral_cheio_vazio.xlsx')
     corte        = os.path.join(_base, 'extratos_corte.xlsx')
     acum_41      = os.path.join(_acum, 'ACUMULADO_41.xlsx')
+
+    FEFO_8668 = r"z:\1 - CD Dia\4 - Equipe PCL\6.6 - Recuperação e Indenizado\6.6.3 - FEFO Validade\Curva A-B-C-D\Auditoria\FEFO_8668.xlsx"
+    FEFO_8628 = r"z:\1 - CD Dia\4 - Equipe PCL\6.6 - Recuperação e Indenizado\6.6.3 - FEFO Validade\Curva A-B-C-D\Auditoria\FEFO_8628.xlsx"
+
+
 class ColNames:
     # Listas de colunas não precisam de caminhos, então apenas mantemos a estrutura
     col_67  = ['data', 'n_car', 'cod', 'desc', 'n_ped', 'qtde_orig', 'vl_orig', 'rua', 'predio', 'apto', 'estoque_dia', 'qtde_corte', 'vl_corte', 'hr', 'min', 'motivo', 'cod_fuc', 'func']
