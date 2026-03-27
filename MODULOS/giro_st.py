@@ -1,4 +1,4 @@
-from modulos._settings import Relatorios, Outros, Output, ColNames, Wms
+from modulos._settings import ColNames, Relatorios, Outros, Filial, Wms, Output
 import pandas as pd
 import numpy as np
 import datetime as dt
@@ -33,262 +33,220 @@ class auxiliar:
                 f.write(log_conteudo)
         except Exception as erro_f:
             print(f"Falha crítica ao gravar log: {erro_f}")
-    def organizar_df(self, df_original, col, id):
-        df = df_original
-        df[col] = pd.to_datetime(df[col]).dt.normalize()
-        df['MES'] = df[col].dt.month
-
-        if id == 1:
-            df = df[['NUMOS', 'DATA', 'CODROTINA', 'POSICAO', 'CODFUNCGER', 'FUNCGER','DTFIMOS', 'CODFUNCOS', 'FUNCOSFIM', 'Tipo O.S.', 'TIPOABAST', 'MES']].copy()
-            df = df.loc[(df['CODROTINA'] == 1709) | (df['CODROTINA'] == 1723)]
-            return df
-        elif id ==2: 
-            df = df[['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR','EMPILHADOR', 'MES']].copy()
-            df = df.drop_duplicates(subset=['NUMOS'])
-            return df
-    def agrupar(self, df, col, id):
-        if id == 1:
-            temp = df.groupby(col).agg(
-                QTDE_OS = ("NUMOS", 'nunique'),
-                OS_50 = ("Tipo O.S.", lambda x: (x == '50 - Movimentação De Para').sum()),
-                OS_61 = ("Tipo O.S.", lambda x: (x == '61 - Movimentação De Para Horizontal').sum()),
-                OS_58 = ("Tipo O.S.", lambda x: (x == '58 - Transferencia de Para Vertical').sum())
-            ).reset_index()
-            return temp
-        elif id == 2:
-            temp = df.groupby(col).agg(
-                OS_RECEB = ("NUMOS", 'nunique')
-            ).reset_index()
-            return temp
-        elif id == 3:
-            temp = df.groupby(col).agg(
-                OS_RECEB = ('OS_RECEB', 'sum')
-            ).reset_index()
-            temp[col] = pd.to_datetime(temp[col]).dt.normalize()
-            return temp
-        elif id == 4:
-            temp = df.groupby(col).agg(
-                QTDE_OS = ("QTDE_OS", 'sum'),
-                OS_50 = ("OS_50", 'sum'),
-                OS_61 = ("OS_61", 'sum'),
-                OS_58 = ("OS_58", 'sum')
-            ).reset_index()
-            temp[col] = pd.to_datetime(temp[col]).dt.normalize()
-            return temp 
-        elif id == 5:
-            temp = df.groupby([col]).agg(
-                    TOTAL_BONUS = ("NUMBONUS", "nunique")
-                ).reset_index().sort_values(by=col, ascending= False)  
-            return temp 
 class Giro_Status(auxiliar):
     def __init__(self):
-        self.HOJE = dt.datetime.now()
-        self.list_path = [Relatorios.rel_96,Relatorios.rel_f18,Outros.ou_86, Outros.ou_f18,Wms.wms_07_end, Outros.ou_end]
+        self.hoje = dt.datetime.now()
+        self.dias = 30
+        self.VIRTUAIS = [0,60, 70, 80, 100, 106, 44]
 
+        self.list_path = [
+            Relatorios.rel_96, Outros.ou_86         # Filial 11
+            ,Filial.F8596, Filial.F286              # Filial 18
+            ,Wms.wms_07_end
+        ]
+
+
+        pass
     def pipeline(self):
         try:
-            col_96 = [
-                'CODPROD', 
-                'DESCRICAO', 
-                'OBS2', 
-                'RUA', 
-                'PREDIO', 
-                'NIVEL', 
-                'APTO', 
-                'QTESTGER', 
-                'DTULTENT', 
-                'DTULTSAIDA'
+            col_8596 = [
+                'DTULTENT', 'DTULTSAIDA', 'CODPROD', 'DESCRICAO', 'OBS2', 'QTUNITCX', 'RUA', 'PREDIO', 'NIVEL', 'APTO','QTESTGER'
             ]
-            PRODUTO_F11 = pd.read_excel(self.list_path[0], usecols= col_96)
-            PRODUTO_F18 = pd.read_excel(self.list_path[1], usecols= col_96)
-
-            colunas_estoque = [
-                'Código', 
-                'Estoque', 
-                'Qtde Pedida', 
-                'Bloqueado(Qt.Bloq.-Qt.Avaria)', 
-                'Qt.Avaria', 
-                'Custo real', 
-                'Comprador'
+            col_286= [
+                'Código', 'Estoque', 'Bloqueado(Qt.Bloq.-Qt.Avaria)', 'Qt.Avaria','Reservado', 'Disponível', 'Custo ult. ent.', 'Comprador'
             ]
-            ESTOQUE_F11 = pd.read_excel(self.list_path[2], usecols= colunas_estoque)
-            ESTOQUE_F18 = pd.read_excel(self.list_path[3], usecols= colunas_estoque)
 
-            enderecado = pd.read_csv(self.list_path[4], header= None, names= ColNames.col_end)
-            BASE_END = pd.read_excel(self.list_path[5], sheet_name= "AE", usecols= ['COD_END', 'RUA'])
+            col_1707 = [5,13]
+            _col_ = ColNames.col_end
+
+            dados_F11 = pd.read_excel(self.list_path[0], usecols= col_8596)
+            aux_286_F11 = pd.read_excel(self.list_path[1], usecols= col_286)
+
+            dados_F18 = pd.read_excel(self.list_path[2], usecols= col_8596)
+            aux_286_F18 = pd.read_excel(self.list_path[3], usecols= col_286)
+
+            aux_1707 = pd.read_csv(self.list_path[4], header= None, usecols= col_1707, names=[_col_[5], _col_[13]])
+
+            pass
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
+
         try:
             try:
-                for col in ['DTULTENT','DTULTSAIDA']: # AJUSTAR DATAS
-                    PRODUTO_F11[col] = pd.to_datetime(PRODUTO_F11[col], errors= 'coerce')
-                    PRODUTO_F18[col] = pd.to_datetime(PRODUTO_F18[col], errors= 'coerce')
+                df_estoque = aux_286_F11.merge(aux_286_F18, on= 'Código', how= 'outer').fillna(0)
+                df_estoque = df_estoque.rename(columns={'Código': "CODPROD"})
+                col_zero = [
+                    'Estoque_x', 'Estoque_y'
+                    ,'Bloqueado(Qt.Bloq.-Qt.Avaria)_x', 'Bloqueado(Qt.Bloq.-Qt.Avaria)_y'
+                    ,'Qt.Avaria_x', 'Qt.Avaria_y'
+                    ,'Custo ult. ent._x', 'Custo ult. ent._y'
+                ]
+                for col in col_zero:
+                    df_estoque[col] = pd.to_numeric(df_estoque[col]).fillna(0)
 
-                PRODUTO_F18 = PRODUTO_F18.drop(columns=['DESCRICAO','OBS2', 'RUA', 'PREDIO', 'NIVEL', 'APTO'])
-                df_prod = PRODUTO_F11.merge(PRODUTO_F18, on= 'CODPROD', how= 'left')
-                df_prod['DTULTENT'] = df_prod[['DTULTENT_x', 'DTULTENT_y']].max(axis=1)
-                df_prod['DTULTSAIDA'] = df_prod[['DTULTSAIDA_x', 'DTULTSAIDA_y']].max(axis=1)
-                df_prod['QTESTGER'] = df_prod['QTESTGER_x'].fillna(0) + df_prod['QTESTGER_y'].fillna(0)
+                condicoes = [
+                    df_estoque["Custo ult. ent._x"] > df_estoque["Custo ult. ent._y"]
+                    ,df_estoque["Custo ult. ent._x"] < df_estoque["Custo ult. ent._y"]
+                ]
+                resultados = [
+                    "F11"
+                    ,"F18"
+                ]
+                res_custo = [
+                    round(df_estoque["Custo ult. ent._x"],2)
+                    ,round(df_estoque["Custo ult. ent._y"],2)
+                ]
 
-                df_prod = df_prod[col_96]
-            except Exception as e: 
-                self.validar_erro(e, "AJUSTE_PROD")
+                c_x = df_estoque['Comprador_x'].fillna(0)
+                c_y = df_estoque['Comprador_y'].fillna(0)
+
+                compr_cond = [
+                    (c_x == c_y)
+                    ,(c_x == 0) & (c_y != 0)
+                    ,(c_x != 0) & (c_y == 0)
+                    ,(c_x != c_y)
+                ]
+                compr_resultados = [
+                    df_estoque['Comprador_x']
+                    ,df_estoque['Comprador_y']
+                    ,df_estoque['Comprador_x']
+                    ,df_estoque['Comprador_x']
+                ]
+
+                df_estoque["FILIAL"] = np.select(condicoes, resultados, default= "F11-F18")
+                df_estoque["CUSTO"] = np.select(
+                    condicoes, res_custo
+                    ,default= round(df_estoque["Custo ult. ent._x"],2)
+                )
+                df_estoque['COMPRADOR'] = np.select(compr_cond, compr_resultados, default="VERIFICAR")
+
+                nomes_separados = df_estoque['COMPRADOR'].str.split()
+
+                df_estoque['COMPRADOR'] = np.where(
+                    nomes_separados.str.len() > 1
+                    ,nomes_separados.str[0] + " " + nomes_separados.str[-1]
+                    ,nomes_separados.str[0]        
+                )
+                df_estoque['CODPROD'] = pd.to_numeric(df_estoque['CODPROD']).astype(int)
+                df_estoque["ESTOQUE"] = df_estoque["Estoque_x"] + df_estoque["Estoque_y"]
+                df_estoque["BLOQ"] = df_estoque["Bloqueado(Qt.Bloq.-Qt.Avaria)_x"] + df_estoque["Bloqueado(Qt.Bloq.-Qt.Avaria)_y"]
+                df_estoque["AVARIA"] = df_estoque["Qt.Avaria_x"] + df_estoque["Qt.Avaria_y"]
+                df_estoque["TOTAL_BLOQ"] = df_estoque["BLOQ"] + df_estoque["AVARIA"]
+                df_estoque['DISP'] = df_estoque["ESTOQUE"] - df_estoque["TOTAL_BLOQ"]
+                df_estoque['CUSTO_EST'] = round(df_estoque["CUSTO"] * df_estoque["DISP"], 2)
+
+                drop_x = ["Qt.Avaria_x","Reservado_x","Disponível_x","Custo ult. ent._x"
+                        ,"Comprador_x"
+                        ,"Bloqueado(Qt.Bloq.-Qt.Avaria)_x", "Estoque_x"
+                ]
+                drop_y = ["Qt.Avaria_y","Reservado_y","Disponível_y","Custo ult. ent._y"
+                        ,"Comprador_y"
+                        ,"Bloqueado(Qt.Bloq.-Qt.Avaria)_y", "Estoque_y"]
+                df_estoque = df_estoque.drop(columns= drop_x + drop_y)
+                pass
+            except Exception as e:
+                self.validar_erro(e, "T_286")
                 return False
+
             try:
-                ESTOQUE_F18 = ESTOQUE_F18[['Código', 'Estoque','Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria','Comprador']]
-                renomear = {
-                    'Código':"COD_F18"
-                    ,'Estoque': "EST_F18"
-                    ,'Bloqueado(Qt.Bloq.-Qt.Avaria)': 'BLOQ_F18'
-                    ,'Qt.Avaria': "AV_F18"
-                    ,'Comprador': "COMP_F18"
-                }
-                df_val = ESTOQUE_F18.rename(columns= renomear)
+                virtual_prod = dados_F11.loc[(dados_F11['RUA'].isin(self.VIRTUAIS))]
+                dados_F11 = dados_F11.loc[(~dados_F11['RUA'].isin(self.VIRTUAIS))]
 
-                df_estoque = ESTOQUE_F11.merge(df_val, left_on= 'Código', right_on= 'COD_F18', how= 'left')
-                df_estoque = df_estoque.fillna(0)                
-            except Exception as e: 
-                self.validar_erro(e, "AJUSTE_ESTOQUE")
+                dados_F18 = dados_F18.loc[(dados_F18['QTESTGER'] > 0) & (~dados_F18['CODPROD'].isin(virtual_prod['CODPROD']))].copy()
+                dados_F18 = dados_F18[['CODPROD', 'DTULTSAIDA', 'DTULTENT']]
+
+                dados_prod = dados_F11.merge(dados_F18, on= 'CODPROD', how= "outer")
+
+                col_int = ['QTUNITCX','RUA','PREDIO','APTO']
+                dt_col = ["DTULTSAIDA_x", "DTULTSAIDA_y", "DTULTENT_x", "DTULTENT_y"]
+
+                for col in col_int:
+                    dados_prod[col] = pd.to_numeric(dados_prod[col], errors= 'coerce').fillna(0).astype(int)
+
+                for col in dt_col:
+                    dados_prod[col] = pd.to_datetime(dados_prod[col], dayfirst= True, errors= 'coerce')
+
+                dados_prod = dados_prod.loc[~dados_prod['RUA'].isin(self.VIRTUAIS)]
+
+                dados_prod['DT_SAIDA'] = dados_prod[['DTULTSAIDA_x', 'DTULTSAIDA_y']].max(axis=1)
+                dados_prod['DT_ENTRADA'] = dados_prod[['DTULTENT_x', 'DTULTENT_y']].max(axis=1)
+                dados_prod['OBS2'] = dados_prod['OBS2'].fillna("ATIVO")
+                dados_prod['DIAS_S'] = (self.hoje - dados_prod['DT_SAIDA']).dt.days.fillna(0).astype(int)
+                dados_prod['DIAS_E'] = (self.hoje - dados_prod['DT_ENTRADA']).dt.days.fillna(0).astype(int)
+                dados_prod['PARADO'] = np.where(
+                    (dados_prod['DIAS_S'] > 30) & (dados_prod['DIAS_E'] > 30)
+                    ,"S"
+                    ,"N"
+                )
+                dados_prod = dados_prod.drop(columns=["DTULTSAIDA_x", "DTULTENT_x", "DTULTSAIDA_y", "DTULTENT_y", "QTESTGER"])
+
+                pass
+            except Exception as e:
+                self.validar_erro(e, "T_8596")
                 return False
-            
-            enderecado = enderecado.loc[enderecado['TIPO_PK'] == "AE"]
 
-            df_estoque['Estoque'] += df_estoque['EST_F18']
-            df_estoque['Bloqueado(Qt.Bloq.-Qt.Avaria)'] += df_estoque['BLOQ_F18']
-            df_estoque['Qt.Avaria'] += df_estoque['AV_F18']  
-            df_estoque['BLOQUEADO'] = (df_estoque['Qt.Avaria'].fillna(0) + df_estoque['Bloqueado(Qt.Bloq.-Qt.Avaria)'].fillna(0)).astype(int)
-            df_estoque['CUSTO_PROD'] = round(
-                df_estoque['Custo real'].fillna(0).astype(float) * df_estoque['Estoque'].fillna(0).astype(float)
-                ,2
-            ) 
-            df_estoque['DISPONIVEL'] = (df_estoque['Estoque'] - df_estoque['BLOQUEADO']).fillna(0).astype(int)
-            nomes_separados = df_estoque['Comprador'].str.split()
+            try:
+                grupo_AE = aux_1707.groupby("COD").agg(
+                    QT_AE = ('TIPO_PK', 'count')
+                ).reset_index()
+                grupo_AE['QT_AE'] = grupo_AE['QT_AE'].astype(int)
 
-            total = nomes_separados.str.len()
+                pass
+            except Exception as e:
+                self.validar_erro(e, "T_1707")
+                return False
+            pass
 
-            df_estoque['COMPRADOR'] = np.where(
-                total > 1, 
-                (nomes_separados.str[0] + " " + nomes_separados.str[-1]),
-                (nomes_separados.str[0])                                
-            )
-            
-            df_prod['DTULTSAIDA'] = pd.to_datetime(df_prod['DTULTSAIDA'], errors= 'coerce')
-            df_prod['DTULTENT'] = pd.to_datetime(df_prod['DTULTENT'], errors= 'coerce')
+            df_completo = dados_prod.merge(df_estoque, on= 'CODPROD', how= 'left')
 
-            tempo_saida = self.HOJE - df_prod['DTULTSAIDA']
-            tempo_entrada = self.HOJE - df_prod['DTULTENT']
+            bloq_quest = [
+                (df_completo['TOTAL_BLOQ'] > 0) & (df_completo['DISP'] == 0)
+                ,(df_completo['TOTAL_BLOQ'] > 0) & (df_completo['DISP'] > 0)
+                ,(df_completo['TOTAL_BLOQ'] == 0) & (df_completo['DISP'] > 0)
+            ]
+            bloq_result = [
+                "TOTAL"
+                ,"PARCIAL"
+                ,"LIVRE"
+            ]
 
-            df_prod['DIAS_PEDENTE'] = tempo_saida.dt.days.fillna(0)
-            df_prod['DIAS_ULT_ENTRADA'] = tempo_entrada.dt.days.fillna(0)
-            df_prod['OBS2'] = df_prod['OBS2'].fillna("ATIVO")
+            categoria_cond = [
+                (df_completo['DIAS_S'] > 30) & (df_completo['DIAS_E'] > 30) & (df_completo['DISP'] > 0) 
+                ,df_completo['DISP'] > 0
+                ,df_completo['ESTOQUE'] == 0
+            ]
+            categoria_result = [
+                "PARADO"
+                ,"ATIVOS"
+                ,"INATIVO"
+            ]
 
-            ruas_fora = [50, 60, 70, 80, 100]
-            df_prod = df_prod.loc[~df_prod['RUA'].isin(ruas_fora)] 
-            col_classificar = [
-                'Código'
-                ,'Estoque'
-                ,'Qtde Pedida'
-                ,'BLOQUEADO'
-                ,'CUSTO_PROD'
-                ,'DISPONIVEL'
-                ,'COMPRADOR'
-                ]
-            df_ordenado = df_estoque[col_classificar]   
-            df_completo = df_prod.merge(
-                df_ordenado
-                ,left_on= 'CODPROD'
-                ,right_on= 'Código'
-                ,how= 'left'
-            ).drop(columns= ['Código'])
-            df_completo['QTESTGER'] += df_completo['Estoque']
-            enderecado = enderecado.merge(
-                BASE_END
-                ,on='COD_END'
-                ,how= 'left'
-            )
-            cols = list(enderecado.columns)
-            cols.insert(1, cols.pop(cols.index('RUA'))) 
-            enderecado = enderecado[cols]
+            df_completo['STATUS_BLOQUEIO'] = np.select(bloq_quest, bloq_result, default= "--")
+            df_completo['CATEGORIAS'] = np.select(categoria_cond, categoria_result, default= "BLOQUEADO")
 
-            grupo_endereco = enderecado.groupby('COD').agg(
-                QT_AE = ('COD_END', 'nunique')
-            ).reset_index()
-            df_completo = df_completo.merge(
-                grupo_endereco
-                ,left_on= 'CODPROD'
-                ,right_on= 'COD'
-                ,how= 'left'
-            ).drop(columns= 'COD').fillna({'QT_AE': 0})
-            col_classificar = [
-                'CODPROD'
-                ,'DESCRICAO'
-                ,'OBS2'
-                ,'RUA'
-                ,'PREDIO'
-                ,'NIVEL'
-                ,'APTO'
-                ,'QTESTGER'
-                ,'QT_AE'
-                ,'Qtde Pedida'
-                ,'DTULTENT'
-                ,'DTULTSAIDA'
-                ,'DIAS_PEDENTE'
-                ,'DIAS_ULT_ENTRADA'
-                ,'BLOQUEADO'
-                ,'CUSTO_PROD'
-                ,'DISPONIVEL'
-                ,'COMPRADOR'
-                ]
-            df_completo = df_completo[col_classificar]
+            df_completo = df_completo.merge(grupo_AE, left_on= 'CODPROD', right_on= "COD", how= 'left').drop(columns='COD')
+            df_completo = df_completo.sort_values(by= ['RUA', 'PREDIO', 'APTO'])
 
-            FL_zerado = df_completo.loc[
-                (df_completo['OBS2'] == "FL") 
-                & (df_completo['QTESTGER'] == 0)].copy()
-
-            FL_ativo = df_completo.loc[
-                (df_completo['OBS2'] == "FL") 
-                & (df_completo['QTESTGER'] != 0) 
-                & (df_completo['DIAS_PEDENTE'] < 30)].copy()
-
-            ativo_zerado = df_completo.loc[
-                (df_completo['OBS2'] == "ATIVO") 
-                & (df_completo['QTESTGER'] == 0) 
-                & (df_completo['DIAS_PEDENTE'] > 30)].copy()
-
-            ger_parado = df_completo.loc[
-                (df_completo['QTESTGER'] > 0) 
-                & (df_completo['DIAS_PEDENTE'] > 30) 
-                & (df_completo['DIAS_ULT_ENTRADA'] > 30)].copy()
-            
-            todos_cods = pd.concat([
-                FL_zerado["CODPROD"],
-                FL_ativo["CODPROD"],
-                ativo_zerado["CODPROD"],
-                ger_parado["CODPROD"]
-            ])
-            lista_cod_unica = set(todos_cods)
-            aereo_filtrado = enderecado.loc[(enderecado['COD'].isin(lista_cod_unica))]
+            df_ativos = df_completo.loc[df_completo['OBS2'] =="ATIVO"]
+            df_FL = df_completo.loc[df_completo['OBS2'] =="FL"]
+            pass
         except Exception as e:
             self.validar_erro(e, "Transform")
             return False
+
         try:
-            lista_dfs = [FL_zerado, FL_ativo, ativo_zerado, ger_parado, aereo_filtrado]
-            for i in range(len(lista_dfs)):
-                lista_dfs[i] = lista_dfs[i].sort_values(by=['RUA', 'PREDIO'], ascending=True)
-            FL_zerado, FL_ativo, ativo_zerado, ger_parado, aereo_filtrado = lista_dfs
-            
-            with pd.ExcelWriter(Output.controle_fl) as feijao:
-                FL_zerado.to_excel(feijao, index= False, sheet_name= "FL_ZERADO")
-                FL_ativo.to_excel(feijao, index= False, sheet_name= "FL_ATIVO")
-                ativo_zerado.to_excel(feijao, index= False, sheet_name= "ATIVO_ZERADO")
-                ger_parado.to_excel(feijao, index= False, sheet_name= 'PROD_PARADO')
-                df_completo.to_excel(feijao, index= False, sheet_name= "GERAL")
-                aereo_filtrado.to_excel(feijao, index= False, sheet_name= "AEREOS_RELATORIO")
+            with pd.ExcelWriter(Output.Giro_Status) as destino:
+                df_ativos.to_excel(destino, sheet_name= "ATIVOS", index= False)
+                df_FL.to_excel(destino, sheet_name= "FLs", index= False)
+                df_completo.to_excel(destino, sheet_name= "COMPLETO", index= False)
+
+
             return True
         except Exception as e:
             self.validar_erro(e, "Laod")
             return False
+        
     def carregamento(self):
         lista_de_logs = []
         dic_retorno = []

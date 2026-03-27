@@ -36,7 +36,7 @@ class Demandas:
             ,"RELATORIO: ABASTECIMENTO"
             ,"RELATORIO: O.S PEDENTES || FIM MESA"
             ,"RELATORIO: CHEIO X VAZIO"
-            ,"FEFO:(SISTEMA X FISICO)"
+            ,"FEFO:(Aereo X Piking 8668)"
             ,"CADASTRO: CORREÇÃO"
             ,"INVENTARIO: ESTOQUE PARADO"
         ]

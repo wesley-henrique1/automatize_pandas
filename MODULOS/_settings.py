@@ -149,12 +149,13 @@ class Output:
 
     inv          = os.path.join(_base, 'analitico_contagem.xlsx')
     life         = os.path.join(_base, 'TOTVS_LIFES.xlsx')
-    controle_fl  = os.path.join(_base, 'Giro_Status.xlsx')
+    Giro_Status  = os.path.join(_base, 'Giro_Status.xlsx')
     rel_os       = os.path.join(_base, 'analitico_baixa.xlsx')
     cadastro     = os.path.join(_base, 'analitico_cadastro.xlsx')
     cheio_vazio  = os.path.join(_base, 'geral_cheio_vazio.xlsx')
     corte        = os.path.join(_base, 'extratos_corte.xlsx')
     acum_41      = os.path.join(_acum, 'ACUMULADO_41.xlsx')
+    mapa_estoque = os.path.join(_base, 'mapa_estoque.xlsx')
 
     FEFO_8668 = r"z:\1 - CD Dia\4 - Equipe PCL\6.6 - Recuperação e Indenizado\6.6.3 - FEFO Validade\Curva A-B-C-D\Auditoria\FEFO_8668.xlsx"
     FEFO_8628 = r"z:\1 - CD Dia\4 - Equipe PCL\6.6 - Recuperação e Indenizado\6.6.3 - FEFO Validade\Curva A-B-C-D\Auditoria\FEFO_8628.xlsx"

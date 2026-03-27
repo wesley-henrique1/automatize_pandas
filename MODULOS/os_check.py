@@ -72,7 +72,7 @@ class Os_check(auxiliar):
             self.validar_erro(e, "Extract")
             return False
         try:
-            df_28['DATA'] = pd.to_datetime(df_28['DATA'])
+            df_28['DATA'] = pd.to_datetime(df_28['DATA'], dayfirst= True)
             df_28 = df_28.loc[df_28['DATA'].dt.date == self.ontem]
             
             df_28[['CODFUNCESTORNO', 'CODFUNCOS']] = df_28[['CODFUNCESTORNO', 'CODFUNCOS']].fillna(0).astype(int)

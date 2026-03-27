@@ -99,7 +99,7 @@ class Abastecimento(auxiliar):
 
         try:
             try:
-                m_atual28['DATA'] = pd.to_datetime(m_atual28['DATA']).dt.normalize()
+                m_atual28['DATA'] = pd.to_datetime(m_atual28['DATA'], dayfirst= True).dt.normalize()
                 m_atual28['MES'] = m_atual28['DATA'].dt.month
                 m_atual28['HORA'] = m_atual28["HORA"].apply(self.corrigir_hr)
                 m_atual28 = m_atual28.loc[m_atual28['CODROTINA'].isin(self.rotinas_filtro)]
@@ -126,7 +126,7 @@ class Abastecimento(auxiliar):
                 return False
             try:
                 m_atual64['CODEMPILHADOR'] = m_atual64['CODEMPILHADOR'].fillna(0)  
-                m_atual64['DATAGERACAO'] = pd.to_datetime(m_atual64['DATAGERACAO']).dt.normalize()
+                m_atual64['DATAGERACAO'] = pd.to_datetime(m_atual64['DATAGERACAO'], dayfirst= True).dt.normalize()
                 m_atual64['MES'] = m_atual64['DATAGERACAO'].dt.month
                 m_atual64 = m_atual64[['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR','EMPILHADOR', 'MES']].copy()
                 m_atual64 = m_atual64.drop_duplicates(subset=['NUMOS'])
@@ -169,7 +169,7 @@ class Abastecimento(auxiliar):
                 grupo64 = agrupamento.groupby('DT_TURNO').agg(
                     OS_RECEB = ('OS_RECEB', 'sum')
                 ).reset_index()
-                grupo64['DT_TURNO'] = pd.to_datetime(grupo64['DT_TURNO']).dt.normalize()
+                grupo64['DT_TURNO'] = pd.to_datetime(grupo64['DT_TURNO'], dayfirst= True).dt.normalize()
 
                 grupo28 = os_geradas28.groupby('DT_TURNO').agg(
                     QTDE_OS = ("QTDE_OS", 'sum'),
@@ -177,7 +177,7 @@ class Abastecimento(auxiliar):
                     OS_61 = ("OS_61", 'sum'),
                     OS_58 = ("OS_58", 'sum')
                 ).reset_index()
-                grupo28['DT_TURNO'] = pd.to_datetime(grupo28['DT_TURNO']).dt.normalize()
+                grupo28['DT_TURNO'] = pd.to_datetime(grupo28['DT_TURNO'], dayfirst= True).dt.normalize()
                 
                 geral_total = grupo28.merge(grupo64, left_on='DT_TURNO', right_on= 'DT_TURNO', how= 'left').fillna(0)
             except Exception as e:

@@ -93,11 +93,7 @@ class auxiliar:
 
 class Fefo_ABST(auxiliar):
     def __init__(self):
-        caminho = r"z:\1 - CD Dia\4 - Equipe PCL\6.6 - Recuperação e Indenizado\6.6.3 - FEFO Validade\Curva A-B-C-D\Auditoria"
-        nome = "Fefo_Python"
-        extensao = ".xlsx"
         self.times = []
-        self.fefo_path = os.path.join(caminho, nome + extensao)
 
         self.list_path = [Wms.wms_07_end, Relatorios.rel_28, Relatorios.rel_96]
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
@@ -130,12 +126,12 @@ class Fefo_ABST(auxiliar):
             return False
         try:
             self.mark_step(self.times,"Transform")
-            END_1707['DT_VALIDADE'] = pd.to_datetime(END_1707['DT_VALIDADE'], errors= "coerce")
+            END_1707['DT_VALIDADE'] = pd.to_datetime(END_1707['DT_VALIDADE'], dayfirst=True, errors= "coerce")
 
             grupo = prod_dados['CODPROD'].loc[(prod_dados["PRAZOVAL"] > 0) & (~prod_dados['RUA'].isin(self.virtual))]
             DF_PROD = self.curva_ABC(prod_dados)
 
-            baixa['DATA'] = pd.to_datetime(baixa['DATA'], errors= 'coerce')
+            baixa['DATA'] = pd.to_datetime(baixa['DATA'], dayfirst=True, errors= 'coerce')
             maior_dt = baixa['DATA'].max()
             filtro_dt = maior_dt - dt.timedelta(days= 6)
             df_baixa = baixa.loc[
@@ -143,7 +139,7 @@ class Fefo_ABST(auxiliar):
                 & (baixa['NIVEL'].between(2,8))
                 & (baixa['NIVEL_1'] == 1)
                 & (baixa['DATA'] >= filtro_dt)
-                & (baixa['POSICAO'] == 'P')
+                & (baixa['POSICAO'] == 'C')
             ]
             
             df_baixa = df_baixa.merge(END_1707, left_on="ENDERECO_DEST", right_on= "COD_END", how= "left")
@@ -172,7 +168,7 @@ class Fefo_ABST(auxiliar):
             ]
 
             df_final = df_completo[COLUNAS_FEFO]
-            df_final.to_excel(self.fefo_path, index= False,sheet_name= "FEFO")
+            df_final.to_excel(Output.FEFO_8628, index= False,sheet_name= "FEFO")
             end_global = time.perf_counter()
 
             for i in range(1, len(self.times)):
@@ -265,7 +261,7 @@ class Fefo_curva(auxiliar):
 
             """>> Tratamento da auxiliar 8596"""
             dados_PROD = self.curva_ABC(dados_PROD)
-            dados_PROD['DTULTENT'] = pd.to_datetime(dados_PROD['DTULTENT'], errors= "coerce")
+            dados_PROD['DTULTENT'] = pd.to_datetime(dados_PROD['DTULTENT'], dayfirst=True, errors= "coerce")
             dados_PROD['PRAZOVAL'] = pd.to_timedelta(dados_PROD['PRAZOVAL'], unit= 'D', errors= 'coerce')
             dados_PROD = dados_PROD.drop(columns= ["RUA","PREDIO", "APTO", "PK_END"])
 

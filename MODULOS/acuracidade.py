@@ -37,7 +37,7 @@ class auxiliar:
             return False
     def organizar_df(self, df_original, col, id):
         df = df_original
-        df[col] = pd.to_datetime(df[col]).dt.normalize()
+        df[col] = pd.to_datetime(df[col], dayfirst= True).dt.normalize()
         df['MES'] = df[col].dt.month
 
         if id == 1:
@@ -66,7 +66,7 @@ class auxiliar:
             temp = df.groupby(col).agg(
                 OS_RECEB = ('OS_RECEB', 'sum')
             ).reset_index()
-            temp[col] = pd.to_datetime(temp[col]).dt.normalize()
+            temp[col] = pd.to_datetime(temp[col], dayfirst= True).dt.normalize()
             return temp
         elif id == 4:
             temp = df.groupby(col).agg(
@@ -75,7 +75,7 @@ class auxiliar:
                 OS_61 = ("OS_61", 'sum'),
                 OS_58 = ("OS_58", 'sum')
             ).reset_index()
-            temp[col] = pd.to_datetime(temp[col]).dt.normalize()
+            temp[col] = pd.to_datetime(temp[col], dayfirst= True).dt.normalize()
             return temp 
         elif id == 5:
             temp = df.groupby([col]).agg(
