@@ -3,8 +3,8 @@ import datetime as dt
 from tkinter import messagebox
 from tkinter import scrolledtext
 
-from Assets.checklist import Demandas
-
+from modulos.checklist import Demandas
+from modulos.Flow_Master import FLOW_MASTER
 
 from modulos._logic_UI import ProcessadorLogica
 from modulos._settings import Path_dados
@@ -19,7 +19,6 @@ from modulos.corte import Corte
 
 from modulos.fefo import Fefo_ABST, Fefo_curva, Fefo_WMS
 
-from modulos.auto_inv import AUTO_INV
 from modulos.auto_3707 import AUTO_3707
 
 class auxiliar:   
@@ -357,7 +356,7 @@ class JanelaPrincipal(auxiliar):
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            ,command=lambda: AUTO_INV()
+            ,command=lambda: FLOW_MASTER()
         )
         self.bt_07 = tk.Button(
             self.automact

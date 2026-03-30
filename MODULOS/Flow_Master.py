@@ -1,14 +1,74 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+diretorio_raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(diretorio_raiz)
+
+
+import pyautogui as pag
+import pyperclip as pc
+import threading
+import time
 
 from modulos._settings import Path_dados
 from tkinter import messagebox
 import tkinter as tk
 
+class Auxiliar():
+    def __init__(self):
+        
+        self.em_execucao = False
+        pass
 
-class UI_inv:
+    def iniciar(self, _listas):
+        self._lista = _listas.get("1.0", tk.END).strip().splitlines()
+
+        if not self._lista:
+            messagebox.showerror("Aviso", "Lista esta vazia, favor informar os codigos")
+            return
+        self.em_execucao = True
+        threading.Thread(target= self.musculo, daemon= True).start()
+
+        pass
+    def Parar(self):
+        self.em_execucao = False
+
+        pass
+    def musculo(self):
+        pag.keyDown('alt')
+        pag.press('tab')
+        pag.keyUp('alt')
+        pag.sleep(0.5)
+
+        for i, SKU in enumerate(self._lista):
+            if not self.em_execucao:
+                break
+
+            pc.copy(SKU)
+            pag.hotkey("ctrl", "v")
+            pag.press('enter')
+            time.sleep(0.5)
+
+            for _ in range(4):
+                if not self.em_execucao: break
+                pag.press('tab')
+                time.sleep(0.5)
+            
+            if not self.em_execucao: break
+            pag.press('enter')
+
+            for _ in range(3):
+                if not self.em_execucao: break
+                pag.press('tab')
+                time.sleep(0.5)
+
+            if not self.em_execucao: break
+            pag.press('enter')
+            pag.press('tab')
+
+
+        pass
+class FLOW_MASTER(Auxiliar):
     def __init__(self):
         self.fonte = ("verdana", 9,"bold") 
         self.background = "#2F4F4F"
@@ -28,8 +88,20 @@ class UI_inv:
         self.widgets_clicaveis()
         self.localizador()
 
-        root.mainloop()
+        root.mainloop() 
+    
         pass
+    def acao_iniciar(self):
+        self.robo = Auxiliar(self.entry_cod)
+        self.robo.iniciar()
+
+        pass
+    def acao_parar(self):
+        if self.robo is not None:
+            self.robo.parar()
+            messagebox.showwarning("Aviso", "Automação interrompida!")
+        pass
+
 
     def componentes(self, janela):
         self.frame_fundo = tk.Frame(
@@ -75,7 +147,7 @@ class UI_inv:
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            # ,command=lambda: AUTO_3707()
+            ,command=lambda:self.iniciar(self.entry_cod)
         )
         self.bt_parar = tk.Button(
             self.frame_fundo
@@ -88,10 +160,11 @@ class UI_inv:
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            # ,command=lambda: AUTO_3707()
+            ,command=lambda: self.Parar()
         )
 
         pass
+    
     def localizador(self):
         self.frame_fundo.place(relx= 0.02, rely= 0.01, relwidth= 0.96, relheight= 0.98)
 
@@ -104,4 +177,4 @@ class UI_inv:
         pass
 
 if __name__ == "__main__":
-    UI_inv()
+    FLOW_MASTER()
