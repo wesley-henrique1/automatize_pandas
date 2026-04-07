@@ -24,7 +24,7 @@ class auxiliar:
         
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: os_check.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: Mapa_Estoque.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
@@ -68,6 +68,7 @@ class Mapa_Estoque(auxiliar):
         self.DataFrame = pd.DataFrame({
             "PL_END": ["INTEIRO (2,55)","INTEIRO(1,90)","INTEIRO(1,35)","MEDIO (0,80)","TERCO (0,56)","TERCO (0,46)"]
             ,"CM": [255, 190, 135, 80, 56, 46]
+            ,"CLASSE_AE": ["INT_255", "INTEIRO", "MEDIO","PONTA","PONTA", "PONTA"]
         })
         self.map_ruas = {
             13: [12]
@@ -84,7 +85,6 @@ class Mapa_Estoque(auxiliar):
             ,39: [33,34,35,36,37,38]
         }
 
-
         self.pipeline()
         pass
 
@@ -99,7 +99,7 @@ class Mapa_Estoque(auxiliar):
             )
             R_8596 = pd.read_excel(
                 self.list_path[1]
-                ,usecols= ['CODPROD',"RUA", 'ALTURAARM', 'QTUNITCX']
+                ,usecols= ['CODPROD',"RUA", 'ALTURAARM', 'QTUNITCX', "QTTOTPAL"]
             )
             END = pd.read_excel(
                 self.list_path[2]
@@ -119,22 +119,26 @@ class Mapa_Estoque(auxiliar):
 
             df_AE = R_1707.loc[(R_1707['TIPO_PK'] == 'AE') & R_1707['COD_END'].isin(filtro['COD_END'])]
             df_AE = df_AE[['COD_END', 'PREDIO', 'NIVEL', 'APTO', 'STATUS', 'COD', 'DESC', 'LASTRO', 'CAMADA','TIPO_PK', 'PL_END', 'QTDE', 'ENTRADA', 'SAIDA', 'DISP']]
+
             R_8596 = R_8596.loc[R_8596['RUA'].isin(filtro['RUA'])]
             prod = R_8596.rename(columns= {
                 "RUA": "RUA_AP"
             })
+            print('passou aqui')
+            prod['QTUNITCX'] = pd.to_numeric(prod['QTUNITCX'], errors= 'coerce').fillna(0).astype(int) 
+            prod['QTTOTPAL'] = pd.to_numeric(prod['QTTOTPAL'], errors= 'coerce').fillna(0).astype(int) 
+            prod['PL_UN'] = prod['QTTOTPAL'] * prod['QTUNITCX']
 
             df_completo = df_AE.merge(prod, left_on= "COD", right_on= 'CODPROD', how= 'left').drop(columns= "CODPROD")
             df_completo = df_completo.merge(self.DataFrame, on= 'PL_END', how= 'left')
             df_completo = df_completo.merge(END, on= 'COD_END', how= 'left')
+            print('passou aqui tambem')
 
-
-            
             df_completo['PL_ALT'] = df_completo['CAMADA'] * df_completo['ALTURAARM']
             df_completo['DISP_CX'] = df_completo['DISP'] / df_completo['QTUNITCX']
             df_completo['CAMADA_AE'] = np.ceil(df_completo['DISP_CX'] / df_completo['LASTRO'])
             df_completo['DISP_ALT'] = df_completo['CAMADA_AE'] * df_completo['ALTURAARM']
-
+            
             CAT_cond = [
                 df_completo['DISP_ALT'] <= 80
                 ,df_completo['DISP_ALT'] <= 135
@@ -148,10 +152,16 @@ class Mapa_Estoque(auxiliar):
                 ,"INT_255"
             ]
             df_completo['CATEGORIA'] = np.select(CAT_cond, CAT_result, default= '--')
-
-            DIV_cond = ((df_completo['CATEGORIA'] == 'PONTA') & (df_completo['CM'] > 80) | (df_completo['CATEGORIA'] == 'MEDIO') & (df_completo['CM'] > 135))
+            print('passou aqui antes da gambiarra')
+            DIV_cond = (
+                (df_completo['DISP'] < df_completo['PL_UN']) 
+                & (
+                    ((df_completo['CATEGORIA'] == 'PONTA') & (df_completo['CM'] > 80)) | 
+                    ((df_completo['CATEGORIA'] == 'MEDIO') & (df_completo['CM'] > 135))
+                )
+            )
             df_completo['DIVERGENCIA'] = np.where(DIV_cond, "VERIFICAR", "CORRETO")
-
+            print('passou aqui depois da gambiarra')
             col_int = ['RUA', 'RUA_AP']
             for col in col_int:
                 df_completo[col] = pd.to_numeric(df_completo[col]).fillna(0)
@@ -176,6 +186,7 @@ class Mapa_Estoque(auxiliar):
                 ,'NIVEL'
                 ,'APTO'
                 ,'PL_END'
+                ,'CLASSE_AE'
             ]
             etapa_2 = [
                 'QTDE'

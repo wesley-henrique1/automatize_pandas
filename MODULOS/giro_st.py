@@ -45,7 +45,7 @@ class Giro_Status(auxiliar):
             ,Wms.wms_07_end
         ]
 
-
+        self.pipeline()
         pass
     def pipeline(self):
         try:
@@ -61,7 +61,7 @@ class Giro_Status(auxiliar):
 
             dados_F11 = pd.read_excel(self.list_path[0], usecols= col_8596)
             aux_286_F11 = pd.read_excel(self.list_path[1], usecols= col_286)
-
+            
             dados_F18 = pd.read_excel(self.list_path[2], usecols= col_8596)
             aux_286_F18 = pd.read_excel(self.list_path[3], usecols= col_286)
 
@@ -81,6 +81,7 @@ class Giro_Status(auxiliar):
                     ,'Bloqueado(Qt.Bloq.-Qt.Avaria)_x', 'Bloqueado(Qt.Bloq.-Qt.Avaria)_y'
                     ,'Qt.Avaria_x', 'Qt.Avaria_y'
                     ,'Custo ult. ent._x', 'Custo ult. ent._y'
+                    ,'Reservado_x','Reservado_y'
                 ]
                 for col in col_zero:
                     df_estoque[col] = pd.to_numeric(df_estoque[col]).fillna(0)
@@ -132,10 +133,17 @@ class Giro_Status(auxiliar):
                 df_estoque["ESTOQUE"] = df_estoque["Estoque_x"] + df_estoque["Estoque_y"]
                 df_estoque["BLOQ"] = df_estoque["Bloqueado(Qt.Bloq.-Qt.Avaria)_x"] + df_estoque["Bloqueado(Qt.Bloq.-Qt.Avaria)_y"]
                 df_estoque["AVARIA"] = df_estoque["Qt.Avaria_x"] + df_estoque["Qt.Avaria_y"]
+                df_estoque['RESERVADO'] = round(df_estoque['Reservado_x'] + df_estoque['Reservado_y'])
+
                 df_estoque["TOTAL_BLOQ"] = df_estoque["BLOQ"] + df_estoque["AVARIA"]
                 df_estoque['DISP'] = df_estoque["ESTOQUE"] - df_estoque["TOTAL_BLOQ"]
                 df_estoque['CUSTO_EST'] = round(df_estoque["CUSTO"] * df_estoque["DISP"], 2)
-
+                df_estoque['_RESERVA_'] = np.where(
+                    df_estoque['RESERVADO'] > 0
+                    ,"S"
+                    ,"N"
+                )
+                
                 drop_x = ["Qt.Avaria_x","Reservado_x","Disponível_x","Custo ult. ent._x"
                         ,"Comprador_x"
                         ,"Bloqueado(Qt.Bloq.-Qt.Avaria)_x", "Estoque_x"
@@ -270,3 +278,6 @@ class Giro_Status(auxiliar):
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
             return False
+
+if __name__ == "__main__":
+    Giro_Status()
