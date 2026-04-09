@@ -153,12 +153,13 @@ class Mapa_Estoque(auxiliar):
             ]
             df_completo['CATEGORIA'] = np.select(CAT_cond, CAT_result, default= '--')
             print('passou aqui antes da gambiarra')
+            val = (
+                (df_completo['CATEGORIA'].isin(['PONTA', 'MEDIO'])) 
+                & (df_completo['CM'] > 135)
+            )
             DIV_cond = (
                 (df_completo['DISP'] < df_completo['PL_UN']) 
-                & (
-                    ((df_completo['CATEGORIA'] == 'PONTA') & (df_completo['CM'] > 80)) | 
-                    ((df_completo['CATEGORIA'] == 'MEDIO') & (df_completo['CM'] > 135))
-                )
+                & val
             )
             df_completo['DIVERGENCIA'] = np.where(DIV_cond, "VERIFICAR", "CORRETO")
             print('passou aqui depois da gambiarra')
@@ -239,4 +240,5 @@ class Mapa_Estoque(auxiliar):
 
 
 if __name__ ==  "__main__":
+    
     Mapa_Estoque()

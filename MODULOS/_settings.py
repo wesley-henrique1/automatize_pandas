@@ -52,10 +52,10 @@ class Wms:
     wms_02     = os.path.join(PASTA_DADOS, '1702 - Cadastro de Endereços.txt')
     wms_07_ger = os.path.join(PASTA_DADOS, '1707 - Estoque endereçado x Gerencial.txt')
     wms_07_end = os.path.join(PASTA_DADOS, '1707 - Relatório de produtos por endereços.txt')
+    geral_1707 = os.path.join(PASTA_DADOS, '1707 - Relatório geral.txt')
     wms_33     = os.path.join(PASTA_DADOS, '1733 - Gestão de inventario.xls')
     wms_67     = os.path.join(PASTA_DADOS, '1767 - Relatorio de corte.txt')
     wms_82     = os.path.join(PASTA_DADOS, '1782 - Relatório de curva ABC de produtos.xls')
-
     pass
 class Outros:
     ou_corte = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.1 Analise de Cortes\2026\# 2 Acompanhamento de produtos cortados.xlsx'
@@ -169,3 +169,26 @@ class ColNames:
     col_mov = ['COD', 'DESC', 'EMBALAGEM', 'UNID', 'MOVI', '%', '%_ACUM', 'CLASSE']
     col_sug = ['COD', 'DESCRIÇÃO', 'EMBALAGEM', 'UNID.', 'DEP', 'RUA', 'PREDIO', 'NIVEL', 'APTO', 'MÊS 1', 'MÊS 2', 'MÊS 3', 'TIPO', 'CAP', '1 DIA', 'COM FATOR', 'VARIAÇÃO', '%']
     col_02  = ['FL','COD_END','DEP','RUA','PREDIO','NIVEL','APTO','TIPO','ROTATIVO','BLOQ','DISP.','PALETE','ESTRUTURA']
+    
+    END_GERAL = [
+        "COD_END"
+        ,"RUA"
+        ,"PREDIO"
+        ,"NIVEL"
+        ,"APTO"
+        ,"STATUS"
+        ,"CODPROD"
+        ,"DESCRICAO"
+        ,"DT_VALIDADE"
+        ,"EMBALAGEM"
+        ,"LASTRO"
+        ,"CAMADA"
+        ,"NORMA_PL"
+        ,"CAP_"
+        ,"REP_"
+        ,"TIPO_END"
+        ,"QTDE"
+        ,"ENTRADA"
+        ,"SAIDA"
+        ,"DISP_"
+    ]
