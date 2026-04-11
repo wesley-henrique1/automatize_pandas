@@ -185,6 +185,7 @@ class ColNames:
         ,"CAMADA"
         ,"NORMA_PL"
         ,"CAP_"
+        ,"SALTO"
         ,"REP_"
         ,"TIPO_END"
         ,"QTDE"
@@ -192,3 +193,4 @@ class ColNames:
         ,"SAIDA"
         ,"DISP_"
     ]
+
