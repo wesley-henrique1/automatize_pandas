@@ -3,23 +3,12 @@ import datetime as dt
 from tkinter import messagebox
 from tkinter import scrolledtext
 
-from modulos.checklist import Demandas
-from modulos.Flow_Master import FLOW_MASTER
-
-from modulos._logic_UI import ProcessadorLogica
-from modulos._settings import Path_dados
-from modulos.abastecimento import Abastecimento
-from modulos.acuracidade import Acuracidade
-from modulos.cont_prod import Contagem_INV
-from modulos.giro_st import Giro_Status
-from modulos.ch_vz import Cheio_Vazio
-from modulos.os_check import Os_check
-from modulos.cadastro import Cadastro
-from modulos.corte import Corte
-
-from modulos.fefo import Fefo_ABST, Fefo_curva, Fefo_WMS
-
-from modulos.auto_3707 import AUTO_3707
+from modulos import (
+    Demandas, FLOW_MASTER, ProcessadorLogica, Path_dados, 
+    Abastecimento, Acuracidade, Contagem_INV, Giro_Status, 
+    Cheio_Vazio, Os_check, Cadastro, Corte, 
+    Fefo_ABST, Fefo_curva, Fefo_WMS, AUTO_3707
+)
 
 class auxiliar:   
     def _exibir_mensagem_status(self, mensagem):
@@ -84,7 +73,7 @@ class JanelaPrincipal(auxiliar):
         
         root = tk.Tk()
         root.title("GERENCIADOR_8000")
-        root.geometry("1000x500")
+        root.geometry("1005x500")
         root.resizable(False,False)
         root.config(bg= self.background)
         root.iconbitmap(Path_dados.icone_pricipal)
@@ -119,6 +108,20 @@ class JanelaPrincipal(auxiliar):
             ,"Contagem": Contagem_INV
             ,"Abastecimento": Abastecimento
         }    
+        self.mapa_relacao = {
+            "Relatorio Corte": "Corte",
+            "Relatorio validar O.S": "Validar_os",
+            "Relatorio Acuracidade": "Acuracidade",
+            "Analitico Cadastro": "Cadastro",
+            "Relatorio Giro Status": "Giro_estatus",
+            "Relatorio cheio x vazio": "cheio_vazio",
+            "Relatorio de Contagem": "Contagem",
+            "Relatorio de Abastecimento": "Abastecimento",
+            "FEFO: Abastecimento": "Fefo_abst",
+            "FEFO: Curva ABC": "Fefo_Curva",
+            "FEFO: Wms Comprador": "Fefo_Wms"
+        }
+        self.list_check = []
 
         self.quadro_fleg(janela_principal= root)
         self.quadro_bt(janela_principal= root)
@@ -138,142 +141,22 @@ class JanelaPrincipal(auxiliar):
             ,highlightthickness= 3
         )
 
-        self.check_abst = tk.Checkbutton(
-            self.parte_1
-            ,text="Abastecimento"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable=self.estados["Abastecimento"]
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-        self.check_Giro_estatus = tk.Checkbutton(
-            self.parte_1
-            ,text="Relatorio Giro Status"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable=self.estados["Giro_estatus"]
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-        self.check_acuracidade = tk.Checkbutton(
-            self.parte_1
-            ,text="Acuracidade"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable=self.estados["Acuracidade"]
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-        self.check_cadastro = tk.Checkbutton(
-            self.parte_1
-            ,text="Cadastro"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable=self.estados["Cadastro"]
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-        self.check_ch_vz = tk.Checkbutton(
-            self.parte_1
-            ,text="Relatorio cheio vazio"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable= self.estados['cheio_vazio']
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-        self.check_corte = tk.Checkbutton(
-            self.parte_1
-            ,text="Relatorio Corte"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable=self.estados["Corte"]
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-        self.check_validar_os = tk.Checkbutton(
-            self.parte_1
-            ,text="Ordem de serviço"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable=self.estados["Validar_os"]
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-        self.check_contagem = tk.Checkbutton(
-            self.parte_1
-            ,text="Contagem inventario"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable=self.estados["Contagem"]
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-
-        """ checkBox FEFO"""
-        self.check_FAbst = tk.Checkbutton(
-            self.parte_1
-            ,text="FEFO Abastecimento"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable=self.estados["Fefo_abst"]
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-        self.check_FCurva = tk.Checkbutton(
-            self.parte_1
-            ,text="FEFO Curva ABC"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable=self.estados["Fefo_Curva"]
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-        self.check_FWMS = tk.Checkbutton(
-            self.parte_1
-            ,text="FEFO WMS"
-            ,font= font
-            ,bg= self.frame_color
-            ,fg= self.borda_color
-            ,variable=self.estados["Fefo_Wms"]
-
-            ,selectcolor=self.frame_color
-            ,activebackground=self.frame_color
-            ,activeforeground=self.borda_color
-        )
-
-
+        for texto_exibicao, chave_interna in self.mapa_relacao.items():
+            var_estado = self.estados.get(chave_interna)
+            check = tk.Checkbutton(
+                self.parte_1,
+                text=texto_exibicao,
+                variable=var_estado,
+                font=font,
+                bg=self.frame_color,
+                fg=self.borda_color,
+                selectcolor=self.frame_color,
+                activebackground=self.frame_color,
+                activeforeground=self.borda_color,
+                justify="left"
+                ,anchor= 'w'
+            )
+            self.list_check.append(check)
         pass
     def quadro_bt(self, janela_principal):
         self.parte_2 = tk.Frame(
@@ -373,7 +256,6 @@ class JanelaPrincipal(auxiliar):
         )
 
         pass
-    
     def quadro_retorno(self, janela_principal):
         self.parte_3 = tk.Frame(
             janela_principal
@@ -422,6 +304,7 @@ class JanelaPrincipal(auxiliar):
             ,state="disabled"
         )
         pass
+    
     def tela_ROTINAS(self):
         # Cria a janela pop-up
         janela_info = tk.Toplevel()
@@ -487,18 +370,26 @@ class JanelaPrincipal(auxiliar):
         # QUADRO 1 FLEXBOX
         self.parte_1.place(relx= 0.01, rely= 0.10, relwidth= 0.40, relheight= 0.50)
 
-        self.check_abst.place(relx=0.02, rely=0.03)
-        self.check_corte.place(relx=0.02, rely=0.13)
-        self.check_cadastro.place(relx=0.02, rely=0.23)  
-        self.check_Giro_estatus.place(relx=0.02, rely=0.33)
-        self.check_FAbst.place(relx=0.02, rely=0.43)
-        self.check_FWMS.place(relx=0.02, rely=0.53)
+        _relx_T1 = 0.01
+        _relx_T2 = 0.47
 
-        self.check_acuracidade.place(relx=0.50, rely=0.03)
-        self.check_validar_os.place(relx=0.50, rely=0.13)
-        self.check_ch_vz.place(relx=0.50, rely=0.23)  
-        self.check_contagem.place(relx=0.50, rely=0.33)
-        self.check_FCurva.place(relx=0.50, rely=0.43)
+        _rely_inicial = 0.03
+        _altura_item = 0.10
+
+        for indice, item_check in enumerate(self.list_check):
+            if indice < 6:
+                _relx = _relx_T1
+                posicao_y = _rely_inicial + (indice * _altura_item)
+
+            else:
+                _relx = _relx_T2
+                posicao_y = _rely_inicial + ((indice-6) * _altura_item)
+
+            item_check.place(
+                relx=_relx
+                ,rely=posicao_y
+                ,relheight=_altura_item
+            )    
 
         # QUADRO 2 BOTÃO
         self.parte_2.place(relx= 0.01, rely= 0.62, relwidth= 0.40, relheight= 0.36)
@@ -512,7 +403,6 @@ class JanelaPrincipal(auxiliar):
         self.bt_inv.place(relx=0.01, rely=0.20, relwidth=0.30, relheight=0.30)
         self.bt_07.place(relx=0.35, rely=0.20, relwidth=0.30, relheight=0.30)
 
-
         # QUADRO 3 RETORNOS
         self.parte_3.place(relx= 0.42, rely= 0.10, relwidth= 0.57, relheight= 0.88)
 
@@ -522,5 +412,7 @@ class JanelaPrincipal(auxiliar):
         self.retorno_file.place(relx=0.52, rely=0.61, relwidth=0.47, relheight=0.38)
         pass
     pass
+
+
 if __name__ == "__main__":
     JanelaPrincipal()
