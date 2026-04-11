@@ -4,7 +4,6 @@ import os
 diretorio_raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(diretorio_raiz)
 
-
 import pyautogui as pag
 import pyperclip as pc
 import threading
@@ -15,44 +14,48 @@ from tkinter import messagebox
 import tkinter as tk
 
 class Auxiliar():
-    def __init__(self):
-        
-        self.em_execucao = False
-        pass
-
     def iniciar(self, _listas):
-        self._lista = _listas.get("1.0", tk.END).strip().splitlines()
+        _lista = _listas.get("1.0", tk.END).strip().splitlines()
+        contagem = len(_lista)
 
-        if not self._lista:
+        if not _lista:
             messagebox.showerror("Aviso", "Lista esta vazia, favor informar os codigos")
             return
         self.em_execucao = True
-        threading.Thread(target= self.musculo, daemon= True).start()
+        self.entry_cod.delete("1.0", tk.END)
+        threading.Thread(target= self.musculo, args= (_lista,contagem,), daemon= True).start()
 
         pass
     def Parar(self):
         self.em_execucao = False
 
         pass
-    def musculo(self):
+    def musculo(self,lista_sku, maximo):
+        lista_bool = []
         pag.keyDown('alt')
         pag.press('tab')
         pag.keyUp('alt')
         pag.sleep(0.5)
-
-        for i, SKU in enumerate(self._lista):
+        
+        for etapa, SKU in enumerate(lista_sku):            
             if not self.em_execucao:
                 break
+            progresso_anterior = int((etapa / maximo) * 100)
+            MSG = (
+                f"{f">> PROGRESSO: {etapa} - {maximo} || {progresso_anterior}%":<}\n"
+                f"{f">> PRODUTO: {SKU}":<}"
+            )
+            self.contador.config(text= MSG)
 
             pc.copy(SKU)
             pag.hotkey("ctrl", "v")
             pag.press('enter')
-            time.sleep(0.5)
+            time.sleep(self.time_executar)
 
             for _ in range(4):
                 if not self.em_execucao: break
                 pag.press('tab')
-                time.sleep(0.5)
+                time.sleep(self.time_executar)
             
             if not self.em_execucao: break
             pag.press('enter')
@@ -60,12 +63,40 @@ class Auxiliar():
             for _ in range(3):
                 if not self.em_execucao: break
                 pag.press('tab')
-                time.sleep(0.5)
+                time.sleep(self.time_executar)
 
             if not self.em_execucao: break
             pag.press('enter')
             pag.press('tab')
 
+            progresso_atual = int(( (etapa +1) / maximo) * 100)
+            MSG = (
+                f"{f">> PROGRESSO: {etapa +1} - {maximo} || {progresso_atual}%":<}\n"
+                f"{f">> PRODUTO: {SKU}":<}"
+            )
+            self.contador.config(text= MSG)
+
+            lista_bool.append(SKU)
+        
+        total_bool = len(lista_bool)
+        total_sku = len(lista_sku)
+
+        if total_bool == total_sku:
+            messagebox.showinfo("Sucesso", f"Processado: {total_bool} de {total_sku} itens.")
+        elif total_bool < total_sku:
+            mensagem = (
+                f"Resumo da Operação\n"
+                f"{'—'*25}\n"
+                f"Transferência: {total_bool} de {total_sku} SKUs\n"
+                f"Último Código: {lista_bool[-1]}"
+            )
+            messagebox.showinfo("Finalizado parcialmente", mensagem)
+        else:
+            messagebox.showerror(
+                "Erro na Transferência", 
+                f"Apenas {total_bool} de {total_sku} itens foram processados.\n"
+                "Verifique os logs para mais detalhes."
+            )
 
         pass
 class FLOW_MASTER(Auxiliar):
@@ -76,10 +107,13 @@ class FLOW_MASTER(Auxiliar):
         self.borda_color = "#000000"
         self.back_2 = "#363636"
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
+        
+        self.time_executar = 0.0
+        self.em_execucao = False
 
         root = tk.Tk()
         root.title("FLOW-MASTER")
-        root.geometry("260x200")
+        root.geometry("300x210")
         root.resizable(False, False)
         root.config(bg=self.back_2)
         root.iconbitmap(Path_dados.icone_pricipal)
@@ -102,7 +136,6 @@ class FLOW_MASTER(Auxiliar):
             messagebox.showwarning("Aviso", "Automação interrompida!")
         pass
 
-
     def componentes(self, janela):
         self.frame_fundo = tk.Frame(
             janela
@@ -121,7 +154,7 @@ class FLOW_MASTER(Auxiliar):
         )
         self.contador = tk.Label(
             self.frame_fundo
-            ,text= (f"{">> PROGRESSO: 0 - 0 || 0%":<}\n"
+            ,text= (f"{">> PROGRESSO: 0 - 0 || 100%":<}\n"
                     f"{">> PRODUTO: ______":<}")
             ,font= ("verdana", 10, "bold")
             ,bg= self.back_2
@@ -163,8 +196,7 @@ class FLOW_MASTER(Auxiliar):
             ,command=lambda: self.Parar()
         )
 
-        pass
-    
+        pass   
     def localizador(self):
         self.frame_fundo.place(relx= 0.02, rely= 0.01, relwidth= 0.96, relheight= 0.98)
 
@@ -175,6 +207,3 @@ class FLOW_MASTER(Auxiliar):
         self.bt_parar.place(relx= 0.51, rely= 0.78, relwidth= 0.48, relheight= 0.20)
 
         pass
-
-if __name__ == "__main__":
-    FLOW_MASTER()
