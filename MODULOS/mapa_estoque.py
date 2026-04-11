@@ -55,8 +55,8 @@ class auxiliar:
     pass
 class Mapa_Estoque(auxiliar):
     def __init__(self):
-        self.list_path = [Wms.wms_07_end, Relatorios.rel_96, Outros.ou_end]
-
+        self.list_path = [Wms.geral_1707, Relatorios.rel_96]
+        self.VIRTUAIS = [60, 70, 80, 100, 106, 44, 47, 40]
         self.estruturas = {
             "INTEIRO (2,55)": [255, "INT_255"]
             ,"INTEIRO(1,90)": [190, "INTEIRO"]
@@ -90,22 +90,19 @@ class Mapa_Estoque(auxiliar):
 
     def pipeline(self):
         try:
-            R_1707 = pd.read_csv(
+            indices = [0, 1, 2, 3, 4, 6, 7, 9, 10, 11, 12, 16, 17, 18, 19, 20]
+            base_geral = pd.read_csv(
                 self.list_path[0]
                 ,header= None
-                ,decimal= ','
-                ,dtype= {15: float, 18: float}
-                ,names= ColNames.col_end
-            )
+                ,usecols= indices
+                ,names= [ColNames.END_GERAL[i] for i in indices]
+                ,sep=','
+            )   
             R_8596 = pd.read_excel(
                 self.list_path[1]
                 ,usecols= ['CODPROD',"RUA", 'ALTURAARM', 'QTUNITCX', "QTTOTPAL"]
             )
-            END = pd.read_excel(
-                self.list_path[2]
-                , sheet_name= 'AE'
-                , usecols= ['COD_END', 'RUA']
-            )
+            end_parado = pd.read_excel(Outros.ou_end, sheet_name= 'AE', usecols= ['COD_END','TIPO'])
 
             pass
         except Exception as e:
@@ -113,32 +110,35 @@ class Mapa_Estoque(auxiliar):
             return False
 
         try:
-            VIRTUAIS = [60, 70, 80, 100, 106, 44, 47, 40]
-            filtro = END.loc[~END['RUA'].isin(VIRTUAIS)]
-
-
-            df_AE = R_1707.loc[(R_1707['TIPO_PK'] == 'AE') & R_1707['COD_END'].isin(filtro['COD_END'])]
-            df_AE = df_AE[['COD_END', 'PREDIO', 'NIVEL', 'APTO', 'STATUS', 'COD', 'DESC', 'LASTRO', 'CAMADA','TIPO_PK', 'PL_END', 'QTDE', 'ENTRADA', 'SAIDA', 'DISP']]
-
-            R_8596 = R_8596.loc[R_8596['RUA'].isin(filtro['RUA'])]
+            aereos_1707 = base_geral.loc[(base_geral['TIPO_END'] == "AE") & (~base_geral['RUA'].isin(self.VIRTUAIS))].copy()
+            R_8596 = R_8596.loc[~R_8596['RUA'].isin(self.VIRTUAIS)]
             prod = R_8596.rename(columns= {
                 "RUA": "RUA_AP"
             })
-            print('passou aqui')
+            end_parado = end_parado.rename(columns= {"TIPO":'PL_END'})
+
             prod['QTUNITCX'] = pd.to_numeric(prod['QTUNITCX'], errors= 'coerce').fillna(0).astype(int) 
             prod['QTTOTPAL'] = pd.to_numeric(prod['QTTOTPAL'], errors= 'coerce').fillna(0).astype(int) 
             prod['PL_UN'] = prod['QTTOTPAL'] * prod['QTUNITCX']
 
-            df_completo = df_AE.merge(prod, left_on= "COD", right_on= 'CODPROD', how= 'left').drop(columns= "CODPROD")
+            df_completo = aereos_1707.merge(prod, on='CODPROD', how= 'left')
+            df_completo = df_completo.merge(end_parado, on= 'COD_END', how= 'left')
             df_completo = df_completo.merge(self.DataFrame, on= 'PL_END', how= 'left')
-            df_completo = df_completo.merge(END, on= 'COD_END', how= 'left')
-            print('passou aqui tambem')
+
+            cod_int = ['QTDE','DISP_']
+            for ws in cod_int:
+                df_completo[ws] = pd.to_numeric(df_completo[ws])
 
             df_completo['PL_ALT'] = df_completo['CAMADA'] * df_completo['ALTURAARM']
-            df_completo['DISP_CX'] = df_completo['DISP'] / df_completo['QTUNITCX']
+            df_completo['DISP_CX'] = df_completo['DISP_'] / df_completo['QTUNITCX']
             df_completo['CAMADA_AE'] = np.ceil(df_completo['DISP_CX'] / df_completo['LASTRO'])
             df_completo['DISP_ALT'] = df_completo['CAMADA_AE'] * df_completo['ALTURAARM']
-            
+            df_completo['STATUS'] = np.where(
+                df_completo['CODPROD'] > 0
+                ,"OCUPADO"
+                ,"VAZIO"
+            )
+                    
             CAT_cond = [
                 df_completo['DISP_ALT'] <= 80
                 ,df_completo['DISP_ALT'] <= 135
@@ -152,17 +152,17 @@ class Mapa_Estoque(auxiliar):
                 ,"INT_255"
             ]
             df_completo['CATEGORIA'] = np.select(CAT_cond, CAT_result, default= '--')
-            print('passou aqui antes da gambiarra')
+
             val = (
                 (df_completo['CATEGORIA'].isin(['PONTA', 'MEDIO'])) 
                 & (df_completo['CM'] > 135)
             )
             DIV_cond = (
-                (df_completo['DISP'] < df_completo['PL_UN']) 
+                (df_completo['DISP_'] < df_completo['PL_UN']) 
                 & val
             )
             df_completo['DIVERGENCIA'] = np.where(DIV_cond, "VERIFICAR", "CORRETO")
-            print('passou aqui depois da gambiarra')
+
             col_int = ['RUA', 'RUA_AP']
             for col in col_int:
                 df_completo[col] = pd.to_numeric(df_completo[col]).fillna(0)
@@ -170,7 +170,6 @@ class Mapa_Estoque(auxiliar):
                 lambda x: self.categorizar_AE(x['RUA'], x['RUA_AP'], self.map_ruas), 
                 axis= 1
             )
-
             pass
         except Exception as e:
             self.validar_erro(e, "Transform")
@@ -178,8 +177,8 @@ class Mapa_Estoque(auxiliar):
 
         try:
             etapa_1 = [
-                'COD'
-                ,'DESC'
+                'CODPROD'
+                ,'DESCRICAO'
                 ,'RUA_AP'
                 ,'COD_END'
                 ,'RUA'
@@ -187,13 +186,14 @@ class Mapa_Estoque(auxiliar):
                 ,'NIVEL'
                 ,'APTO'
                 ,'PL_END'
+                ,'STATUS'
                 ,'CLASSE_AE'
             ]
             etapa_2 = [
                 'QTDE'
                 ,'ENTRADA'
                 ,'SAIDA'
-                ,'DISP'
+                ,'DISP_'
             ]
             etapas_KPI  = [
                 'DISP_CX'
@@ -207,13 +207,11 @@ class Mapa_Estoque(auxiliar):
             df_completo = df_completo[etapa_1 + etapa_2 + etapas_KPI]
             df_completo = df_completo.sort_values(by=["RUA", "PREDIO"], ascending= True)
             df_completo.to_excel(Output.mapa_estoque,index= False, sheet_name="Analise ae")
+
             return True
-            pass
         except Exception as e:
             self.validar_erro(e, "Laod")
             return False
-
-        pass
     def carregamento(self):
         lista_de_logs = []
         dic_retorno = []
@@ -240,5 +238,4 @@ class Mapa_Estoque(auxiliar):
 
 
 if __name__ ==  "__main__":
-    
     Mapa_Estoque()
