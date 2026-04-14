@@ -7,7 +7,7 @@ from modulos import (
     Demandas, FLOW_MASTER, ProcessadorLogica, Path_dados, 
     Abastecimento, Acuracidade, Contagem_INV, Giro_Status, 
     Cheio_Vazio, Os_check, Cadastro, Corte, 
-    Fefo_ABST, Fefo_curva, Fefo_WMS, AUTO_3707
+    Fefo_ABST, Fefo_curva, Fefo_WMS,FLOW_FEEDER
 )
 
 class auxiliar:   
@@ -230,7 +230,7 @@ class JanelaPrincipal(auxiliar):
         )
         self.bt_inv = tk.Button(
             self.automact
-            ,text="INVENTARIO"
+            ,text="Flow_Master"
             ,cursor="hand2"
             ,relief="solid"
             ,font=("Arial", 10, "bold")
@@ -243,7 +243,7 @@ class JanelaPrincipal(auxiliar):
         )
         self.bt_07 = tk.Button(
             self.automact
-            ,text="3707"
+            ,text="Flow_Feeder"
             ,cursor="hand2"
             ,relief="solid"
             ,font=("Arial", 10, "bold")
@@ -252,7 +252,7 @@ class JanelaPrincipal(auxiliar):
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            ,command=lambda: AUTO_3707()
+            ,command=lambda: FLOW_FEEDER()
         )
 
         pass

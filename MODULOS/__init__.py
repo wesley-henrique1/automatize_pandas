@@ -14,5 +14,5 @@ from .corte import Corte
 from .fefo import Fefo_ABST, Fefo_curva, Fefo_WMS
 
 ### AUTOMAÇÃO
-from .auto_3707 import AUTO_3707
+from .Flow_Feeder import FLOW_FEEDER
 from .Flow_Master import FLOW_MASTER
