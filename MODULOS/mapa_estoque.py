@@ -140,16 +140,20 @@ class Mapa_Estoque(auxiliar):
             )
                     
             CAT_cond = [
-                df_completo['DISP_ALT'] <= 80
+                df_completo['CODPROD'] == 0
+                ,df_completo['DISP_ALT'] <= 80
                 ,df_completo['DISP_ALT'] <= 135
                 ,df_completo['DISP_ALT'] <= 190
                 ,df_completo['DISP_ALT'] <= 255
+                ,df_completo['DISP_ALT'] > 255
             ]
             CAT_result = [
-                "PONTA"
+                "VAZIO"
+                ,"PONTA"
                 ,"MEDIO"
                 ,"INTEIRO"
                 ,"INT_255"
+                ,"ACIMA_VALIDAR"
             ]
             df_completo['CATEGORIA'] = np.select(CAT_cond, CAT_result, default= '--')
 
@@ -207,7 +211,7 @@ class Mapa_Estoque(auxiliar):
             df_completo = df_completo[etapa_1 + etapa_2 + etapas_KPI]
             df_completo = df_completo.sort_values(by=["RUA", "PREDIO"], ascending= True)
             df_completo.to_excel(Output.mapa_estoque,index= False, sheet_name="Analise ae")
-
+            print("feito")
             return True
         except Exception as e:
             self.validar_erro(e, "Laod")
@@ -231,6 +235,9 @@ class Mapa_Estoque(auxiliar):
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
+
+                print(lista_de_logs)
+                print(dic_retorno)
             return lista_de_logs, dic_retorno
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
