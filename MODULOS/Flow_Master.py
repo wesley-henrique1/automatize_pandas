@@ -1,9 +1,3 @@
-import sys
-import os
-
-diretorio_raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(diretorio_raiz)
-
 import pyautogui as pag
 import pyperclip as pc
 import threading
@@ -11,26 +5,72 @@ import time
 
 from modulos._settings import Path_dados
 from tkinter import messagebox
+import datetime as dt
 import tkinter as tk
 
 class Auxiliar():
-    def iniciar(self, _listas):
-        _lista = _listas.get("1.0", tk.END).strip().splitlines()
-        contagem = len(_lista)
-
-        if not _lista:
-            messagebox.showerror("Aviso", "Lista esta vazia, favor informar os codigos")
-            return
-        self.em_execucao = True
-        self.entry_cod.delete("1.0", tk.END)
-        threading.Thread(target= self.musculo, args= (_lista,contagem,), daemon= True).start()
-
-        pass
-    def Parar(self):
+    def validar_erro(self, e, etapa):
+        largura = 78
+        mapeamento = {
+            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
+            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
+            KeyError: f"Coluna ou chave não encontrada: {e}",
+            TypeError: f"Incompatibilidade de tipo: {e}",
+            ValueError: f"Formato de dado inválido: {e}",
+            NameError: f"Variável ou função não definida: {e}"
+        }
+        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
+        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        log_conteudo = (
+            f"{'='* largura}\n"
+            f"FONTE: Flow_Master.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"TIPO: {type(e).__name__}\n"
+            f"MENSAGEM: {msg}\n"
+            f"{'='* largura}\n\n"
+        )
+        try:
+            messagebox.showwarning(
+                "Aviso de Interrupção", 
+                "Ocorreram erros durante o processamento.\n\n"
+                "Consulte o arquivo 'log_erros.txt' para detalhes técnicos."
+            ) 
+            with open("log_erros.txt", "a", encoding="utf-8") as f:
+                f.write(log_conteudo)
+        except Exception as erro_f:
+            print(f"Falha crítica ao gravar log: {erro_f}")
+    
+    def Parar_Processo(self):
         self.em_execucao = False
 
+        try:
+            self.bt_iniciar.config(state="normal")
+            self.entry_cod.delete("1.0", tk.END)
+            self.contador.config(text= self.TextLog)
+        except Exception as e:
+            self.validar_erro(e, "AUX: Parar_Processo") 
+
         pass
-    def musculo(self,lista_sku, maximo):
+    def Iniciar_processo(self, _listas):
+        try:
+            self.em_execucao = True
+            self.bt_iniciar.config(state="disabled")
+
+            _lista = _listas.get("1.0", tk.END).strip().splitlines()
+            contagem = len(_lista)
+
+            if not _lista:
+                messagebox.showerror("Aviso", "Lista esta vazia, favor informar os codigos")
+                return
+            self.em_execucao = True
+            self.entry_cod.delete("1.0", tk.END)
+            threading.Thread(target= self._automact, args= (_lista,contagem,), daemon= True).start()
+        except Exception as e:
+            self.validar_erro(e, "AUX: Iniciar_processo") 
+
+        pass
+    def _automact(self,lista_sku, maximo):
+        inicio_processo = time.time()
+
         lista_bool = []
         pag.keyDown('alt')
         pag.press('tab')
@@ -80,23 +120,41 @@ class Auxiliar():
         
         total_bool = len(lista_bool)
         total_sku = len(lista_sku)
+        fim_processo = time.time()
+        tempo_total = fim_processo - inicio_processo
+
+        if tempo_total > 60:
+            minutos, segundos = divmod(tempo_total, 60)
+            msg = f"{int(minutos)}min e {int(segundos)} segundos"
+        else:
+            msg = f"{tempo_total:.2f} segundos"    
 
         if total_bool == total_sku:
-            messagebox.showinfo("Sucesso", f"Processado: {total_bool} de {total_sku} itens.")
+                messagebox.showinfo(
+                    "Sucesso", 
+                    f"Processado: {total_bool} de {total_sku} itens.\n"
+                    f"{'—'*25}\n"
+                    f"Tempo de execução {msg}."
+                )
+                self.bt_iniciar.config(state="normal")
         elif total_bool < total_sku:
             mensagem = (
                 f"Resumo da Operação\n"
                 f"{'—'*25}\n"
                 f"Transferência: {total_bool} de {total_sku} SKUs\n"
-                f"Último Código: {lista_bool[-1]}"
+                f"Último Código: {lista_bool[-1]}\n"
+                f"Tempo de execução {msg}."
             )
             messagebox.showinfo("Finalizado parcialmente", mensagem)
+            self.bt_iniciar.config(state="normal")
         else:
             messagebox.showerror(
                 "Erro na Transferência", 
                 f"Apenas {total_bool} de {total_sku} itens foram processados.\n"
                 "Verifique os logs para mais detalhes."
             )
+            self.bt_iniciar.config(state="normal")
+
 
         pass
 class FLOW_MASTER(Auxiliar):
@@ -108,11 +166,14 @@ class FLOW_MASTER(Auxiliar):
         self.back_2 = "#363636"
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
         
-        self.time_executar = 0.0
-        self.em_execucao = False
+        self.time_executar = 0.05
+        self.TextLog = (
+            f"{">> PROGRESSO: 0 - 0 || 100%":<}\n"
+            f"{">> PRODUTO: ______":<}"
+        )
 
         root = tk.Tk()
-        root.title("FLOW-MASTER")
+        root.title("Flow_Master")
         root.geometry("300x210")
         root.resizable(False, False)
         root.config(bg=self.back_2)
@@ -154,8 +215,7 @@ class FLOW_MASTER(Auxiliar):
         )
         self.contador = tk.Label(
             self.frame_fundo
-            ,text= (f"{">> PROGRESSO: 0 - 0 || 100%":<}\n"
-                    f"{">> PRODUTO: ______":<}")
+            ,text= self.TextLog
             ,font= ("verdana", 10, "bold")
             ,bg= self.back_2
             ,fg= self.frame_color
@@ -180,7 +240,7 @@ class FLOW_MASTER(Auxiliar):
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            ,command=lambda:self.iniciar(self.entry_cod)
+            ,command=lambda:self.Iniciar_processo(self.entry_cod)
         )
         self.bt_parar = tk.Button(
             self.frame_fundo
@@ -193,7 +253,7 @@ class FLOW_MASTER(Auxiliar):
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            ,command=lambda: self.Parar()
+            ,command=lambda: self.Parar_Processo()
         )
 
         pass   

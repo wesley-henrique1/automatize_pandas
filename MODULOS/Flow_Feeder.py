@@ -23,41 +23,67 @@ class Auxiliares:
         agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
         log_conteudo = (
             f"{'='* largura}\n"
-            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
+            f"FONTE: Flow_Feeder.py | ETAPA: {etapa} | DATA: {agora}\n"
             f"TIPO: {type(e).__name__}\n"
             f"MENSAGEM: {msg}\n"
             f"{'='* largura}\n\n"
         )
         try:
+            messagebox.showwarning(
+                "Aviso de Interrupção", 
+                "Ocorreram erros durante o processamento.\n\n"
+                "Consulte o arquivo 'log_erros.txt' para detalhes técnicos."
+            ) 
             with open("log_erros.txt", "a", encoding="utf-8") as f:
                 f.write(log_conteudo)
         except Exception as erro_f:
             print(f"Falha crítica ao gravar log: {erro_f}")
 
     def Lg_parar(self):
-        self.em_execucao = False
+        try:
+            self.em_execucao = False  
+            self.CodProd.delete("1.0", tk.END)
+            self.CodEnd.delete("1.0", tk.END)
+            self.logUI.config(text=self.text_logUI)
+            self.btTransferir.config(state="normal")
+        except Exception as e:
+            self.validar_erro(e, "AUX: Lg_parar")
 
-        pass
+        return self.em_execucao    
     def Lg_transferir(self, listCod, listEnd):
-        _codProd = listCod.get("1.0", tk.END).strip().splitlines()
-        _codEnd = listEnd.get("1.0", tk.END).strip().splitlines()
+        self.em_execucao = True
+        self.btTransferir.config(state="disabled")
 
-        if not _codProd or not _codEnd:
+        list_prod = listCod.get("1.0", tk.END).strip().splitlines()
+        list_end = listEnd.get("1.0", tk.END).strip().splitlines()
+
+        if not list_prod or not list_end:
             messagebox.showerror("Erro", "Uma ou ambas as listas estão vazias!")
             return
         
+        _codProd = []
+        _codEnd = []
+        for var in list_prod:
+            var = int(str(var).strip())
+            _codProd.append(var)
+        for var in list_end:
+            var = int(str(var).strip())
+            _codEnd.append(var)
+
         TT_PROD = len(_codProd)
         TT_end = len(_codEnd)
 
         if TT_PROD != TT_end:
             mensagem = f"As listas possuem quantidades diferentes!\n\nProdutos: {TT_PROD}\nEndereços: {TT_end}"
-            messagebox.showerror("Divergência", mensagem)
+            messagebox.showwarning("Divergência", mensagem)
             return
 
         try:
+            self.CodProd.delete("1.0", tk.END)
+            self.CodEnd.delete("1.0", tk.END)
             threading.Thread(target= self._automact, args= (_codProd,_codEnd,TT_PROD,)).start()
         except Exception as e:
-                    self.validar_erro(e, "AUX: Lg_transferir")
+            self.validar_erro(e, "AUX: Lg_transferir")
 
     def _LogUI(self, fase, barramento, progresso, cod, end):
         MSG = (
@@ -68,7 +94,7 @@ class Auxiliares:
 
         pass
     def _automact(self, listCod, listEnd, trava):
-        log_error = {}
+        inicio_processo = time.time()
         try:
             lista_bool = []
             pag.keyDown('alt')
@@ -76,24 +102,17 @@ class Auxiliares:
             pag.keyUp('alt')
             pag.sleep(0.5)
 
-            for etapa, (codprod, codend) in zip(listCod, listEnd):
+            for etapa, (codprod, codend) in enumerate(zip(listCod, listEnd)):
                 if not self.em_execucao:
                     break
-
-                try:
-                    dest_cod = int(codprod.strip())
-                    dest_end = int(codend.strip())
-                except Exception as e:
-                    log_error["erro"] = [dest_cod, dest_end]
-                    self.validar_erro(e, "AUX: _automact")
-
                 progresso_anterior = int((etapa / trava) * 100)
+                print(f"etapa: {etapa} - {codprod} | {codend}")
                 self._LogUI(
                     fase= etapa
                     ,barramento= trava
                     ,progresso= progresso_anterior
-                    ,cod= dest_cod
-                    ,end= dest_end
+                    ,cod= codprod
+                    ,end= codend
                 )
 
                 if not self.em_execucao: break
@@ -111,16 +130,49 @@ class Auxiliares:
 
                 progresso_atual = int(( (etapa +1) / trava) * 100)
                 self._LogUI(
-                    fase= etapa
+                    fase= etapa + 1
                     ,barramento= trava
                     ,progresso= progresso_atual
-                    ,cod= dest_cod
-                    ,end= dest_end
+                    ,cod= codprod
+                    ,end= codend
                 )
                 if not self.em_execucao: break
+                lista_bool.append(codprod)
+
+            total_bool = len(lista_bool)
+            total_sku = len(listCod)
+
+            fim_processo = time.time()
+            tempo_total = fim_processo - inicio_processo
+
+            if total_bool == total_sku:
+                messagebox.showinfo(
+                    "Sucesso", 
+                    f"Processado: {total_bool} de {total_sku} itens.\n"
+                    f"{'—'*25}\n"
+                    f"Tempo de execução {tempo_total:.1f} segundos."
+                )
+                self.btTransferir.config(state="normal")
+            elif total_bool < total_sku:
+                mensagem = (
+                    f"Resumo da Operação\n"
+                    f"{'—'*25}\n"
+                    f"Transferência: {total_bool} de {total_sku} SKUs\n"
+                    f"Último Código: {lista_bool[-1]}"
+                    f"Tempo de execução {tempo_total:.1f} segundos."
+                )
+                messagebox.showinfo("Finalizado parcialmente", mensagem)
+                self.btTransferir.config(state="normal")
+            else:
+                messagebox.showerror(
+                    "Erro na Transferência", 
+                    f"Apenas {total_bool} de {total_sku} itens foram processados.\n"
+                    "Verifique os logs para mais detalhes."
+                )
+                self.btTransferir.config(state="normal")
         except Exception as e:
-            self.validar_erro(e, "AUX: _automact")
-    
+            print(f"erro: _automact\n{e}\n")
+            self.validar_erro(e, "AUX: _automact") 
     pass
 class FLOW_FEEDER(Auxiliares):
     def __init__(self):
@@ -135,8 +187,7 @@ class FLOW_FEEDER(Auxiliares):
             f"{">> PROGRESSO: 0 - 0 || 100%":<}\n"
             f"{">> Fase: PRODUTO | DESTINO"}"
         )
-        self.time_executar = 0.0
-        self.em_execucao = False
+        self.time_executar = 0.05
 
         root = tk.Tk()
         root.title("Flow_Feeder")
@@ -239,7 +290,7 @@ class FLOW_FEEDER(Auxiliares):
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            # ,command=lambda:self.iniciar(self.entry_cod)
+            ,command=lambda:self.Lg_parar()
         )
         pass
     def localizar(self):
@@ -254,3 +305,7 @@ class FLOW_FEEDER(Auxiliares):
 
         self.btTransferir.place(relx=0.19, rely=0.80, relwidth=0.30, relheight=0.15)
         self.btParar.place(relx=0.51, rely=0.80, relwidth=0.30, relheight=0.15)
+
+
+if __name__ == "__main__":
+    FLOW_FEEDER()
