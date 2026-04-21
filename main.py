@@ -4,11 +4,19 @@ from tkinter import messagebox
 from tkinter import scrolledtext
 
 from modulos import (
-    Demandas, FLOW_MASTER, ProcessadorLogica, Path_dados, 
-    Abastecimento, Acuracidade, Contagem_INV, Giro_Status, 
-    Cheio_Vazio, Os_check, Cadastro, Corte, 
-    Fefo_ABST, Fefo_curva, Fefo_WMS,FLOW_FEEDER
+    ProcessadorLogica
+    ,Path_dados
+    ,Abastecimento
+    ,Acuracidade
+    ,Contagem_INV
+    ,Giro_Status
+    ,Cheio_Vazio
+    ,Os_check
+    ,Cadastro
+    ,Corte
+    ,Fefo_ABST, Fefo_curva, Fefo_WMS
 )
+from interface import (FLOW_FEEDER, FLOW_MASTER, Demandas)
 
 class auxiliar:   
     def _exibir_mensagem_status(self, mensagem):

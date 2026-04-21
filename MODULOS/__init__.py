@@ -1,5 +1,3 @@
-from .checklist import Demandas
-
 from ._logic_UI import ProcessadorLogica
 from ._settings import Path_dados
 from .abastecimento import Abastecimento
@@ -12,7 +10,3 @@ from .cadastro import Cadastro
 from .corte import Corte
 
 from .fefo import Fefo_ABST, Fefo_curva, Fefo_WMS
-
-### AUTOMAÇÃO
-from .Flow_Feeder import FLOW_FEEDER
-from .Flow_Master import FLOW_MASTER
