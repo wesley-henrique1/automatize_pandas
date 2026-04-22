@@ -1,11 +1,11 @@
 # --- DataBase ---
+# *.csv
+# *.txt
+# *.accdb
+# *.xlsx
+# *.xls
+DataBase/BASE_8041/
 
-*.csv
-*.txt
-*.accdb
-# Pasta de retornos 
-DataBase/
-ARQUIVOS_GERADOS/
 # --- Python & Cache ---
 __pycache__/
 *.py[cod]
