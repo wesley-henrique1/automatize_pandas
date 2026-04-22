@@ -8,5 +8,5 @@ from .ch_vz import Cheio_Vazio
 from .os_check import Os_check
 from .cadastro import Cadastro
 from .corte import Corte
-
+from .mapa_estoque import Mapa_Estoque
 from .fefo import Fefo_ABST, Fefo_curva, Fefo_WMS

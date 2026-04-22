@@ -14,6 +14,7 @@ from modulos import (
     ,Os_check
     ,Cadastro
     ,Corte
+    ,Mapa_Estoque
     ,Fefo_ABST, Fefo_curva, Fefo_WMS
 )
 from interface import (FLOW_FEEDER, FLOW_MASTER, Demandas)
@@ -91,7 +92,7 @@ class JanelaPrincipal(auxiliar):
 
             ,"Fefo_abst": tk.BooleanVar(value= False)
             ,"Fefo_Curva": tk.BooleanVar(value= False)
-            ,"Fefo_Wms": tk.BooleanVar(value= False)
+            ,"Mapa_end": tk.BooleanVar(value= False)
 
             ,"Acuracidade": tk.BooleanVar(value=False)
             ,"Validar_os": tk.BooleanVar(value=False)
@@ -106,8 +107,8 @@ class JanelaPrincipal(auxiliar):
 
             ,"Fefo_abst": Fefo_ABST
             ,"Fefo_Curva": Fefo_curva
-            ,"Fefo_Wms": Fefo_WMS
 
+            ,"Mapa_end": Mapa_Estoque
             ,"Validar_os": Os_check
             ,"Acuracidade": Acuracidade
             ,"Cadastro": Cadastro
@@ -127,7 +128,7 @@ class JanelaPrincipal(auxiliar):
             "Relatorio de Abastecimento": "Abastecimento",
             "FEFO: Abastecimento": "Fefo_abst",
             "FEFO: Curva ABC": "Fefo_Curva",
-            "FEFO: Wms Comprador": "Fefo_Wms"
+            "Mapeamento dos Aéreos": "Mapa_end"
         }
         self.list_check = []
 

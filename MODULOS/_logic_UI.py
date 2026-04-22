@@ -50,18 +50,27 @@ class ProcessadorLogica:
 
         for i, nome in enumerate(argumento):
             try:
+                print("teste de passagem")
+
                 progresso_anterior = (i / total_scripts) * 100
                 txt_progresso = f"PROGRESSO >> {progresso_anterior:.0f}% -> {nome} || {i}/{total_scripts} OPERAÇÃO"
                 self._executar_na_main_thread(self._atualizar_contador, txt_progresso)
 
                 classe_do_script = self.mainUI.scripts_map[nome]
                 instancia = classe_do_script()
-                
+
+                print("trageto instancia")
+
                 if nome == "Abastecimento":
                     status_pipeline, log_data = instancia.pipeline() 
                 else:
                     status_pipeline = instancia.pipeline()
+
+                    print("trageto pipeline")
+
                 log_arquivo, log_db = instancia.carregamento()
+                
+                print("trageto carregamento")
 
                 if nome == "Corte" and status_pipeline is not False:
                     msg_corte = instancia.Log_Retorno()

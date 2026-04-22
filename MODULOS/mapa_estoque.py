@@ -1,4 +1,4 @@
-from _settings import Output, Relatorios, ColNames,Wms, Outros
+from modulos._settings import Output, Relatorios, ColNames,Wms, Outros
 import warnings
 warnings.simplefilter(action='ignore', category=UserWarning)
 
