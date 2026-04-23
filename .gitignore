@@ -1,10 +1,10 @@
-# --- DataBase ---
-# *.csv
-# *.txt
-# *.accdb
-# *.xlsx
-# *.xls
-DataBase/BASE_8041/
+--- DataBase ---
+*.csv
+*.txt
+*.accdb
+*.xlsx
+*.xls
+DataBase/
 
 # --- Python & Cache ---
 __pycache__/
