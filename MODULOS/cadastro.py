@@ -201,9 +201,9 @@ class Cadastro(auxiliar):
                 "x":         ["x", "x", "x"]
             })
             df_final = df_final.sort_values(by=['RUA', 'PREDIO'], ascending= True)
-            with pd.ExcelWriter(Output.cadastro) as PL:
-                df_final.to_excel(PL, sheet_name= "cadastro", index= False)
-                df_amostradinho.to_excel(PL, sheet_name= "demostrativo", index= False)
+            # with pd.ExcelWriter(Output.cadastro) as PL:
+            #     df_final.to_excel(PL, sheet_name= "cadastro", index= False)
+            #     df_amostradinho.to_excel(PL, sheet_name= "demostrativo", index= False)
             return True
         except Exception as e:
             self.validar_erro(e, "Load")

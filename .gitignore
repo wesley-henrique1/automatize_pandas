@@ -5,7 +5,7 @@
 *.xlsx
 *.xls
 DataBase/
-
+log_erros.txt
 # --- Python & Cache ---
 __pycache__/
 *.py[cod]
