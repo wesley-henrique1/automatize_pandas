@@ -1,11 +1,8 @@
 --- DataBase ---
-*.csv
-*.txt
-*.accdb
-*.xlsx
-*.xls
 DataBase/
-
+ARQUIVOS_GERADOS/
+Assets/jornada.json
+*.txt
 # --- Python & Cache ---
 __pycache__/
 *.py[cod]

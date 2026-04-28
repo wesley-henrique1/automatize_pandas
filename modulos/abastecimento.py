@@ -51,20 +51,15 @@ class auxiliar:
         
         separador = valor.split(":")
         
-        if len(separador) == 2:
-            # Caso: "7:15" -> vira "07:15:00"
-            horas = separador[0].zfill(2)
-            minuto = separador[1].zfill(2)
-            segundo = "00"
-            return f"{horas}:{minuto}:{segundo}"
+        if len(separador) == 1:
+            return f"{separador[0].zfill(2)}:00:00"
+        
+        elif len(separador) == 2:
+            return f"{separador[0].zfill(2)}:{separador[1].zfill(2)}:00"
         
         elif len(separador) == 3:
-            # Caso: "7:15:5" -> vira "07:15:05"
-            horas = separador[0].zfill(2)
-            minuto = separador[1].zfill(2)
-            segundo = separador[2].zfill(2)
-            return f"{horas}:{minuto}:{segundo}"
-    
+            return f"{separador[0].zfill(2)}:{separador[1].zfill(2)}:{separador[2].zfill(2)}"
+
         return valor
 class Abastecimento(auxiliar):
     def __init__(self):
@@ -92,7 +87,6 @@ class Abastecimento(auxiliar):
                 f"\n8628 >> {dt_menor_28:%d/%m/%Y} -- {dt_maior_28:%d/%m/%Y}\n"
                 f"8664 >> {dt_menor_64:%d/%m/%Y} -- {dt_maior_64:%d/%m/%Y}"
             )
-            print("PASSAGEM EXTRAÇÃO\n")
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -103,23 +97,19 @@ class Abastecimento(auxiliar):
                 m_atual28['MES'] = m_atual28['DATA'].dt.month
                 m_atual28['HORA'] = m_atual28["HORA"].apply(self.corrigir_hr)
                 m_atual28 = m_atual28.loc[m_atual28['CODROTINA'].isin(self.rotinas_filtro)]
-                
-                cond_turno = (
-                    (m_atual28['HORA'] >= self.hr_AM)  & (m_atual28['HORA'] <= self.hr_PM)  # CONDIÇÃO 1
-                    ,(m_atual28['HORA'] >= self.hr_PM) | (m_atual28['HORA'] < self.hr_AM)   # CONDIÇÃO 2
-                )
-                result_turno = (
-                    m_atual28['DATA']                               # CONDIÇÃO 1
-                    ,m_atual28['DATA'] - pd.Timedelta(days= 1)      # CONDIÇÃO 2
-                )
+
+                cond_turno = [
+                    (m_atual28['HORA'] >= "00:00:00")  & (m_atual28['HORA'] < self.hr_AM)  # CONDIÇÃO 1
+                ]
+                result_turno = [
+                    m_atual28['DATA'] - pd.Timedelta(days=1)
+                ]
                 m_atual28['DT_TURNO'] = np.select(cond_turno, result_turno, default=m_atual28['DATA'])
                 pendencia = m_atual28.loc[m_atual28['POSICAO'] == "P"]
-
 
                 os_geradas28 = self.agrupar(m_atual28, ['DT_TURNO','CODFUNCGER'])
                 os_finalizadas28 = self.agrupar(m_atual28, ['DT_TURNO','CODFUNCOS'])
                 os_pedentes28 = self.agrupar(pendencia, ['DT_TURNO','CODFUNCGER'])
-                print(f"debug: T_28")
             except Exception as e:
                 self.validar_erro(e, "T_28")
                 print(f"debug T_28: {e}")
@@ -191,7 +181,6 @@ class Abastecimento(auxiliar):
             pd_total.to_excel(Power_BI.abst_pd, index= False, sheet_name= "OS_PD")
             fim_total.to_excel(Power_BI.abst_fim, index= False, sheet_name= "OS_FIM")
             geral_total.to_excel(Power_BI.abst_geral, index= False, sheet_name= "OS_GERAL")
-            print("Laod - finish")
             return True, periodo
         except Exception as e:
             self.validar_erro(e, "Laod")
