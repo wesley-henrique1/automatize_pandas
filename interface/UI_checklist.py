@@ -1,61 +1,55 @@
 from modulos._settings import Path_dados
+from datetime import datetime as dt, timedelta
 import tkinter as tk
-from datetime import datetime as dt
+import json
 
-class Demandas:
+class Auxiliar:
+    def _json(self):
+        try:
+            with open(Path_dados.J_jornada, 'r', encoding= 'utf-8') as jornada:
+                dados_brutos = json.load(jornada)
+                dic_json = {int(k): v for k, v in dados_brutos.items()}
+        except:
+            print("erro", "\narquivo não encotrado")
+            dic_json = {}
+        return dic_json
+    def atualizar_interface(self):
+        dia_hoje = self.hoje.weekday() + 2
+        self.demandas = self.DEMANDAS_SEMANAIS.get(dia_hoje, ["Sem tarefas hoje"])
+        self.nome_dia = self.dias_nome.get(dia_hoje, "Final de Semana")
+        self.lbl_titulo.config(text=f"Demandas: {self.nome_dia}")
+        for check in self.list_place:
+            check.destroy()
+        self.list_place = []
+        for tarefa in self.demandas:            
+            check = tk.Checkbutton(
+                self.chek_frame, 
+                text=tarefa, 
+                font=self.fonte,
+                anchor="w",
+                bg=self.frame_color,
+            )
+            self.list_place.append(check)
+        self.renderizar_checks()
+
+    def renderizar_checks(self):
+        eixo_y = 0.15
+        salto = 0.08    
+        eixo_x = 0.02
+        for cap in self.list_place:
+            cap.place(rely=eixo_y, relx=eixo_x)
+            eixo_y += salto
+    def Proximo(self):
+        self.hoje += timedelta(days=1)
+        self.atualizar_interface()
+    def Anterior(self):
+        self.hoje -= timedelta(days=1)
+        self.atualizar_interface()    
+        
+    pass
+class Demandas(Auxiliar):
     def __init__(self):
-        segunda = [
-            "RELATORIO: CORTE"
-            ,"RELATORIO: ABASTECIMENTO"
-            ,"RELATORIO: GIRO ESTOQUE"
-            ,"FEFO: CURVA VENCIMENTO"
-            ,"CONTAGEM ETIQUETAS"
-            ,"INVENTARIO: FL || ATIVO"
-            ,"CADASTRO: CAPACIDADE"
-        ]
-        terca = [
-            "RELATORIO: CORTE"
-            ,"RELATORIO: ABASTECIMENTO"
-            ,"FEFO: RETIRADA CURVA A"
-            ,"RELATORIO O.S MENSAL"
-            ,"RELATORIO: O.S PEDENTES || FIM MESA"
-            ,"RELATORIO: CHEIO X VAZIO"
-            ,"CADASTRO: VALIDAR FLEGS"
-            ,"INVENTARIO: BAIXO ESTOQUE"
-        ]
-        quarta = [
-            "RELATORIO: CORTE"
-            ,"RELATORIO: ABASTECIMENTO"
-            ,"RELATORIO: O.S PEDENTES || FIM MESA"
-            ,"RELATORIO: CHEIO X VAZIO"
-            ,"FEFO: ANÁLISE 'CURVA DE SHELF'"
-            ,"CADASTRO: CUBAGEM"
-        ]
-        quinta = [
-            "RELATORIO: CORTE"
-            ,"RELATORIO: ABASTECIMENTO"
-            ,"RELATORIO: O.S PEDENTES || FIM MESA"
-            ,"RELATORIO: CHEIO X VAZIO"
-            ,"FEFO:(Aereo X Piking 8668)"
-            ,"CADASTRO: CORREÇÃO"
-            ,"INVENTARIO: ESTOQUE PARADO"
-        ]
-        sexta = [
-            "RELATORIO: CORTE"
-            ,"RELATORIO: ABASTECIMENTO"
-            ,"RELATORIO: O.S PEDENTES || FIM MESA"
-            ,"RELATORIO: CHEIO X VAZIO"
-            ,"FEFO: AEREO MENOR QUE PICKING"
-            ,"CADASTRO: CORREÇÃO"
-            ,"INVENTARIO: ACURACIDADE"
-        ]
-        self.DEMANDAS_SEMANAIS = {
-            2: segunda
-            ,3: terca
-            ,4: quarta
-            ,5: quinta
-            ,6: sexta
-        }
+        self.DEMANDAS_SEMANAIS = self._json()
         self.dias_nome = {
             2: "Segunda-feira"
             , 3: "Terça-feira"
@@ -70,12 +64,14 @@ class Demandas:
         self.borda_color = "#000000"
         self.back_2 = "#363636"
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
-        hoje = dt.now()
-        dia_hoje = hoje.weekday() + 2
+
+        self.hoje = dt.now()
+
+        dia_hoje = self.hoje.weekday() + 2
         self.demandas = self.DEMANDAS_SEMANAIS.get(dia_hoje, ["Sem tarefas hoje"])
         self.nome_dia = self.dias_nome.get(dia_hoje, "Final de Semana")
 
-        root = tk.Toplevel()
+        root = tk.Tk()
         root.title("CHECKLIST TAREFAS")
         root.geometry("400x440")
         root.resizable(False, False)
@@ -83,6 +79,7 @@ class Demandas:
         root.iconbitmap(Path_dados.icone_pricipal)
 
         self.componentes(root)
+        self.Clicaveis()
         self.localizador()
         root.mainloop()
         
@@ -111,11 +108,30 @@ class Demandas:
                 bg= self.frame_color ,
             )
             self.list_place.append(check)
+    def Clicaveis(self):
+        self.btProximo = tk.Button(
+            self.chek_frame
+            ,text= ">"
+            ,bg= self.frame_color
+            ,highlightbackground= self.borda_color
+            ,highlightthickness= 3
+            ,command= self.Proximo
+        )
+        self.btAnterior = tk.Button(
+            self.chek_frame
+            ,text= "<"
+            ,bg= self.frame_color
+            ,highlightbackground= self.borda_color
+            ,highlightthickness= 3
+            ,command= self.Anterior
+        )
 
     def localizador(self):
         self.chek_frame.place(rely= 0.02, relx= 0.02, relwidth= 0.96, relheight= 0.96)
 
-        self.lbl_titulo.place(rely= 0.02, relx= 0.02, relwidth= 0.96, relheight= 0.10)
+        self.lbl_titulo.place(rely= 0.02, relx= 0.14, relwidth= 0.72, relheight= 0.10)
+        self.btAnterior.place(rely= 0.02, relx= 0.02, relwidth= 0.10, relheight= 0.10)
+        self.btProximo.place(rely= 0.02, relx= 0.88, relwidth= 0.10, relheight= 0.10)
 
         eixo_y = 0.15
         salto = 0.08    

@@ -79,7 +79,6 @@ class JanelaPrincipal(auxiliar):
         self.back_2 = "#363636"
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
 
-        
         root = tk.Tk()
         root.title("GERENCIADOR_8000")
         root.geometry("1005x500")
