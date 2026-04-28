@@ -1,0 +1,11 @@
+{
+    "Abastecimento": ["8664", "8628"],
+    "Recebimento":["1106"],
+    "Acuracidade":["286","1707 gerencial", "1707 endereçado", "8596"],
+    "Cadastro": ["8596"],
+    "Corte": ["1767, 8041, Pasta"],
+    "Fefo: abastecimento": ["1707 endereçado", "8628", "8596"],
+    "Fefo: Curva ABC": ["8668", "8596","8596 F18", "286 F18", "286", "1707 endereçado"],
+    "Giro_status": ["8596","8596 F18","286", "286 F18", "1707 endereçado"],
+    "Mapa_End": ["1707 geral", "8596"]
+}
