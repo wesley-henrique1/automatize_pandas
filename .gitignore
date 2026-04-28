@@ -1,6 +1,8 @@
 --- DataBase ---
 DataBase/
-
+ARQUIVOS_GERADOS/
+*.json
+*.txt
 # --- Python & Cache ---
 __pycache__/
 *.py[cod]
