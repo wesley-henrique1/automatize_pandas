@@ -1,8 +1,6 @@
 --- DataBase ---
 DataBase/
-ARQUIVOS_GERADOS/
-Assets/jornada.json
-*.txt
+
 # --- Python & Cache ---
 __pycache__/
 *.py[cod]
