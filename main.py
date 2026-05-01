@@ -15,7 +15,7 @@ from modulos import (
     ,Cadastro
     ,Corte
     ,Mapa_Estoque
-    ,Fefo_ABST, Fefo_curva, Fefo_WMS
+    ,Fefo_ABST, Fefo_curva
 )
 from interface import (FLOW_FEEDER, FLOW_MASTER, Demandas)
 

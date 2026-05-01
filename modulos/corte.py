@@ -247,7 +247,7 @@ class Corte(auxiliares):
             self.noite = var_noite
             self.divergencia = var_div
         except Exception as e:
-            self.validar_erro(e, "Laod")
+            self.validar_erro(e, "Load")
             return False
     def Log_Retorno(self):
         try:

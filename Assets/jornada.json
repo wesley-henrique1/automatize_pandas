@@ -17,16 +17,12 @@
     "4":[
         "RELATORIO: CORTE"
         ,"RELATORIO: ABASTECIMENTO"
-        ,"RELATORIO: O.S PEDENTES || FIM MESA"
-        ,"RELATORIO: CHEIO X VAZIO"
         ,"FEFO: ANÁLISE 'CURVA DE SHELF'"
         ,"CADASTRO: CUBAGEM"
     ],
     "5":[
         "RELATORIO: CORTE"
         ,"RELATORIO: ABASTECIMENTO"
-        ,"RELATORIO: O.S PEDENTES || FIM MESA"
-        ,"RELATORIO: CHEIO X VAZIO"
         ,"FEFO:(Aereo X Piking 8668)"
         ,"CADASTRO: CORREÇÃO"
         ,"INVENTARIO: ESTOQUE PARADO"
@@ -34,8 +30,6 @@
     "6":[
         "RELATORIO: CORTE"
         ,"RELATORIO: ABASTECIMENTO"
-        ,"RELATORIO: O.S PEDENTES || FIM MESA"
-        ,"RELATORIO: CHEIO X VAZIO"
         ,"FEFO: AEREO MENOR QUE PICKING"
         ,"CADASTRO: CORREÇÃO"
         ,"INVENTARIO: ACURACIDADE"

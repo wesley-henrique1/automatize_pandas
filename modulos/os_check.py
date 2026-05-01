@@ -138,7 +138,7 @@ class Os_check(auxiliar):
                 )
             return True
         except Exception as e:
-            self.validar_erro(e, "Laod")
+            self.validar_erro(e, "Load")
             return False
     def carregamento(self):
         lista_de_logs = []

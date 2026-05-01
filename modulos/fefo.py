@@ -149,7 +149,7 @@ class Fefo_ABST(auxiliar):
             self.validar_erro(e, "ABST_Transform")
             return False
         try:
-            self.mark_step(self.times,"Laod")
+            self.mark_step(self.times,"Load")
             COLUNAS_FEFO = [
                 "DATA"
                 , "CODPROD"
@@ -179,7 +179,7 @@ class Fefo_ABST(auxiliar):
             end_global = time.perf_counter()
             return True
         except Exception as e:
-            self.validar_erro(e, "ABST_Laod")
+            self.validar_erro(e, "ABST_Load")
             return False
     def carregamento(self):
         lista_de_logs = []
@@ -372,11 +372,11 @@ class Fefo_curva(auxiliar):
 
             df_completo = df_completo[col_base + col_calculadas + col_final]
             df_completo.to_excel(Output.FEFO_8668, index= False)
-            self.mark_step(self.list_time, 'Laod')
+            self.mark_step(self.list_time, 'Load')
 
             return True
         except Exception as e:
-            self.validar_erro(e, "curva-Laod")
+            self.validar_erro(e, "curva-Load")
             return False
     def carregamento(self):
         lista_de_logs = []
@@ -423,7 +423,7 @@ class Fefo_WMS(auxiliar):
         try:
             pass
         except Exception as e:
-            self.validar_erro(e, "Laod")
+            self.validar_erro(e, "Load")
             return False
     def carregamento(self):
         lista_de_logs = []

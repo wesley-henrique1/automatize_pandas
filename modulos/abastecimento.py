@@ -183,7 +183,7 @@ class Abastecimento(auxiliar):
             geral_total.to_excel(Power_BI.abst_geral, index= False, sheet_name= "OS_GERAL")
             return True, periodo
         except Exception as e:
-            self.validar_erro(e, "Laod")
+            self.validar_erro(e, "Load")
             return False
     def carregamento(self):
         lista_de_logs = []
