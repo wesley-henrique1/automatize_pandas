@@ -1,8 +1,8 @@
-from modulos._settings import Relatorios, Outros, Output
+from _settings import Relatorios, Outros, Output
+from monitor_etl import MonitorETL
 import datetime as dt
 import pandas as pd
 import numpy as np
-import time
 import warnings
 import os
 import re
@@ -49,6 +49,8 @@ class auxiliar:
         return None
 class Cadastro(auxiliar):
     def __init__(self):
+        self.Instancia = MonitorETL()
+
         self.list_time = []
         self.list_path = [Relatorios.rel_96, Outros.ou_end]
         self.chekout = [27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
@@ -60,9 +62,11 @@ class Cadastro(auxiliar):
         comprimento = 120
         self.area_pl = (largura * comprimento) + 100
 
+        self.pipeline()
+
     def pipeline(self):
         try:
-            start_global = time.perf_counter()
+            self.Instancia.stageTime('Extract')
             colunas_origem = [
                 "RUA"
                 ,"PREDIO"
@@ -84,10 +88,13 @@ class Cadastro(auxiliar):
             ]
             dados_prod = pd.read_excel(self.list_path[0], usecols= colunas_origem)
             endereco = pd.read_excel(self.list_path[1], sheet_name= 'STATUS', usecols= ["RUA", "TIPO_RUA", "CARACT"])
+            self.Instancia.stageTime('Extract')
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
         try:
+            self.Instancia.stageTime('Transform')
+
             TEMP = dados_prod.merge(endereco, on= 'RUA', how= 'inner')
             df_prod = TEMP.loc[TEMP['RUA'].between(1,39)].copy()
             dic_raname = {
@@ -171,10 +178,14 @@ class Cadastro(auxiliar):
             except Exception as e:
                 self.validar_erro(e, "T-KPI")
                 return False
+            
+            self.Instancia.stageTime('Transform')
         except Exception as e:
                 self.validar_erro(e, "Transform")
                 return False
         try:
+            self.Instancia.stageTime('Load')
+
             ordem_primaria = ['CODPROD', 'DESCRICAO','OBS2', 'RUA', 'PREDIO', 'APTO', 'TIPO_RUA','CARACTERISTICA']
             capacidade = ['FATOR','QTTOTPAL','CAP', 'P_REP','FREQ_PROD','FLEG_ABST','STATUS_PROD']
             validar = ['VAL_CAP', 'VAL_FLEG', 'VAL_CARACT', 'VAL_TIPO_OS', 'VAL_CUBAGEM', 'VAL_PESO', 'VAL_RUA']
@@ -204,6 +215,9 @@ class Cadastro(auxiliar):
             # with pd.ExcelWriter(Output.cadastro) as PL:
             #     df_final.to_excel(PL, sheet_name= "cadastro", index= False)
             #     df_amostradinho.to_excel(PL, sheet_name= "demostrativo", index= False)
+
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "Cadastro")
             return True
         except Exception as e:
             self.validar_erro(e, "Load")
@@ -234,24 +248,7 @@ class Cadastro(auxiliar):
             return False
 
         pass
-    def temporizador(self, lista_timestamps):
-        if len(lista_timestamps) == 4:
-            ext = lista_timestamps[1] - lista_timestamps[0]
-            tra = lista_timestamps[2] - lista_timestamps[1]
-            loa = lista_timestamps[3] - lista_timestamps[2]
-            total = lista_timestamps[3] - lista_timestamps[0]
 
-            def formatar(n):
-                if n >= 3600: return f"{n / 3600:.2f}hr"
-                if n >= 60: return f"{n / 60:.2f}min"
-                return f"{n:.2f}seg"
 
-            return [{
-                "Modulo": "Cadastro",
-                "Extract": formatar(ext),
-                "Transform": formatar(tra),
-                "Load": formatar(loa),
-                "Total": formatar(total)
-            }]
-
-        lista_timestamps.append(time.perf_counter())
+if __name__ == "__main__":
+    Cadastro()

@@ -18,6 +18,7 @@ class Path_dados:
     icone_corte = os.path.join(PASTA_STYLE, 'corte_img.ico')
     png_jc = os.path.join(PASTA_STYLE, 'JC_Distribuição.png')
     J_jornada = os.path.join(PASTA_STYLE, "jornada.json")
+    J_LogTime = os.path.join(PASTA_STYLE, "logTime.json")
 class DB_acumulado:
     _fixar = os.path.join(PASTA_DADOS, 'BASE_FIXAR')
     path_acumulado = os.path.join(_fixar, "DB_ACUMULADO.accdb")
