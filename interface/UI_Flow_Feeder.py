@@ -1,4 +1,4 @@
-from modulos._settings import Path_dados
+from modulos._settings import Assets
 
 import tkinter as tk
 from tkinter import messagebox
@@ -213,7 +213,7 @@ class FLOW_FEEDER(Auxiliares):
         root.geometry("300x210")
         root.resizable(False, False)
         root.config(bg=self.back_2)
-        root.iconbitmap(Path_dados.icone_pricipal)
+        root.iconbitmap(Assets.FleshIcon)
         
         self.componentes(root)
         self.clicaveis()

@@ -1,4 +1,4 @@
-from modulos._settings import Output, Relatorios, ColNames,Wms, Outros
+from modulos._settings import Relatorios, Wms, ColNames, OutPut, BaseDados
 import warnings
 warnings.simplefilter(action='ignore', category=UserWarning)
 
@@ -55,7 +55,7 @@ class auxiliar:
     pass
 class Mapa_Estoque(auxiliar):
     def __init__(self):
-        self.list_path = [Wms.geral_1707, Relatorios.rel_96]
+        self.list_path = [Wms.geral07, Relatorios._8596, BaseDados.EndFixo]
         self.VIRTUAIS = [60, 70, 80, 100, 106, 44, 47, 40]
         self.estruturas = {
             "INTEIRO (2,55)": [255, "INT_255"]
@@ -84,7 +84,7 @@ class Mapa_Estoque(auxiliar):
             ,38: [33,34,35,36,37,39]
             ,39: [33,34,35,36,37,38]
         }
-
+        self.saida = OutPut.MapaEstoque
         self.pipeline()
         pass
 
@@ -95,14 +95,14 @@ class Mapa_Estoque(auxiliar):
                 self.list_path[0]
                 ,header= None
                 ,usecols= indices
-                ,names= [ColNames.END_GERAL[i] for i in indices]
+                ,names= [ColNames.Geral[i] for i in indices]
                 ,sep=','
             )   
             R_8596 = pd.read_excel(
                 self.list_path[1]
                 ,usecols= ['CODPROD',"RUA", 'ALTURAARM', 'QTUNITCX', "QTTOTPAL"]
             )
-            end_parado = pd.read_excel(Outros.ou_end, sheet_name= 'AE', usecols= ['COD_END','TIPO'])
+            end_parado = pd.read_excel(self.list_path[2], sheet_name= 'AE', usecols= ['COD_END','TIPO'])
 
             pass
         except Exception as e:
@@ -210,7 +210,7 @@ class Mapa_Estoque(auxiliar):
             ]
             df_completo = df_completo[etapa_1 + etapa_2 + etapas_KPI]
             df_completo = df_completo.sort_values(by=["RUA", "PREDIO"], ascending= True)
-            df_completo.to_excel(Output.mapa_estoque,index= False, sheet_name="Analise ae")
+            df_completo.to_excel(self.saida,index= False, sheet_name="Analise ae")
             print("feito")
             return True
         except Exception as e:

@@ -1,5 +1,5 @@
-from modulos._settings import Power_BI, Relatorios
-# from _settings import Power_BI, Relatorios
+from modulos._settings import Relatorios, OutPut
+# from _settings import Relatorios, OutPut
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -63,7 +63,7 @@ class auxiliar:
         return valor
 class Abastecimento(auxiliar):
     def __init__(self):
-        self.list_path = [Relatorios.rel_28, Relatorios.rel_64]
+        self.list_path = [Relatorios._8628, Relatorios._8664]
         self.rotinas_filtro = [1723,1709]
         self.hr_AM = "06:30:00"
         self.hr_PM = "18:00:00"
@@ -178,9 +178,10 @@ class Abastecimento(auxiliar):
             self.validar_erro(e, "Transform")
             return False
         try:
-            pd_total.to_excel(Power_BI.abst_pd, index= False, sheet_name= "OS_PD")
-            fim_total.to_excel(Power_BI.abst_fim, index= False, sheet_name= "OS_FIM")
-            geral_total.to_excel(Power_BI.abst_geral, index= False, sheet_name= "OS_GERAL")
+            with pd.ExcelWriter(OutPut.Abastecimento) as var:
+                pd_total.to_excel(var, index= False, sheet_name= "OS_PD")
+                fim_total.to_excel(var, index= False, sheet_name= "OS_FIM")
+                geral_total.to_excel(var, index= False, sheet_name= "OS_GERAL")
             return True, periodo
         except Exception as e:
             self.validar_erro(e, "Load")

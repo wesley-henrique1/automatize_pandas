@@ -3,7 +3,7 @@ import pyperclip as pc
 import threading
 import time
 
-from modulos._settings import Path_dados
+from modulos._settings import Assets
 from tkinter import messagebox
 import datetime as dt
 import tkinter as tk
@@ -189,7 +189,7 @@ class FLOW_MASTER(Auxiliar):
         root.geometry("300x210")
         root.resizable(False, False)
         root.config(bg=self.back_2)
-        root.iconbitmap(Path_dados.icone_pricipal)
+        root.iconbitmap(Assets.FleshIcon)
 
         self.componentes(root)
         self.widgets_clicaveis()

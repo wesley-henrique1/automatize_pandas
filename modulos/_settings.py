@@ -1,178 +1,153 @@
-import os
 import sys
+import os 
 
-if getattr(sys, 'frozen', False):
-    BASE_DIR = os.path.dirname(sys.executable)
-    INTERNAL_DIR = sys._MEIPASS
-else:
-    PASTA_ATUAL = os.path.dirname(os.path.abspath(__file__))
-    BASE_DIR = os.path.dirname(PASTA_ATUAL) 
-    INTERNAL_DIR = BASE_DIR
+class aux:
+    if getattr(sys, "frozen", False):
+        Diretorio = os.path.dirname(sys.executable)
+        Estatico = sys._MEIPASS
+    else:
+        PastaAtual = os.path.dirname(os.path.abspath(__file__))
+        Diretorio = os.path.dirname(PastaAtual)
+        Estatico = Diretorio
 
-PASTA_DADOS = os.path.join(BASE_DIR, "DataBase")
-PASTA_STYLE = os.path.join(BASE_DIR, "Assets")
-FILE_RETORNO = os.path.join(BASE_DIR, 'RESULTADO_FINAL.xlsx')
+    OutPut = os.path.join(Diretorio, "ARQUIVOS_GERADOS")
+    assets = os.path.join(Diretorio, "Assets")
+    DataBase = os.path.join(Diretorio, "DataBase")
+    Interface = os.path.join(Diretorio, "interface")
+    Modulos = os.path.join(Diretorio, "modulos")
 
-class Path_dados:
-    icone_pricipal = os.path.join(PASTA_STYLE, 'flesh_perfil.ico')
-    icone_corte = os.path.join(PASTA_STYLE, 'corte_img.ico')
-    png_jc = os.path.join(PASTA_STYLE, 'JC_Distribuição.png')
-    J_jornada = os.path.join(PASTA_STYLE, "jornada.json")
-    J_LogTime = os.path.join(PASTA_STYLE, "logTime.json")
-class DB_acumulado:
-    _fixar = os.path.join(PASTA_DADOS, 'BASE_FIXAR')
-    path_acumulado = os.path.join(_fixar, "DB_ACUMULADO.accdb")
+class Assets(aux):
+    Icons = os.path.join(aux.assets, "icons")
+    Jsons = os.path.join(aux.assets, "jsons")
+
+    corte = os.path.join(Icons, "corte_img.ico")
+    Flesh = os.path.join(Icons, 'flesh_completo.png')
+    FleshIcon = os.path.join(Icons, 'flesh_perfil.ico')
+
+    Jornada = os.path.join(Jsons, "jornada.json")
+    LogTime = os.path.join(Jsons, 'logTime.json')
+    Rotinas = os.path.join(Jsons, "rotinas.json")
+
+    pass
+class Filial_18(aux):
+    _8596 = os.path.join(aux.DataBase, '8596 - Dados filial_18.xlsx')
+    _286 = os.path.join(aux.DataBase, '0286 - Consultar filial_18.xls')
+    
+    pass
+class Gestao(aux):
+    Corte = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.1 Analise de Cortes\2026\# 2 Acompanhamento de produtos cortados.xlsx'
+    CheioVazio = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.5 - Relatório Cheio x vazio\RETORNO'
+
+
+    _001 = os.path.join(aux.DataBase, '001 - TOTVS_LIFE.xlsx')
+    _105 = os.path.join(aux.DataBase, '0105 - Posição do estoque.xls')
+    _286 = os.path.join(aux.DataBase, '0286 - Consultar Produtos.xls')
+    _718 = os.path.join(aux.DataBase, '0718 - Contas pagas.xls')
+    _1118 = os.path.join(aux.DataBase, '1118 - Gerencial 11.xls')
+
+    MalhaFina_day = os.path.join(aux.DataBase, 'CD MATRIZ - Malha Fina 112025.xlsx')
+    MalhaFina_mes = os.path.join(aux.DataBase, 'CD MATRIZ - Malha Fina até 6 meses.xlsx')
+    pass
+class Relatorios(aux):
+    _8041 = os.path.join(aux.DataBase, '8041 - Relatorio de picking master.xlsx')
+    _8132 = os.path.join(aux.DataBase, '8132 - Relatorio de endereçamento.xlsx')
+    _8134 = os.path.join(aux.DataBase, '8134 - Analitico avaria.xlsx')
+    _8560 = os.path.join(aux.DataBase, '8560 - Relatório acesso.xlsx')
+    _8573 = os.path.join(aux.DataBase, '8573 - Emissão etiquetas cod. barras.xlsx')
+    _8576 = os.path.join(aux.DataBase, '8576 - Acompanhamento de anomalias.xlsx')
+    _8596 = os.path.join(aux.DataBase, '8596 - Dados logistico produtos WMS.xlsx')
+    _8611 = os.path.join(aux.DataBase, '8611 - Responsável por gerar o.xlsx')
+    _8628 = os.path.join(aux.DataBase, '8628 - Relatorio de abastecimento.xlsx')
+    _8664 = os.path.join(aux.DataBase, '8664 - Eficiência do recebimento.xlsx')
+    _8668 = os.path.join(aux.DataBase, '8668 - Produtos Aereo x Picking.xlsx')
+
+    pass
+class Wms(aux):
+    _1702 = os.path.join(aux.DataBase, '1702 - Cadastro de Endereços.txt')
+    _1733 = os.path.join(aux.DataBase, '1733 - Gestão de inventario.xls')
+    _1767 = os.path.join(aux.DataBase, '1767 - Relatorio de corte.txt')
+    _1782 = os.path.join(aux.DataBase, '1782 - Relatório de curva ABC de produtos.xls')
+
+    validade07 = os.path.join(aux.DataBase, '1707 - Consultar Validade.csv')
+    gerencial07 = os.path.join(aux.DataBase, '1707 - Estoque endereçado x Gerencial.txt')
+    endereco07 = os.path.join(aux.DataBase, '1707 - Relatório de produtos por endereços.txt')
+    geral07 = os.path.join(aux.DataBase, '1707 - Relatório geral.txt')
+
+    pass
+class BaseDados(aux):
+    _1782 = os.path.join(aux.DataBase, 'BASE_1782')
+    _8041 = os.path.join(aux.DataBase, 'BASE_8041')
+    _8668 = os.path.join(aux.DataBase, 'BASE_8668')
+    BaseFixa = os.path.join(aux.DataBase, 'BASE_FIXAR')
+
+    EndFixo = os.path.join(BaseFixa, 'BASE_ENDEREÇOS.xlsx')
+    Func = os.path.join(BaseFixa, 'BASE_FUNCIONARIO.xlsx')
+
+    path_acumulado = os.path.join(BaseFixa, "DB_ACUMULADO.accdb")
     drive = '{Microsoft Access Driver (*.mdb, *.accdb)}'
 
-    tb_vz_ch = "DB_VAZIO_CHEIO"
-    db_pedidos = "DB_PEDIDOS"
-    db_prod = "DB_INVPROD"
-    db_cont = "DB_INVCONT"
-
-class Filial:
-    F8596 = os.path.join(PASTA_DADOS, '8596 - Dados filial_18.xlsx')
-    F286 = os.path.join(PASTA_DADOS, '0286 - Consultar filial_18.xls')
+    DBVzCh = "DB_VAZIO_CHEIO"
+    DBPedidos = "DB_PEDIDOS"
+    DBProd = "DB_INVPROD"
+    DBCont = "DB_INVCONT"
     pass
 
+class OutPut(aux):
+    Baixas = os.path.join(aux.OutPut, 'Analitico baixa.xlsx')
+    Cadastro = os.path.join(aux.OutPut, 'Analitico cadastro.xlsx')
+    Corte = os.path.join(aux.OutPut, 'Analitico corte.xlsx')
+    GiroStatus = os.path.join(aux.OutPut, 'Giro_Status.xlsx')
+    MapaEstoque = os.path.join(aux.OutPut, 'mapa_estoque.xlsx')
 
-class Relatorios:
-    rel_41 = os.path.join(PASTA_DADOS, '8041 - Relatorio de picking master.xlsx')
-    rel_32 = os.path.join(PASTA_DADOS, '8132 - Relatorio de endereçamento.xlsx')
-    rel_34 = os.path.join(PASTA_DADOS, '8134 - Analitico avaria.xlsx')
-    rel_60 = os.path.join(PASTA_DADOS, '8560 - Relatório acesso.xlsx')
-    rel_73 = os.path.join(PASTA_DADOS, '8573 - Emissão etiquetas cod. barras.xlsx')
-    rel_76 = os.path.join(PASTA_DADOS, '8576 - Acompanhamento de anomalias.xlsx')
-    rel_96 = os.path.join(PASTA_DADOS, '8596 - Dados logistico produtos WMS.xlsx')
-    rel_11 = os.path.join(PASTA_DADOS, '8611 - Responsável por gerar o.xlsx')
-    rel_28 = os.path.join(PASTA_DADOS, '8628 - Relatorio de abastecimento.xlsx')
-    rel_64 = os.path.join(PASTA_DADOS, '8664 - Eficiência do recebimento.xlsx')
-    rel_68 = os.path.join(PASTA_DADOS, '8668 - Produtos Aereo x Picking.xlsx')
+    Acuracidade = os.path.join(aux.OutPut, 'BI_Acuracidade.xlsx')
+    Abastecimento = os.path.join(aux.OutPut, 'BI_ABASTECIMENTO.xlsx')
     
-    rel_f18 = os.path.join(PASTA_DADOS, '8596 - Dados filial_18.xlsx')
-    pass
-class Wms:
-    wms_02     = os.path.join(PASTA_DADOS, '1702 - Cadastro de Endereços.txt')
-    wms_07_ger = os.path.join(PASTA_DADOS, '1707 - Estoque endereçado x Gerencial.txt')
-    wms_07_end = os.path.join(PASTA_DADOS, '1707 - Relatório de produtos por endereços.txt')
-    geral_1707 = os.path.join(PASTA_DADOS, '1707 - Relatório geral.txt')
-    wms_33     = os.path.join(PASTA_DADOS, '1733 - Gestão de inventario.xls')
-    wms_67     = os.path.join(PASTA_DADOS, '1767 - Relatorio de corte.txt')
-    wms_82     = os.path.join(PASTA_DADOS, '1782 - Relatório de curva ABC de produtos.xls')
-    pass
-class Outros:
-    ou_corte = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.1 Analise de Cortes\2026\# 2 Acompanhamento de produtos cortados.xlsx'
-    
-    _fixar = os.path.join(PASTA_DADOS, 'BASE_FIXAR')
-    ou_end   = os.path.join(_fixar, 'BASE_ENDEREÇOS.xlsx')
-    ou_func  = os.path.join(_fixar, 'BASE_FUNCIONARIO.xlsx')
-    
-    ou_life  = os.path.join(PASTA_DADOS, '001 - TOTVS_LIFE.xlsx')
-    ou_18    = os.path.join(PASTA_DADOS, '1118 - Gerencial 11.xls')
-    ou_86    = os.path.join(PASTA_DADOS, '0286 - Consultar Produtos.xls')
-    ou_05    = os.path.join(PASTA_DADOS, '0105 - Posição do estoque.xls')
-    ou_718   = os.path.join(PASTA_DADOS, '0718 - Contas pagas.xls')   
+    Jupyter_1 = os.path.join(aux.OutPut, 'JUPYTER_1')
+    Jupyter_2 = os.path.join(aux.OutPut, 'JUPYTER_2')
 
-    ou_f18   = os.path.join(PASTA_DADOS, '0286 - Consultar filial_18.xls')
-    pass
-class Directory:
-    dir_cheio_vazio = r'z:\1 - CD Dia\4 - Equipe PCL\6.1 - Inteligência Logística\6.1.5 - Relatório Cheio x vazio\RETORNO'
+    P_Acuracidade = os.path.join(aux.OutPut, 'BI_ACURACIDADE')
 
-    # Diretórios dentro da Base de Dados
-    dir_PROD    = os.path.join(PASTA_DADOS, 'BASE_1733', 'INV_PROD')
-    dir_CONT     = os.path.join(PASTA_DADOS, 'BASE_1733', "INV_CONT")
-    dir_acum    = os.path.join(PASTA_DADOS, 'ACUMULADOS')
-    dir_82      = os.path.join(PASTA_DADOS, 'BASE_1782')
-    dir_41      = os.path.join(PASTA_DADOS, 'BASE_8041')
-    dir_28      = os.path.join(PASTA_DADOS, 'BASE_8628')
-    dir_64      = os.path.join(PASTA_DADOS, 'BASE_8664')
-    dir_fixar   = os.path.join(PASTA_DADOS, 'BASE_FIXAR')
-
-    # Diretórios de Output (BI)
-    _out  = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
-    dir_acuracidade = os.path.join(_out, 'BI_ACURACIDADE')
-    dir_acesso      = os.path.join(_out, 'BI_ACESSO')
-
-    @classmethod
-    def criar_pastas(cls):
-        """Cria as pastas de saída automaticamente se não existirem"""
-        pastas = [cls.dir_acuracidade, cls.dir_acesso, cls.dir_acum]
-        for pasta in pastas:
-            if not os.path.exists(pasta):
-                os.makedirs(pasta)
-                print(f"Pasta criada: {pasta}")
-    
-    pass
-class Power_BI:
-    _base_dados = PASTA_DADOS
-    _out = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
-    
-    # Relatório de Abastecimentos (Fontes de entrada)
-    abst_atual64 = os.path.join(_base_dados, 'BASE_8664', '01- JANEIRO 8664.xlsx')
-    abst_atual28 = os.path.join(_base_dados, 'BASE_8628', '8628 - 01 - JANEIRO.xlsx')
-
-    # Relatório de Abastecimentos (Saídas/Outputs)
-    _aba = os.path.join(_out, 'BI_ABASTECIMENTO')
-    abst_bonus  = os.path.join(_aba, 'BONUS_CONT.xlsx')
-    abst_fim    = os.path.join(_aba, 'OS_FIM.xlsx')
-    abst_pd     = os.path.join(_aba, 'OS_PD.xlsx')
-    abst_geral  = os.path.join(_aba, 'OS_GERAL.xlsx')
-    abst_cons64 = os.path.join(_aba, 'CONSOLIDADA_8664.xlsx')
-    abst_cons28 = os.path.join(_aba, 'CONSOLIDADA_8628.xlsx')
-
-    # Relatório de Acuracidade (Saídas)
-    _acu = os.path.join(_out, 'BI_ACURACIDADE')
-    acu_prod  = os.path.join(_acu, 'DIM_PROD.xlsx')
-    acu_diver = os.path.join(_acu, 'FATO_DIVERGENCIA.xlsx')
-    acu_inv   = os.path.join(_acu, 'FATO_INVENTARIO.xlsx')
-
-    # Relatório de Acesso (Saídas)
-    _ace = os.path.join(_out, 'BI_ACESSO')
-    ace_ace  = os.path.join(_ace, 'DIM_ACESSO.xlsx')
-    ace_st   = os.path.join(_ace, 'DIM_ESTOQUE.xlsx')
-    ace_mov  = os.path.join(_ace, 'DIM_MOVIMENTAR.xlsx')
-    ace_prod = os.path.join(_ace, 'DIM_PRODUTO.xlsx')
-    ace_sug  = os.path.join(_ace, 'DIM_SUGESTÃO.xlsx')
-    ace_fato = os.path.join(_ace, 'DIM_SUGESTÃO.xlsx')
-
-    # Relatório de Cheio x Vazio (Histórico/Acumulado)
-    ch_vz = os.path.join(_base_dados, 'ACUMULADOS', 'acumulado_cheio_vazio.xlsx')
+    Fefo8668 = r"z:\1 - CD Dia\4 - Equipe PCL\6.6 - Recuperação e Indenizado\6.6.3 - FEFO Validade\Curva A-B-C-D\Auditoria\FEFO_8668.xlsx"
+    Fefo8628 = r"z:\1 - CD Dia\4 - Equipe PCL\6.6 - Recuperação e Indenizado\6.6.3 - FEFO Validade\Curva A-B-C-D\Auditoria\FEFO_8628.xlsx"
 
     pass
-class Ipynb:
-    _base = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
-    # Salvando os resultados na raiz do projeto (BASE_DIR)
-    retorno   = os.path.join(_base, 'JUPTER_1.xlsx')
-    retorno_1 = os.path.join(_base, 'JUPTER_2.xlsx')
-    
-    pass
-class Output:
-    _base = os.path.join(BASE_DIR, "ARQUIVOS_GERADOS")
-    _acum = os.path.join(PASTA_DADOS, "ACUMULADOS")
-
-    inv          = os.path.join(_base, 'analitico_contagem.xlsx')
-    life         = os.path.join(_base, 'TOTVS_LIFES.xlsx')
-    Giro_Status  = os.path.join(_base, 'Giro_Status.xlsx')
-    rel_os       = os.path.join(_base, 'analitico_baixa.xlsx')
-    cadastro     = os.path.join(_base, 'analitico_cadastro.xlsx')
-    cheio_vazio  = os.path.join(_base, 'geral_cheio_vazio.xlsx')
-    corte        = os.path.join(_base, 'extratos_corte.xlsx')
-    acum_41      = os.path.join(_acum, 'ACUMULADO_41.xlsx')
-    mapa_estoque = os.path.join(_base, 'mapa_estoque.xlsx')
-
-    FEFO_8668 = r"z:\1 - CD Dia\4 - Equipe PCL\6.6 - Recuperação e Indenizado\6.6.3 - FEFO Validade\Curva A-B-C-D\Auditoria\FEFO_8668.xlsx"
-    FEFO_8628 = r"z:\1 - CD Dia\4 - Equipe PCL\6.6 - Recuperação e Indenizado\6.6.3 - FEFO Validade\Curva A-B-C-D\Auditoria\FEFO_8628.xlsx"
-
-
-class ColNames:
-    # Listas de colunas não precisam de caminhos, então apenas mantemos a estrutura
-    col_67  = ['data', 'n_car', 'cod', 'desc', 'n_ped', 'qtde_orig', 'vl_orig', 'rua', 'predio', 'apto', 'estoque_dia', 'qtde_corte', 'vl_corte', 'hr', 'min', 'motivo', 'cod_fuc', 'func']
-    col_ger = ['COD', 'DESCRICAO', 'DEP', 'RUA', 'PREDIO', 'NIVEL', 'APTO', 'EMBALAGEM', 'CAP', 'P_REP', 'QTDE_O.S', 'PICKING', 'PULMAO', 'ENDERECO', 'GERENCIAL']
-    col_end = ['COD_END', 'PREDIO','NIVEL', 'APTO', 'STATUS', 'COD', 'DESC', 'DT_ENTRADA', 'DT_VALIDADE','EMB', 'LASTRO', 'CAMADA', 'CAP', 'TIPO_PK','PL_END', 'QTDE', 'ENTRADA', 'SAIDA', 'DISP']
-    col_mov = ['COD', 'DESC', 'EMBALAGEM', 'UNID', 'MOVI', '%', '%_ACUM', 'CLASSE']
-    col_sug = ['COD', 'DESCRIÇÃO', 'EMBALAGEM', 'UNID.', 'DEP', 'RUA', 'PREDIO', 'NIVEL', 'APTO', 'MÊS 1', 'MÊS 2', 'MÊS 3', 'TIPO', 'CAP', '1 DIA', 'COM FATOR', 'VARIAÇÃO', '%']
-    col_02  = ['FL','COD_END','DEP','RUA','PREDIO','NIVEL','APTO','TIPO','ROTATIVO','BLOQ','DISP.','PALETE','ESTRUTURA']
-    
-    END_GERAL = [
+class ColNames():
+    _1767 = [
+        'data'
+        ,'n_car'
+        ,'cod'
+        ,'desc'
+        ,'n_ped'
+        ,'qtde_orig'
+        ,'vl_orig'
+        ,'rua'
+        ,'predio'
+        ,'apto'
+        ,'estoque_dia'
+        ,'qtde_corte'
+        ,'vl_corte'
+        ,'hr'
+        ,'min'
+        ,'motivo'
+        ,'cod_fuc'
+        ,'func'
+    ]
+    _0702 = [
+        'FL'
+        ,'COD_END'
+        ,'DEP'
+        ,'RUA'
+        ,'PREDIO'
+        ,'NIVEL'
+        ,'APTO'
+        ,'TIPO'
+        ,'ROTATIVO'
+        ,'BLOQ'
+        ,'DISP.'
+        ,'PALETE'
+        ,'ESTRUTURA'
+    ]
+    Geral = [
         "COD_END"
         ,"RUA"
         ,"PREDIO"
@@ -195,4 +170,72 @@ class ColNames:
         ,"SAIDA"
         ,"DISP_"
     ]
-
+    Gerencial = [
+        'COD'
+        ,'DESCRICAO'
+        ,'DEP'
+        ,'RUA'
+        ,'PREDIO'
+        ,'NIVEL'
+        ,'APTO'
+        ,'EMBALAGEM'
+        ,'CAP'
+        ,'P_REP'
+        ,'QTDE_O.S'
+        ,'PICKING'
+        ,'PULMAO'
+        ,'ENDERECO'
+        ,'GERENCIAL'
+    ]
+    Endereco = [
+        'COD_END'
+        ,'PREDIO'
+        ,'NIVEL'
+        ,'APTO'
+        ,'STATUS'
+        ,'COD'
+        ,'DESC'
+        ,'DT_ENTRADA'
+        ,'DT_VALIDADE'
+        ,'EMB'
+        ,'LASTRO'
+        ,'CAMADA'
+        ,'CAP'
+        ,'TIPO_PK'
+        ,'PL_END'
+        ,'QTDE'
+        ,'ENTRADA'
+        ,'SAIDA'
+        ,'DISP'
+    ]
+    Movimentar = [
+        'COD'
+        ,'DESC'
+        ,'EMBALAGEM'
+        ,'UNID'
+        ,'MOVI'
+        ,'%'
+        ,'%_ACUM'
+        ,'CLASSE'
+    ]
+    Sugestao = [
+        'COD'
+        ,'DESCRIÇÃO'
+        ,'EMBALAGEM'
+        ,'UNID.'
+        ,'DEP'
+        ,'RUA'
+        ,'PREDIO'
+        ,'NIVEL'
+        ,'APTO'
+        ,'MÊS 1'
+        ,'MÊS 2'
+        ,'MÊS 3'
+        ,'TIPO'
+        ,'CAP'
+        ,'1 DIA'
+        ,'COM FATOR'
+        ,'VARIAÇÃO'
+        ,'%'
+    ]
+    pass

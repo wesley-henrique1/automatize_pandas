@@ -1,5 +1,6 @@
-from _settings import Relatorios, Outros, Output
-from monitor_etl import MonitorETL
+from modulos._settings import Relatorios, BaseDados, OutPut
+from modulos._monitor_etl import MonitorETL
+
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -51,8 +52,7 @@ class Cadastro(auxiliar):
     def __init__(self):
         self.Instancia = MonitorETL()
 
-        self.list_time = []
-        self.list_path = [Relatorios.rel_96, Outros.ou_end]
+        self.list_path = [Relatorios._8596, BaseDados.EndFixo]
         self.chekout = [27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
         self.list_div = ['6-PRATELEIRA','5-TERCO (0,46)','4-TERCO (0,56)']
@@ -212,9 +212,9 @@ class Cadastro(auxiliar):
                 "x":         ["x", "x", "x"]
             })
             df_final = df_final.sort_values(by=['RUA', 'PREDIO'], ascending= True)
-            # with pd.ExcelWriter(Output.cadastro) as PL:
-            #     df_final.to_excel(PL, sheet_name= "cadastro", index= False)
-            #     df_amostradinho.to_excel(PL, sheet_name= "demostrativo", index= False)
+            with pd.ExcelWriter(OutPut.Cadastro) as var:
+                df_final.to_excel(var, sheet_name= "cadastro", index= False)
+                df_amostradinho.to_excel(var, sheet_name= "demostrativo", index= False)
 
             self.Instancia.stageTime('Load')
             self.Instancia.conversor(Modulo= "Cadastro")

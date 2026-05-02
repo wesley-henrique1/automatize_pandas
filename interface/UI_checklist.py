@@ -1,4 +1,4 @@
-from modulos._settings import Path_dados
+from modulos._settings import Assets
 from datetime import datetime as dt, timedelta
 import tkinter as tk
 import json
@@ -6,7 +6,7 @@ import json
 class Auxiliar:
     def _json(self):
         try:
-            with open(Path_dados.J_jornada, 'r', encoding= 'utf-8') as jornada:
+            with open(Assets.Jornada, 'r', encoding= 'utf-8') as jornada:
                 dados_brutos = json.load(jornada)
                 dic_json = {int(k): v for k, v in dados_brutos.items()}
         except:
@@ -76,7 +76,7 @@ class Demandas(Auxiliar):
         root.geometry("400x440")
         root.resizable(False, False)
         root.config(bg= self.background)
-        root.iconbitmap(Path_dados.icone_pricipal)
+        root.iconbitmap(Assets.FleshIcon)
 
         self.componentes(root)
         self.Clicaveis()

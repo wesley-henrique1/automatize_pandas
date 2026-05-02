@@ -1,4 +1,5 @@
-from modulos._settings import Directory, Outros, Wms, Relatorios, ColNames
+from modulos._settings import Gestao, Wms, Relatorios, ColNames, OutPut
+# from _settings import Gestao, Wms, Relatorios, ColNames, OutPut
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -103,13 +104,15 @@ class auxiliar:
         return df_copia
 class Acuracidade(auxiliar):
     def __init__(self):
-        self.list_path = [Outros.ou_86, Wms.wms_07_ger,Wms.wms_07_end,Relatorios.rel_96]
+        self.list_path = [Gestao._286, Wms.gerencial07,Wms.endereco07,Relatorios._8596]
+
+        self.pipeline()
 
     def pipeline(self):
         try:
             df_bloq = pd.read_excel(self.list_path[0], usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria'])
-            end_ger = pd.read_csv(self.list_path[1], header= None, names= ColNames.col_ger)  
-            df_end = pd.read_csv(self.list_path[2], header= None, names= ColNames.col_end)
+            end_ger = pd.read_csv(self.list_path[1], header= None, names= ColNames.Gerencial)  
+            df_end = pd.read_csv(self.list_path[2], header= None, names= ColNames.Endereco)
             df_prod = pd.read_excel(self.list_path[3], usecols= ['CODPROD', 'QTUNITCX','QTTOTPAL'])
         except Exception as e:
             self.validar_erro(e, "Extract")
@@ -216,12 +219,9 @@ class Acuracidade(auxiliar):
             self.validar_erro(e, "Transform")
             return False
         try:
-            dic = Directory.dir_acuracidade
-            path_div = os.path.join(dic, "FATO_DIVERGENCIA.xlsx")
-            path_prod = os.path.join(dic, "DIM_PROD.xlsx")
-
-            df.to_excel(path_div, index= False, sheet_name= 'DIVERGENCIA')
-            df_prod.to_excel(path_prod, index= False, sheet_name= 'DIM_PROD')
+            with pd.ExcelWriter(OutPut.Acuracidade) as var:
+                df.to_excel(var, index= False, sheet_name= 'DIVERGENCIA')
+                df_prod.to_excel(var, index= False, sheet_name= 'DIM_PROD')
             return True
         except Exception as e:
             self.validar_erro(e, "Load")
@@ -251,3 +251,5 @@ class Acuracidade(auxiliar):
             self.validar_erro(e, "CARREGAMENTO")
             return False
 
+if __name__ == "__main__":
+    Acuracidade()

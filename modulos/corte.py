@@ -1,4 +1,4 @@
-from modulos._settings import DB_acumulado,  Wms, Directory, ColNames, Output
+from modulos._settings import Wms, BaseDados, ColNames, OutPut
 import datetime as dt
 import pandas as pd
 import glob
@@ -92,23 +92,27 @@ class auxiliares:
         return df_copia
 class Corte(auxiliares):
     def __init__(self):
-        DRIVER = DB_acumulado.drive
-        DB_PATH = DB_acumulado.path_acumulado
-        self.NOME_TABELA = DB_acumulado.db_pedidos
+        DRIVER = BaseDados.drive
+        DB_PATH = BaseDados.path_acumulado
+        self.NOME_TABELA = BaseDados.DBPedidos
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH};")
 
-        self.list_path = [Wms.wms_67]
+        self.list_path = [Wms._1767]
+        self.BaseCorte = BaseDados._8041
+        self.saida = OutPut.Corte
         self.ano = dt.datetime.now().year
 
+        self.pipeline()
+
     def pipeline(self):
-        try: # Extração dos dados nessecario 
-            files_pedidos = glob.glob(os.path.join(Directory.dir_41, '*.xls*'))
+        try:
+            files_pedidos = glob.glob(os.path.join(self.BaseCorte, '*.xls*'))
 
             query_select = f"SELECT {'NOME_ARQUIVO'} FROM {self.NOME_TABELA}"
             names_db = self.cosultar_db(query_select)
             arquivos_processados = set(names_db['NOME_ARQUIVO'].str.strip().tolist())
 
-            df_corte = pd.read_csv(self.list_path[0],header= None, names= ColNames.col_67)
+            df_corte = pd.read_csv(self.list_path[0],header= None, names= ColNames._1767)
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
@@ -191,7 +195,7 @@ class Corte(auxiliares):
                         list_erros.append(name_file)
                         self.validar_erro(e, f"{name_file}: P-leitura")
                     try:
-                        novo_caminho_completo = os.path.join(Directory.dir_41, novo_nome_arquivo)
+                        novo_caminho_completo = os.path.join(self.BaseCorte, novo_nome_arquivo)
                         os.rename(file, novo_caminho_completo)
                         print(f"Sucesso: {name_file} -> {novo_nome_arquivo}")
                     except Exception as e:
@@ -235,7 +239,7 @@ class Corte(auxiliares):
             ex_noite = df_noite.loc[df_noite['data_turno'] == max_ex_noite].copy()
             
 
-            with pd.ExcelWriter(Output.corte) as destino_corte:
+            with pd.ExcelWriter(self.saida) as destino_corte:
                 df_corte.to_excel(destino_corte, sheet_name='extrato', index= False)
                 ex_dia.to_excel(destino_corte, sheet_name= 'ex_dia', index= False)
                 ex_noite.to_excel(destino_corte, sheet_name= 'ex_noite', index= False)
@@ -338,3 +342,6 @@ class Corte(auxiliares):
         except Exception as e:
             self.validar_erro(e, "CARREGAMENTO")
             return False
+
+if __name__ == "__main__":
+    Corte()

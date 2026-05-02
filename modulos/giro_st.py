@@ -1,4 +1,5 @@
-from modulos._settings import ColNames, Relatorios, Outros, Filial, Wms, Output
+from modulos._settings import Relatorios, Gestao, Filial_18, Wms, ColNames, OutPut
+
 import pandas as pd
 import numpy as np
 import datetime as dt
@@ -40,11 +41,11 @@ class Giro_Status(auxiliar):
         self.VIRTUAIS = [0,60, 70, 80, 100, 106, 44]
 
         self.list_path = [
-            Relatorios.rel_96, Outros.ou_86         # Filial 11
-            ,Filial.F8596, Filial.F286              # Filial 18
-            ,Wms.wms_07_end
+            Relatorios._8596, Gestao._286
+            ,Filial_18._8596, Filial_18._286
+            ,Wms.endereco07
         ]
-
+        self.saida = OutPut.GiroStatus
         self.pipeline()
         pass
     def pipeline(self):
@@ -57,7 +58,7 @@ class Giro_Status(auxiliar):
             ]
 
             col_1707 = [5,13]
-            _col_ = ColNames.col_end
+            _col_ = ColNames.Endereco
 
             dados_F11 = pd.read_excel(self.list_path[0], usecols= col_8596)
             aux_286_F11 = pd.read_excel(self.list_path[1], usecols= col_286)
@@ -71,7 +72,6 @@ class Giro_Status(auxiliar):
         except Exception as e:
             self.validar_erro(e, "Extract")
             return False
-
         try:
             try:
                 df_estoque = aux_286_F11.merge(aux_286_F18, on= 'Código', how= 'outer').fillna(0)
@@ -242,9 +242,8 @@ class Giro_Status(auxiliar):
         except Exception as e:
             self.validar_erro(e, "Transform")
             return False
-
         try:
-            with pd.ExcelWriter(Output.Giro_Status) as destino:
+            with pd.ExcelWriter(self.saida) as destino:
                 df_ativos.to_excel(destino, sheet_name= "ATIVOS", index= False)
                 df_FL.to_excel(destino, sheet_name= "FLs", index= False)
                 df_completo.to_excel(destino, sheet_name= "COMPLETO", index= False)

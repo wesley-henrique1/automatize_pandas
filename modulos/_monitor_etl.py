@@ -1,11 +1,11 @@
-from _settings import Path_dados
+from modulos._settings import Assets
 from datetime import datetime as dt
 import json
 import time
 
 class MonitorETL:
     def __init__(self):
-        self.log  = Path_dados.J_LogTime
+        self.log  = Assets.LogTime
         self.__notbook = {
             "Extract": [],
             "Transform": [],

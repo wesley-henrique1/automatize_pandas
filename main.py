@@ -5,13 +5,10 @@ from tkinter import scrolledtext
 
 from modulos import (
     ProcessadorLogica
-    ,Path_dados
+    ,Assets
     ,Abastecimento
     ,Acuracidade
-    ,Contagem_INV
     ,Giro_Status
-    ,Cheio_Vazio
-    ,Os_check
     ,Cadastro
     ,Corte
     ,Mapa_Estoque
@@ -84,7 +81,7 @@ class JanelaPrincipal(auxiliar):
         root.geometry("1005x500")
         root.resizable(False,False)
         root.config(bg= self.background)
-        root.iconbitmap(Path_dados.icone_pricipal)
+        root.iconbitmap(Assets.FleshIcon)
         
         self.estados = {
             "Corte": tk.BooleanVar(value=False)
@@ -108,21 +105,16 @@ class JanelaPrincipal(auxiliar):
             ,"Fefo_Curva": Fefo_curva
 
             ,"Mapa_end": Mapa_Estoque
-            ,"Validar_os": Os_check
             ,"Acuracidade": Acuracidade
             ,"Cadastro": Cadastro
             ,"Giro_estatus": Giro_Status
-            ,"cheio_vazio": Cheio_Vazio
-            ,"Contagem": Contagem_INV
             ,"Abastecimento": Abastecimento
         }    
         self.mapa_relacao = {
             "Relatorio Corte": "Corte",
-            "Relatorio validar O.S": "Validar_os",
             "Relatorio Acuracidade": "Acuracidade",
             "Analitico Cadastro": "Cadastro",
             "Relatorio Giro Status": "Giro_estatus",
-            "Relatorio cheio x vazio": "cheio_vazio",
             "Relatorio de Contagem": "Contagem",
             "Relatorio de Abastecimento": "Abastecimento",
             "FEFO: Abastecimento": "Fefo_abst",
@@ -320,7 +312,7 @@ class JanelaPrincipal(auxiliar):
         janela_info.geometry("400x300")
         janela_info.resizable(False,False)
         janela_info.configure(bg=self.background)
-        janela_info.iconbitmap(Path_dados.icone_pricipal)
+        janela_info.iconbitmap(Assets.FleshIcon)
 
         self.frame_rotina = tk.Frame(
             janela_info
@@ -358,7 +350,7 @@ class JanelaPrincipal(auxiliar):
         janela_info.geometry("1020x500")
         janela_info.resizable(False,True)
         janela_info.configure(bg=self.back_2)
-        janela_info.iconbitmap(Path_dados.icone_corte)
+        janela_info.iconbitmap(Assets.FleshIcon)
         janela_info.attributes("-topmost", True)
 
         self.conteudo_corte = scrolledtext.ScrolledText(
