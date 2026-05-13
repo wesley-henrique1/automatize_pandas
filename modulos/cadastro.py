@@ -138,6 +138,10 @@ class Cadastro(auxiliar):
                 rua_CX = (df_PRODUTO['TIPO_RUA'] == 'CX') & (df_PRODUTO['FATOR'] != 1)
                 cond_rua = [rua_UN, rua_CX]
 
+                RuaGrandeza = (df_PRODUTO['TIPO_1'] == '1 - GRANDEZA') & (df_PRODUTO['RUA'].isin(self.chekout))
+                RuaEmbalado = (df_PRODUTO['TIPO_1'] == '5 - EMBALADO') & (~df_PRODUTO['RUA'].isin(self.chekout))
+                Cond_OS = [RuaGrandeza, RuaEmbalado]
+
                 escolha = ['DIVERGENCIA', 'DIVERGENCIA']
 
                 df_PRODUTO["VAL_CAP"] = np.select(
@@ -155,6 +159,12 @@ class Cadastro(auxiliar):
                     ,escolha
                     ,default= "NORMAL"
                 )
+                df_PRODUTO['VAL_TIPO_OS'] = np.select(
+                    Cond_OS
+                    ,escolha
+                    ,default= 'NORMAL'
+                )
+
                 df_PRODUTO['VAL_CUBAGEM'] = np.where(
                     df_PRODUTO['AREA_LT'] > self.area_pl
                     ,"DIVERGENCIA"
@@ -168,11 +178,6 @@ class Cadastro(auxiliar):
                 df_PRODUTO['VAL_PESO'] = np.where(
                     (df_PRODUTO["GRAMATURA_GR"] >= 1000) & (df_PRODUTO['APTO'] > 200) & (~df_PRODUTO['RUA'].isin([31,32]))
                     ,"ACIMA DA BANDEJA"
-                    ,"NORMAL"
-                )
-                df_PRODUTO['VAL_TIPO_OS'] = np.where(
-                    (df_PRODUTO['TIPO_1'] == '1 - GRANDEZA') & (df_PRODUTO['RUA'].isin(self.chekout))
-                    ,"DIVERGENCIA"
                     ,"NORMAL"
                 )
             except Exception as e:
@@ -248,7 +253,6 @@ class Cadastro(auxiliar):
             return False
 
         pass
-
 
 if __name__ == "__main__":
     Cadastro()

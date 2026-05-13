@@ -67,7 +67,6 @@ class Giro_Status(auxiliar):
             aux_286_F18 = pd.read_excel(self.list_path[3], usecols= col_286)
 
             aux_1707 = pd.read_csv(self.list_path[4], header= None, usecols= col_1707, names=[_col_[5], _col_[13]])
-
             pass
         except Exception as e:
             self.validar_erro(e, "Extract")
@@ -158,8 +157,8 @@ class Giro_Status(auxiliar):
                 return False
 
             try:
-                virtual_prod = dados_F11.loc[(dados_F11['RUA'].isin(self.VIRTUAIS))]
-                dados_F11 = dados_F11.loc[(~dados_F11['RUA'].isin(self.VIRTUAIS))]
+                virtual_prod = dados_F11.loc[(dados_F11['RUA'].isin(self.VIRTUAIS))].copy()
+                dados_F11 = dados_F11.loc[(~dados_F11['RUA'].isin(self.VIRTUAIS))].copy()
 
                 dados_F18 = dados_F18.loc[(dados_F18['QTESTGER'] > 0) & (~dados_F18['CODPROD'].isin(virtual_prod['CODPROD']))].copy()
                 dados_F18 = dados_F18[['CODPROD', 'DTULTSAIDA', 'DTULTENT']]
@@ -175,7 +174,7 @@ class Giro_Status(auxiliar):
                 for col in dt_col:
                     dados_prod[col] = pd.to_datetime(dados_prod[col], dayfirst= True, errors= 'coerce')
 
-                dados_prod = dados_prod.loc[~dados_prod['RUA'].isin(self.VIRTUAIS)]
+                dados_prod = dados_prod.loc[~dados_prod['RUA'].isin(self.VIRTUAIS)].copy()
 
                 dados_prod['DT_SAIDA'] = dados_prod[['DTULTSAIDA_x', 'DTULTSAIDA_y']].max(axis=1)
                 dados_prod['DT_ENTRADA'] = dados_prod[['DTULTENT_x', 'DTULTENT_y']].max(axis=1)
@@ -195,7 +194,8 @@ class Giro_Status(auxiliar):
                 return False
 
             try:
-                grupo_AE = aux_1707.groupby("COD").agg(
+                aux = aux_1707.loc[aux_1707['TIPO_PK'] == 'AE']
+                grupo_AE = aux.groupby("COD").agg(
                     QT_AE = ('TIPO_PK', 'count')
                 ).reset_index()
                 grupo_AE['QT_AE'] = grupo_AE['QT_AE'].astype(int)
@@ -204,9 +204,8 @@ class Giro_Status(auxiliar):
             except Exception as e:
                 self.validar_erro(e, "T_1707")
                 return False
-            pass
 
-            df_completo = dados_prod.merge(df_estoque, on= 'CODPROD', how= 'left')
+            df_completo = dados_prod.merge(df_estoque, on='CODPROD', how='left')
 
             bloq_quest = [
                 (df_completo['TOTAL_BLOQ'] > 0) & (df_completo['DISP'] == 0)
@@ -236,8 +235,8 @@ class Giro_Status(auxiliar):
             df_completo = df_completo.merge(grupo_AE, left_on= 'CODPROD', right_on= "COD", how= 'left').drop(columns='COD')
             df_completo = df_completo.sort_values(by= ['RUA', 'PREDIO', 'APTO'])
 
-            df_ativos = df_completo.loc[df_completo['OBS2'] =="ATIVO"]
-            df_FL = df_completo.loc[df_completo['OBS2'] =="FL"]
+            df_ativos = df_completo.loc[df_completo['OBS2'] =="ATIVO"].copy()
+            df_FL = df_completo.loc[df_completo['OBS2'] =="FL"].copy()
             pass
         except Exception as e:
             self.validar_erro(e, "Transform")
@@ -247,8 +246,6 @@ class Giro_Status(auxiliar):
                 df_ativos.to_excel(destino, sheet_name= "ATIVOS", index= False)
                 df_FL.to_excel(destino, sheet_name= "FLs", index= False)
                 df_completo.to_excel(destino, sheet_name= "COMPLETO", index= False)
-
-
             return True
         except Exception as e:
             self.validar_erro(e, "Load")

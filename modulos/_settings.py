@@ -102,8 +102,8 @@ class OutPut(aux):
     Acuracidade = os.path.join(aux.OutPut, 'BI_Acuracidade.xlsx')
     Abastecimento = os.path.join(aux.OutPut, 'BI_ABASTECIMENTO.xlsx')
     
-    Jupyter_1 = os.path.join(aux.OutPut, 'JUPYTER_1')
-    Jupyter_2 = os.path.join(aux.OutPut, 'JUPYTER_2')
+    Jupyter_1 = os.path.join(aux.OutPut, 'JUPYTER_1.xlsx')
+    Jupyter_2 = os.path.join(aux.OutPut, 'JUPYTER_2.xlsx')
 
     P_Acuracidade = os.path.join(aux.OutPut, 'BI_ACURACIDADE')
 
