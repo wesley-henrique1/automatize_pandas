@@ -6,7 +6,6 @@ from src.mod import Executar
 
 from tkinter import scrolledtext
 from tkinter import messagebox
-import datetime as dt
 import tkinter as tk
 
 
@@ -170,7 +169,7 @@ class JanelaPrincipal(auxiliar):
         )
         self.bt_inv = tk.Button(
             self.automact
-            ,text="Flow_Master"
+            ,text="1731"
             ,cursor="hand2"
             ,relief="solid"
             ,font=("Arial", 10, "bold")
@@ -183,7 +182,7 @@ class JanelaPrincipal(auxiliar):
         )
         self.bt_07 = tk.Button(
             self.automact
-            ,text="Flow_Feeder"
+            ,text="3707"
             ,cursor="hand2"
             ,relief="solid"
             ,font=("Arial", 10, "bold")
@@ -193,6 +192,19 @@ class JanelaPrincipal(auxiliar):
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
             ,command=lambda: FLOW_FEEDER()
+        )
+        self.bt1702 = tk.Button(
+            self.automact
+            ,text="1702"
+            ,cursor="hand2"
+            ,relief="solid"
+            ,font=("Arial", 10, "bold")
+            ,highlightthickness=3
+            
+            ,bg=self.frame_color
+            ,fg=self.borda_color
+            ,highlightbackground=self.borda_color
+            # ,command=lambda: FLOW_FEEDER()
         )
 
         pass
@@ -342,6 +354,7 @@ class JanelaPrincipal(auxiliar):
         self.automact.place(relx=0.01, rely=0.34, relwidth=0.98, relheight=0.65)
         self.bt_inv.place(relx=0.01, rely=0.20, relwidth=0.30, relheight=0.30)
         self.bt_07.place(relx=0.35, rely=0.20, relwidth=0.30, relheight=0.30)
+        self.bt1702.place(relx=0.68, rely=0.20, relwidth=0.30, relheight=0.30)
 
         # QUADRO 3 RETORNOS
         self.parte_3.place(relx= 0.005, rely= 0.32, relwidth= 0.99, relheight= 0.67)

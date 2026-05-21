@@ -1,6 +1,6 @@
 --- DataBase ---
-database/
-output/
+database/*
+output/*
 *.txt
 # --- Python & Cache ---
 __pycache__/
