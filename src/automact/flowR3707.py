@@ -161,7 +161,7 @@ class Auxiliares:
         except Exception as e:
             self.validador.registrar_log(e, "AUX: _automact") 
     pass
-class FLOW_FEEDER(Auxiliares):
+class Flow3707(Auxiliares):
     validador = ValidarErros(fonte="Flow Feeder")
     def __init__(self):
         self.fonte = ("verdana", 9,"bold") 
@@ -296,4 +296,4 @@ class FLOW_FEEDER(Auxiliares):
 
 
 if __name__ == "__main__":
-    FLOW_FEEDER()
+    Flow3707()

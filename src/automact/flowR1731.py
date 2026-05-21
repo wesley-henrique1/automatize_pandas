@@ -140,7 +140,7 @@ class Auxiliar():
 
 
         pass
-class FLOW_MASTER(Auxiliar):
+class Flow1731(Auxiliar):
     validador = ValidarErros(fonte="Flow Mater")
     def __init__(self):
         self.fonte = ("verdana", 9,"bold") 
