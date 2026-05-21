@@ -1,6 +1,4 @@
-from ..lib.settings import Assets
 from ..lib import ValidarErros
-
 import tkinter as tk
 from tkinter import messagebox
 import pyautogui as pag
@@ -9,77 +7,58 @@ import threading
 import time
 from datetime import timedelta
 
-class Auxiliares:
-    def Lg_parar(self):
-        try:
-            self.em_execucao = False  
-            self.CodProd.delete("1.0", tk.END)
-            self.CodEnd.delete("1.0", tk.END)
-            self.logUI.config(text=self.text_logUI)
-            self.btTransferir.config(state="normal")
-        except Exception as e:
-           self.validador.registrar_log(e, "AUX: Lg_parar")
+class Flow3707:
+    validador = ValidarErros(fonte="Flow Feeder")
+    def __init__(self, UI):
+        self.ancora =  UI
+        self._codProd = []
+        self._codEnd = []
 
-        return self.em_execucao    
-    def Lg_transferir(self, listCod, listEnd):
-        self.em_execucao = True
-        list_prod = listCod.get("1.0", tk.END).strip().splitlines()
-        list_end = listEnd.get("1.0", tk.END).strip().splitlines()
+        self.AncoraCodProd = self.ancora.CodProd
+        self.AncoraCodEnd = self.ancora.CodEnd
+        self.AncoraLogUI = self.ancora.logUI
+        self.AncoraBtTransferir = self.btTransferir
 
-        self.btTransferir.config(state="disabled")
-        self.CodProd.delete("1.0", tk.END)
-        self.CodEnd.delete("1.0", tk.END)
-        self.logUI.config(text=self.text_logUI)
+    pass
 
+    def _tratar(self, list_prod, list_end):
         if not list_prod or not list_end:
             messagebox.showerror("Erro", "Uma ou ambas as listas estão vazias!")
             self.Lg_parar() 
             return
-        
-        _codProd = []
-        _codEnd = []
+
         for var in list_prod:
             try:
                 var = int(str(var).strip())
-                _codProd.append(var)
-            except (ValueError, TypeError):
-                mensagem = f"Erro de Formato: O valor '{var}' não é um código válido.\n\nUse apenas números inteiros."
-                messagebox.showwarning("Divergência de Dados", mensagem)   
+                self._codProd.append(var)
+            except Exception as e:
+                self.validador.registrar_log(e, "Logica: ")
                 self.Lg_parar() 
                 return
         for var in list_end:
             try:
                 var = int(str(var).strip())
-                _codEnd.append(var)
-            except (ValueError, TypeError):
-                mensagem = f"Erro de Formato: O valor '{var}' não é um código válido.\n\nUse apenas números inteiros."
-                messagebox.showwarning("Divergência de Dados", mensagem) 
+                self._codEnd.append(var)
+            except Exception as e:
+                self.validador.registrar_log(e, "Logica: ")
                 self.Lg_parar() 
                 return   
 
-        TT_PROD = len(_codProd)
-        TT_end = len(_codEnd)
+        TT_PROD = len(self._codProd)
+        TT_end = len(self._codEnd)
 
         if TT_PROD != TT_end:
             mensagem = f"As listas possuem quantidades diferentes!\n\nProdutos: {TT_PROD}\nEndereços: {TT_end}"
             messagebox.showwarning("Divergência", mensagem)
             self.Lg_parar()
             return
-
-        try:
-            self.CodProd.delete("1.0", tk.END)
-            self.CodEnd.delete("1.0", tk.END)
-            threading.Thread(target= self._automact, args= (_codProd,_codEnd,TT_PROD,)).start()
-        except Exception as e:
-           self.validador.registrar_log(e, "AUX: Lg_transferir")
-
+        return TT_PROD
     def _LogUI(self, fase, barramento, progresso, cod, end):
         MSG = (
             f"{f">> PROGRESSO: {fase} - {barramento} || {progresso}%":<}\n"
             f"{f">> PRODUTO: {cod} | {end}":<}"
         )
-        self.logUI.config(text= MSG)
-
+        self.AncoraLogUI.config(text= MSG)
         pass
     def _automact(self, listCod, listEnd, trava):
         inicio_processo = time.time()
@@ -140,7 +119,7 @@ class Auxiliares:
                     f"{'—'*25}\n"
                     f"Tempo de execução {msg}."
                 )
-                self.btTransferir.config(state="normal")
+                self.AncoraBtTransferir.config(state="normal")
             elif total_bool < total_sku:
                 mensagem = (
                     f"Resumo da Operação\n"
@@ -150,150 +129,46 @@ class Auxiliares:
                     f"Tempo de execução {msg}."
                 )
                 messagebox.showinfo("Finalizado parcialmente", mensagem)
-                self.btTransferir.config(state="normal")
+                self.AncoraBtTransferir.config(state="normal")
             else:
                 messagebox.showerror(
                     "Erro na Transferência", 
                     f"Apenas {total_bool} de {total_sku} itens foram processados.\n"
                     "Verifique os logs para mais detalhes."
                 )
-                self.btTransferir.config(state="normal")
+                self.AncoraBtTransferir.config(state="normal")
         except Exception as e:
-            self.validador.registrar_log(e, "AUX: _automact") 
-    pass
-class Flow3707(Auxiliares):
-    validador = ValidarErros(fonte="Flow Feeder")
-    def __init__(self):
-        self.fonte = ("verdana", 9,"bold") 
-        self.background = "#2F4F4F"
-        self.frame_color = "#F0FFFF"
-        self.borda_color = "#000000"
-        self.back_2 = "#363636"
-        self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
-
-        self.text_logUI = (
-            f"{">> PROGRESSO: 0 - 0 || 100%":<}\n"
-            f"{">> Fase: PRODUTO | DESTINO"}"
-        )
-        self.time_executar = 0.05
-
-        root = tk.Tk()
-        root.title("Flow_Feeder")
-        root.geometry("300x210")
-        root.resizable(False, False)
-        root.config(bg=self.back_2)
-        root.iconbitmap(Assets.IcoEngrenagem)
-        
-        self.componentes(root)
-        self.clicaveis()
-        
-        self.localizar()
-        root.mainloop()
+            self.validador.registrar_log(e, "Logica: _automact") 
         pass
+    
+    def PararProcesso(self):
+        try:
+            self.em_execucao = False  
+            self.AncoraCodProd.delete("1.0", tk.END)
+            self.AncoraCodEnd.delete("1.0", tk.END)
+            self.AncoraLogUI.config(text=self.text_logUI)
+            self.AncoraBtTransferir.config(state="normal")
+        except Exception as e:
+           self.validador.registrar_log(e, "Logica: ")
 
-    def componentes(self, tela):
-        self.tela_Segundaria = tk.Frame(
-            tela
-            ,bg= self.background
-            ,highlightbackground= self.frame_color
-            ,highlightthickness= 3
-        )
-
-        self.text_PROD = tk.Label(
-            self.tela_Segundaria
-            ,text= "Lista Produto:"
-            ,font=("verdana", 10, "bold")
-            ,bg=self.background
-            ,fg=self.frame_color
-            ,anchor= "nw"
-            ,justify="left"
-            ,padx=5
-            ,pady=5
-        )
-        self.text_END = tk.Label(
-            self.tela_Segundaria
-            ,text= "Lista Destino:"
-            ,font=("verdana", 10, "bold")
-            ,bg=self.background
-            ,fg=self.frame_color
-            ,anchor= "nw"
-            ,justify="left"
-            ,padx=5
-            ,pady=5
-        )
-        self.CodProd = tk.Text(
-            self.tela_Segundaria
-            ,font=("Consolas", 10)
-            ,bg=self.frame_color
-            ,fg=self.borda_color
-            ,highlightbackground=self.borda_color
-            ,highlightthickness=2
-            ,padx=10, pady=10
-        )
-        self.CodEnd = tk.Text(
-            self.tela_Segundaria
-            ,font=("Consolas", 10)
-            ,bg=self.frame_color
-            ,fg=self.borda_color
-            ,highlightbackground=self.borda_color
-            ,highlightthickness=2
-            ,padx=10, pady=10
-        )
-        
-        self.logUI = tk.Label(
-            self.tela_Segundaria
-            ,text= self.text_logUI
-            ,font= ("verdana", 10, "bold")
-            ,bg= self.back_2
-            ,fg= self.frame_color
-            ,highlightbackground= self.borda_color
-            ,highlightthickness= 3
-            ,anchor= "nw"
-            ,justify="left"
-            ,padx=5
-            ,pady=5
-        )
-        
+        return self.em_execucao    
         pass
-    def clicaveis(self):
-        self.btTransferir = tk.Button(
-            self.tela_Segundaria
-            ,text= "Transferir"
-            ,cursor="hand2"
-            ,relief="solid"
-            ,font=("Arial", 10, "bold")
-            ,highlightthickness=3
-            ,bg=self.frame_color
-            ,fg=self.borda_color
-            ,highlightbackground=self.borda_color
-            ,command=lambda: self.Lg_transferir(listCod= self.CodProd, listEnd= self.CodEnd)
-        )
-        self.btParar = tk.Button(
-            self.tela_Segundaria
-            ,text= "Parar"
-            ,cursor="hand2"
-            ,relief="solid"
-            ,font=("Arial", 10, "bold")
-            ,highlightthickness=3
-            ,bg=self.frame_color
-            ,fg=self.borda_color
-            ,highlightbackground=self.borda_color
-            ,command=lambda:self.Lg_parar()
-        )
-        pass
-    def localizar(self):
-        self.tela_Segundaria.place(relx= 0.02, rely= 0.01, relwidth= 0.96, relheight= 0.98)
+    def IniciarProcesso(self, listCod, listEnd):
+        self.em_execucao = True
+        list_prod = listCod.get("1.0", tk.END).strip().splitlines()
+        list_end = listEnd.get("1.0", tk.END).strip().splitlines()
+
+        self.AncoraBtTransferir.config(state="disabled")
+        self.AncoraCodProd.delete("1.0", tk.END)
+        self.AncoraCodEnd.delete("1.0", tk.END)
+        self.AncoraLogUI.config(text=self.text_logUI)
+
+        TT_PROD = self._tratar(list_prod= list_prod, list_end= list_end)
         
-        self.text_PROD.place(relx= 0.02, rely= 0.01, relwidth= 0.40, relheight= 0.20)
-        self.text_END.place(relx= 0.02, rely= 0.24, relwidth= 0.40, relheight= 0.20)
-        self.CodProd.place(relx= 0.42, rely= 0.01, relwidth= 0.55, relheight= 0.20)
-        self.CodEnd.place(relx= 0.42, rely= 0.24, relwidth= 0.55, relheight= 0.20)
+        try:
+            self.AncoraCodProd.delete("1.0", tk.END)
+            self.AncoraCodEnd.delete("1.0", tk.END)
+            threading.Thread(target= self._automact, args= (self._codProd,self._codEnd,TT_PROD,)).start()
+        except Exception as e:
+           self.validador.registrar_log(e, "Logica: IniciarProcesso")
 
-        self.logUI.place(relx= 0.02, rely= 0.46, relwidth= 0.95, relheight= 0.25)
-
-        self.btTransferir.place(relx=0.19, rely=0.80, relwidth=0.30, relheight=0.15)
-        self.btParar.place(relx=0.51, rely=0.80, relwidth=0.30, relheight=0.15)
-
-
-if __name__ == "__main__":
-    Flow3707()
