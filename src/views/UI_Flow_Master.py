@@ -161,7 +161,7 @@ class FLOW_MASTER(Auxiliar):
         root.geometry("300x210")
         root.resizable(False, False)
         root.config(bg=self.back_2)
-        root.iconbitmap(Assets.FleshIcon)
+        root.iconbitmap(Assets.IcoEngrenagem)
 
         self.componentes(root)
         self.widgets_clicaveis()

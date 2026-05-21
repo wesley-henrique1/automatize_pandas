@@ -79,7 +79,7 @@ class Demandas(Auxiliar):
         root.geometry("400x440")
         root.resizable(False, False)
         root.config(bg= self.background)
-        root.iconbitmap(Assets.FleshIcon)
+        root.iconbitmap(Assets.IcoEngrenagem)
 
         self.componentes(root)
         self.Clicaveis()
