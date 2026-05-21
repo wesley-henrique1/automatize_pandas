@@ -1,4 +1,5 @@
 from ..lib.settings import Assets
+from ..automact import Flow1731
 from tkinter import messagebox
 import tkinter as tk
 
@@ -24,22 +25,14 @@ class Ui1731:
         root.config(bg=self.back_2)
         root.iconbitmap(Assets.IcoEngrenagem)
 
+
         self.componentes(root)
         self.widgets_clicaveis()
         self.localizador()
 
+        self.ancora = Flow1731(self)
         root.mainloop() 
     
-        pass
-    def acao_iniciar(self):
-        self.robo = Auxiliar(self.entry_cod)
-        self.robo.iniciar()
-
-        pass
-    def acao_parar(self):
-        if self.robo is not None:
-            self.robo.parar()
-            messagebox.showwarning("Aviso", "Automação interrompida!")
         pass
 
     def componentes(self, janela):
@@ -85,7 +78,7 @@ class Ui1731:
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            ,command=lambda:self.Iniciar_processo(self.entry_cod)
+            ,command=lambda:self.ancora.Iniciar_processo(self.entry_cod)
         )
         self.bt_parar = tk.Button(
             self.frame_fundo

@@ -3,28 +3,41 @@ import pyperclip as pc
 import threading
 import time
 
-from ..lib.settings import Assets
 from ..lib import ValidarErros
 
 from tkinter import messagebox
 import tkinter as tk
 
 class Auxiliar():    
-    def Parar_Processo(self):
-        self.em_execucao = False
 
+        pass
+class Flow1731(Auxiliar):
+    validador = ValidarErros(fonte="Flow Mater")
+    def __init__(self, UI):        
+        self.UImodulo = UI
+
+        self.time_executar = 0.01
+
+        self.ancoraIniciar = self.UImodulo.bt_iniciar
+        self.ancoraContador = self.UImodulo.contador
+        self.ancoraEntrada = self.UImodulo.entry_cod
+        
+        pass
+    
+    def PararProcesso(self):
+        self.em_execucao = False
         try:
-            self.bt_iniciar.config(state="normal")
-            self.entry_cod.delete("1.0", tk.END)
-            self.contador.config(text= self.TextLog)
+            self.ancoraIniciar.config(state="normal")
+            self.ancoraEntrada.delete("1.0", tk.END)
+            self.ancoraContador.config(text= self.TextLog)
         except Exception as e:
-           self.validador.registrar_log(e, "AUX: Parar_Processo") 
+           self.validador.registrar_log(e, "logic: PararProcesso") 
 
         pass
     def Iniciar_processo(self, _listas):
         try:
             self.em_execucao = True
-            self.bt_iniciar.config(state="disabled")
+            self.ancoraIniciar.config(state="disabled")
             _codProd = []
 
             _lista = _listas.get("1.0", tk.END).strip().splitlines()
@@ -32,7 +45,7 @@ class Auxiliar():
 
             if not _lista:
                 messagebox.showerror("Aviso", "Lista esta vazia, favor informar os codigos")
-                self.Parar_Processo()
+                self.PararProcesso()
                 return
             for var in _lista:
                 try:
@@ -41,16 +54,15 @@ class Auxiliar():
                 except (ValueError, TypeError):
                     mensagem = f"Erro de Formato: O valor '{var}' não é um código válido.\n\nUse apenas números inteiros."
                     messagebox.showwarning("Divergência de Dados", mensagem)   
-                    self.Parar_Processo()
+                    self.PararProcesso()
                     return
 
             self.em_execucao = True
-            self.entry_cod.delete("1.0", tk.END)
+            self.ancoraEntrada.delete("1.0", tk.END)
             threading.Thread(target= self._automact, args= (_codProd,contagem,), daemon= True).start()
         except Exception as e:
-           self.validador.registrar_log(e, "AUX: Iniciar_processo") 
+           self.validador.registrar_log(e, "logic: IniciarProcesso") 
 
-        pass
     def _automact(self,lista_sku, maximo):
         inicio_processo = time.time()
 
@@ -68,7 +80,7 @@ class Auxiliar():
                 f"{f">> PROGRESSO: {etapa} - {maximo} || {progresso_anterior}%":<}\n"
                 f"{f">> PRODUTO: {SKU}":<}"
             )
-            self.contador.config(text= MSG)
+            self.ancoraContador.config(text= MSG)
 
             pc.copy(SKU)
             pag.hotkey("ctrl", "v")
@@ -97,7 +109,7 @@ class Auxiliar():
                 f"{f">> PROGRESSO: {etapa +1} - {maximo} || {progresso_atual}%":<}\n"
                 f"{f">> PRODUTO: {SKU}":<}"
             )
-            self.contador.config(text= MSG)
+            self.ancoraContador.config(text= MSG)
 
             lista_bool.append(SKU)
         
@@ -119,7 +131,7 @@ class Auxiliar():
                     f"{'—'*25}\n"
                     f"Tempo de execução {msg}."
                 )
-                self.bt_iniciar.config(state="normal")
+                self.ancoraIniciar.config(state="normal")
         elif total_bool < total_sku:
             mensagem = (
                 f"Resumo da Operação\n"
@@ -129,125 +141,13 @@ class Auxiliar():
                 f"Tempo de execução {msg}."
             )
             messagebox.showinfo("Finalizado parcialmente", mensagem)
-            self.bt_iniciar.config(state="normal")
+            self.ancoraIniciar.config(state="normal")
         else:
             messagebox.showerror(
                 "Erro na Transferência", 
                 f"Apenas {total_bool} de {total_sku} itens foram processados.\n"
                 "Verifique os logs para mais detalhes."
             )
-            self.bt_iniciar.config(state="normal")
+            self.ancoraIniciar.config(state="normal")
 
 
-        pass
-class Flow1731(Auxiliar):
-    validador = ValidarErros(fonte="Flow Mater")
-    def __init__(self):
-        self.fonte = ("verdana", 9,"bold") 
-        self.background = "#2F4F4F"
-        self.frame_color = "#F0FFFF"
-        self.borda_color = "#000000"
-        self.back_2 = "#363636"
-        self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
-        
-        self.time_executar = 0.05
-        self.TextLog = (
-            f"{">> PROGRESSO: 0 - 0 || 100%":<}\n"
-            f"{">> PRODUTO: ______":<}"
-        )
-
-        root = tk.Tk()
-        root.title("Flow_Master")
-        root.geometry("300x210")
-        root.resizable(False, False)
-        root.config(bg=self.back_2)
-        root.iconbitmap(Assets.IcoEngrenagem)
-
-        self.componentes(root)
-        self.widgets_clicaveis()
-        self.localizador()
-
-        root.mainloop() 
-    
-        pass
-    def acao_iniciar(self):
-        self.robo = Auxiliar(self.entry_cod)
-        self.robo.iniciar()
-
-        pass
-    def acao_parar(self):
-        if self.robo is not None:
-            self.robo.parar()
-            messagebox.showwarning("Aviso", "Automação interrompida!")
-        pass
-
-    def componentes(self, janela):
-        self.frame_fundo = tk.Frame(
-            janela
-            ,bg= self.background
-            ,highlightbackground= self.frame_color
-            ,highlightthickness= 3
-        )
-        self.entry_cod = tk.Text(
-            self.frame_fundo
-            ,font=("Consolas", 10)
-            ,bg=self.frame_color
-            ,fg=self.borda_color
-            ,highlightbackground=self.borda_color
-            ,highlightthickness=2
-            ,padx=10, pady=10
-        )
-        self.contador = tk.Label(
-            self.frame_fundo
-            ,text= self.TextLog
-            ,font= ("verdana", 10, "bold")
-            ,bg= self.back_2
-            ,fg= self.frame_color
-            ,highlightbackground= self.borda_color
-            ,highlightthickness= 3
-            ,anchor= "nw"
-            ,justify="left"
-            ,padx=5
-            ,pady=5
-        )
-        
-        pass
-    def widgets_clicaveis(self): 
-        self.bt_iniciar = tk.Button(
-            self.frame_fundo
-            ,text="INICIAR"
-            ,cursor="hand2"
-            ,relief="solid"
-            ,font=("Arial", 10, "bold")
-            ,highlightthickness=3
-            
-            ,bg=self.frame_color
-            ,fg=self.borda_color
-            ,highlightbackground=self.borda_color
-            ,command=lambda:self.Iniciar_processo(self.entry_cod)
-        )
-        self.bt_parar = tk.Button(
-            self.frame_fundo
-            ,text="PARAR"
-            ,cursor="hand2"
-            ,relief="solid"
-            ,font=("Arial", 10, "bold")
-            ,highlightthickness=3
-            
-            ,bg=self.frame_color
-            ,fg=self.borda_color
-            ,highlightbackground=self.borda_color
-            ,command=lambda: self.Parar_Processo()
-        )
-
-        pass   
-    def localizador(self):
-        self.frame_fundo.place(relx= 0.02, rely= 0.01, relwidth= 0.96, relheight= 0.98)
-
-        self.entry_cod.place(relx= 0.01, rely= 0.01, relwidth= 0.98, relheight= 0.20)
-        self.contador.place(relx= 0.01, rely= 0.32, relwidth= 0.98, relheight= 0.40)
-
-        self.bt_iniciar.place(relx= 0.01, rely= 0.78, relwidth= 0.48, relheight= 0.20)
-        self.bt_parar.place(relx= 0.51, rely= 0.78, relwidth= 0.48, relheight= 0.20)
-
-        pass

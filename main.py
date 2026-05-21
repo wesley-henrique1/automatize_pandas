@@ -1,5 +1,8 @@
 from src.lib.settings import Assets
-from src import Demandas, Flow1731, Flow3707, Executar, ProcessadorLogica, ValidarErros
+from src.views import Demandas, Ui1731
+from src.mod import Executar
+from src.lib import ProcessadorLogica, ValidarErros
+from src.automact import Flow3707
 
 from tkinter import scrolledtext, messagebox
 import tkinter as tk
@@ -174,7 +177,7 @@ class JanelaPrincipal(auxiliar):
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            ,command=lambda: Flow1731()
+            ,command=lambda: Ui1731()
         )
         self.bt_07 = tk.Button(
             self.automact
