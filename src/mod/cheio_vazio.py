@@ -1,5 +1,6 @@
-from modulos._settings import Directory, DB_acumulado
-import datetime as dt
+from ..lib.settings import BaseDados, Gestao
+from ..lib import ValidarErros
+
 import pandas as pd
 import glob
 import os
@@ -8,33 +9,6 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
 class auxiliar:
-    def validar_erro(self, e, etapa):
-        largura = 64
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: ch_vz.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
     def cosultar_db(self, consulta):
         try:
             connection_url = URL.create(
@@ -45,7 +19,7 @@ class auxiliar:
             db_dados = pd.read_sql(text(consulta), self.engine)
             return db_dados
         except Exception as e:
-            self.validar_erro(e, "Consulta_banco_dados")
+            self.validador.registrar_log(e, "Consulta_banco_dados")
             return pd.DataFrame()
     def atualizar(self, df, tabela):
         try:            
@@ -57,15 +31,16 @@ class auxiliar:
                 ,chunksize=100
             )
         except Exception as e:
-            self.validar_erro(e, f"Load_{tabela}")
+            self.validador.registrar_log(e, f"Load_{tabela}")
             return False
-class Cheio_Vazio(auxiliar):
+class CheioVazio(auxiliar):
+    validador = ValidarErros(fonte="CheioVazio")
     def __init__(self):
-        DRIVER = DB_acumulado.drive
-        DB_PATH = DB_acumulado.path_acumulado
-        self.NOME_TABELA = DB_acumulado.tb_vz_ch
+        DRIVER = BaseDados.drive
+        DB_PATH = BaseDados.path_acumulado
+        self.NOME_TABELA = BaseDados.DBVzCh
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH };")
-        self.list_dados = [Directory.dir_cheio_vazio]
+        self.list_dados = [Gestao.CheioVazio]
 
     def pipeline(self):
         try:  # EXTRAÇÃO DOS DADOS
@@ -79,7 +54,7 @@ class Cheio_Vazio(auxiliar):
             list_files_db = []
             list_erros = []
         except Exception as e:
-            self.validar_erro(e, "Extract")
+            self.validador.registrar_log(e, "Extract")
             return False
         try: # TRATAMENTO DOS DADOS
             for file in pasta_files:
@@ -95,7 +70,7 @@ class Cheio_Vazio(auxiliar):
                     list_processado.append(df_TEMPORARIO)
                 except Exception as e:
                     list_erros.append(NAME_FILE)
-                    self.validar_erro(e, f"\n{NAME_FILE} - consolidação")
+                    self.validador.registrar_log(e, f"\n{NAME_FILE} - consolidação")
             if not list_processado:
                 self.qt_files = len(list_processado)
                 self.qt_erros = len(list_erros)
@@ -115,7 +90,7 @@ class Cheio_Vazio(auxiliar):
                 try:
                     df_consolidado[col] = df_consolidado[col].fillna(0).astype(int)
                 except Exception as e:
-                    self.validar_erro(e, f"{col} - tratamento_int")
+                    self.validador.registrar_log(e, f"{col} - tratamento_int")
 
             self.atualizar(df_consolidado, self.NOME_TABELA)
             self.qt_files = len(list_processado)
@@ -123,7 +98,7 @@ class Cheio_Vazio(auxiliar):
             self.qtde = len(list_files_db)
             return True
         except Exception as e:
-            self.validar_erro(e, "Transform")
+            self.validador.registrar_log(e, "Transform")
             return False
     def carregamento(self):
         lista_de_logs = []
@@ -137,5 +112,5 @@ class Cheio_Vazio(auxiliar):
             }
             return lista_de_logs, dic_retorno
         except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
+            self.validador.registrar_log(e, "CARREGAMENTO")
             return False

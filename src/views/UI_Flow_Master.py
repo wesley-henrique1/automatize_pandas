@@ -3,42 +3,13 @@ import pyperclip as pc
 import threading
 import time
 
-from modulos._settings import Assets
+from ..lib.settings import Assets
+from ..lib import ValidarErros
+
 from tkinter import messagebox
-import datetime as dt
 import tkinter as tk
 
-class Auxiliar():
-    def validar_erro(self, e, etapa):
-        largura = 78
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: Flow_Master.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-        try:
-            messagebox.showwarning(
-                "Aviso de Interrupção", 
-                "Ocorreram erros durante o processamento.\n\n"
-                "Consulte o arquivo 'log_erros.txt' para detalhes técnicos."
-            ) 
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
-    
+class Auxiliar():    
     def Parar_Processo(self):
         self.em_execucao = False
 
@@ -47,7 +18,7 @@ class Auxiliar():
             self.entry_cod.delete("1.0", tk.END)
             self.contador.config(text= self.TextLog)
         except Exception as e:
-            self.validar_erro(e, "AUX: Parar_Processo") 
+           self.validador.registrar_log(e, "AUX: Parar_Processo") 
 
         pass
     def Iniciar_processo(self, _listas):
@@ -77,7 +48,7 @@ class Auxiliar():
             self.entry_cod.delete("1.0", tk.END)
             threading.Thread(target= self._automact, args= (_codProd,contagem,), daemon= True).start()
         except Exception as e:
-            self.validar_erro(e, "AUX: Iniciar_processo") 
+           self.validador.registrar_log(e, "AUX: Iniciar_processo") 
 
         pass
     def _automact(self,lista_sku, maximo):
@@ -170,6 +141,7 @@ class Auxiliar():
 
         pass
 class FLOW_MASTER(Auxiliar):
+    validador = ValidarErros(fonte="Flow Mater")
     def __init__(self):
         self.fonte = ("verdana", 9,"bold") 
         self.background = "#2F4F4F"

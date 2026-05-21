@@ -1,0 +1,80 @@
+{
+    "_AbastecimentoKeys": {
+        "_chave": "abstKeys",
+        "_Nomeclatura": "Relatorio de Abastecimento",
+        "_Modulo": "abastecimento",
+        "_classes": "Abastecimento",
+        "_estado": "true"
+    },
+    "_AcuracidadeKeys": {
+        "_chave": "AcuracidadeKeys",
+        "_Nomeclatura": "Relatorio Acuracidade",
+        "_Modulo": "acuracidade",
+        "_classes": "Acuracidade",
+        "_estado": "true"
+    },
+    "_CadastroKeys": {
+        "_chave": "CadastroKeys",
+        "_Nomeclatura": "Analitico Cadastro",
+        "_Modulo": "cadastro",
+        "_classes": "Cadastro",
+        "_estado": "true"
+
+    },
+    "_CheioVazioKeys": {
+        "_chave": "CheioVazioKeys",
+        "_Nomeclatura": "Analitico Cheio x Vazio",
+        "_Modulo": "cheio_vazio",
+        "_classes": "CheioVazio",
+        "_estado": "false"
+    },
+    "_ContagemINVKeys": {
+        "_chave": "ContagemINVKeys",
+        "_Nomeclatura": "Analitico Inventarios",
+        "_Modulo": "contagem",
+        "_classes": "ContagemINV",
+        "_estado": "false"
+    },
+    "_CorteKeys":{
+        "_chave": "CorteKeys",
+        "_Nomeclatura": "Analitico Cortes",
+        "_Modulo": "corte",
+        "_classes": "Corte",
+        "_estado": "true"
+    },
+    "_FefoAbstKeys":{
+        "_chave": "FefoAbstKeys",
+        "_Nomeclatura": "FEFO: Abastecimento",
+        "_Modulo": "fefo",
+        "_classes": "FefoAbst",
+        "_estado": "true"
+    },
+    "_FefoABCKeys": {
+        "_chave": "FefoABCKeys",
+        "_Nomeclatura": "FEFO: Curva ABC",
+        "_Modulo": "fefo",
+        "_classes": "FefoCurva",
+        "_estado": "true"
+    },
+    "_GiroEstoqueKeys": {
+        "_chave": "GiroEstoqueKeys",
+        "_Nomeclatura": "Analitico Giro Estoque",
+        "_Modulo": "giro_estoque",
+        "_classes": "GiroEstoque",
+        "_estado": "true"
+    },
+    "_MapaEstoqueKeys": {
+        "_chave": "MapaEstoqueKeys",
+        "_Nomeclatura": "Mapeamento dos Aéreos",
+        "_Modulo": "mapa_estoque",
+        "_classes": "MapaEstoque",
+        "_estado": "true"
+    },
+    "_OSCheckKeys": {
+        "_chave": "OSCheckKeys",
+        "_Nomeclatura": "Analitico O.S",
+        "_Modulo": "os_check",
+        "_classes": "OSCheck",
+        "_estado": "false"
+    }
+}

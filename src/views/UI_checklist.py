@@ -1,4 +1,6 @@
-from modulos._settings import Assets
+from ..lib.settings import Assets
+from ..lib import ValidarErros
+
 from datetime import datetime as dt, timedelta
 import tkinter as tk
 import json
@@ -9,8 +11,8 @@ class Auxiliar:
             with open(Assets.Jornada, 'r', encoding= 'utf-8') as jornada:
                 dados_brutos = json.load(jornada)
                 dic_json = {int(k): v for k, v in dados_brutos.items()}
-        except:
-            print("erro", "\narquivo não encotrado")
+        except Exception as e:
+            self.validador.registrar_log(e, "json")
             dic_json = {}
         return dic_json
     def atualizar_interface(self):
@@ -48,6 +50,7 @@ class Auxiliar:
         
     pass
 class Demandas(Auxiliar):
+    validador = ValidarErros(fonte="Demandas")
     def __init__(self):
         self.DEMANDAS_SEMANAIS = self._json()
         self.dias_nome = {

@@ -1,5 +1,6 @@
-from modulos._settings import Directory, DB_acumulado
-import datetime as dt
+from ..lib.settings import BaseDados, Gestao
+from ..lib import ValidarErros
+
 import pandas as pd
 import glob
 import os 
@@ -7,34 +8,7 @@ import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
-class auxiliares:
-    def validar_erro(self, e, etapa):
-        largura = 64
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: cont_prod.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
+class __aux:
     def cosultar_db(self, consulta):
         try:
             connection_url = URL.create(
@@ -45,7 +19,7 @@ class auxiliares:
             db_dados = pd.read_sql(text(consulta), self.engine)
             return db_dados
         except Exception as e:
-            self.validar_erro(e, "Consulta_banco_dados")
+            self.validador.registrar_log(e, "Consulta_banco_dados")
             return pd.DataFrame()
     def atualizar(self, df, tabela):
         try:            
@@ -57,19 +31,20 @@ class auxiliares:
                 ,chunksize=100
             )
         except Exception as e:
-            self.validar_erro(e, f"Load_{tabela}")
+            self.validador.registrar_log(e, f"Load_{tabela}")
             return False
-class Contagem_INV(auxiliares):
+class ContagemINV(__aux):
+    validador = ValidarErros(fonte="ContagemINV")
     def __init__(self):
         super().__init__()
-        DRIVER = DB_acumulado.drive
-        DB_PATH = DB_acumulado.path_acumulado
+        DRIVER = Gestao.drive
+        DB_PATH = BaseDados.path_acumulado
 
-        self.TABELA_PROD = DB_acumulado.db_prod
-        self.TABELA_CONT = DB_acumulado.db_cont
+        self.TABELA_PROD = BaseDados.DBProd
+        self.TABELA_CONT = BaseDados.DBCont
 
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH};")
-        self.list_direct = [Directory.dir_PROD, Directory.dir_CONT]
+        self.list_direct = [Gestao.dir_PROD, Gestao.invCont]
 
     def pipeline(self):
         try:
@@ -83,7 +58,7 @@ class Contagem_INV(auxiliares):
             dados_cont = set(db_cont['COD_INV'].tolist())
             msg_db = []
         except Exception as e:
-            self.validar_erro(e, "Extract")
+            self.validador.registrar_log(e, "Extract")
             return False
         
         try:
@@ -101,7 +76,7 @@ class Contagem_INV(auxiliares):
                         ficante_df = pd.read_excel(file, header= 1, usecols= ["Código", "Descrição", "Rua", "Inventário"])
                     except Exception as e:
                         erros_prod.append(nome_file)
-                        self.validar_erro(e, nome_file)
+                        self.validador.registrar_log(e, nome_file)
                         continue
 
                     ficante_df = ficante_df.rename(columns={
@@ -125,7 +100,7 @@ class Contagem_INV(auxiliares):
                     }
                     msg_db.append(retorno_bd)
             except Exception as e:
-                self.validar_erro(e, "T-INV_PROD")
+                self.validador.registrar_log(e, "T-INV_PROD")
             try:
                 BOOL_CONT = False
                 listagem_cont = []
@@ -140,7 +115,7 @@ class Contagem_INV(auxiliares):
                         cod_limpo = int((partes[0]).strip())
                         num_contagem = int(partes[1].strip())
                     except Exception as e:
-                        self.validar_erro(e, f"T-INV_CONT:{file}")
+                        self.validador.registrar_log(e, f"T-INV_CONT:{file}")
 
                     if cod_limpo in dados_cont:
                         continue
@@ -162,7 +137,7 @@ class Contagem_INV(auxiliares):
                         listagem_cont.append(df_analitico)
                     except Exception as e:
                         erros_cont.append(nome_file)
-                        self.validar_erro(e, nome_file)
+                        self.validador.registrar_log(e, nome_file)
                         continue
 
                 if listagem_cont:
@@ -186,9 +161,9 @@ class Contagem_INV(auxiliares):
                     }
                     msg_db.append(retorno_bd)
             except Exception as e:
-                self.validar_erro(e, "T-INV_CONT")
+                self.validador.registrar_log(e, "T-INV_CONT")
         except Exception as e:
-            self.validar_erro(e, "Transform")
+            self.validador.registrar_log(e, "Transform")
             return False
         
         try:
@@ -212,7 +187,7 @@ class Contagem_INV(auxiliares):
             }
             return True
         except Exception as e:
-            self.validar_erro(e, "Load")
+            self.validador.registrar_log(e, "Load")
             return False
     def carregamento(self):
         lista_de_logs = []
@@ -222,6 +197,6 @@ class Contagem_INV(auxiliares):
             dic_retorno.append(self.dic_count)
             return lista_de_logs, dic_retorno
         except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
+            self.validador.registrar_log(e, "CARREGAMENTO")
             return False
 

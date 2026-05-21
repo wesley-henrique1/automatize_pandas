@@ -1,8 +1,10 @@
 from tkinter import messagebox
-import datetime as dt
+from .valerros import ValidarErros
+
 import threading
 
 class ProcessadorLogica:
+    validador = ValidarErros(fonte="main_logica")
     def __init__(self, UI):
         self.mainUI = UI
         self._widget_ancora = self.mainUI.retorno
@@ -50,7 +52,6 @@ class ProcessadorLogica:
 
         for i, nome in enumerate(argumento):
             try:
-                print("teste de passagem")
 
                 progresso_anterior = (i / total_scripts) * 100
                 txt_progresso = f"PROGRESSO >> {progresso_anterior:.0f}% -> {nome} || {i}/{total_scripts} OPERAÇÃO"
@@ -59,20 +60,14 @@ class ProcessadorLogica:
                 classe_do_script = self.mainUI.scripts_map[nome]
                 instancia = classe_do_script()
 
-                print("trageto instancia")
-
-                if nome == "Abastecimento":
+                if nome == "abstKeys":
                     status_pipeline, log_data = instancia.pipeline() 
                 else:
                     status_pipeline = instancia.pipeline()
 
-                    print("trageto pipeline")
-
                 log_arquivo, log_db = instancia.carregamento()
                 
-                print("trageto carregamento")
-
-                if nome == "Corte" and status_pipeline is not False:
+                if nome == "CorteKeys" and status_pipeline is not False:
                     msg_corte = instancia.Log_Retorno()
                     dic_log[nome] = "Executado"
                 else:
@@ -89,7 +84,7 @@ class ProcessadorLogica:
 
             except Exception as e:
                 dic_log[nome] = "Falha Crítica"
-                self.validar_erro(e, f"Módulo: {nome}")
+                self.validador.registrar_log(e, f"Módulo: {nome}")
                 self._executar_na_main_thread(self.mainUI._exibir_mensagem_status, " >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
 
         self._processar_finalizacao(lista_de_logs, lista_de_file, dic_log, log_data, msg_corte)
@@ -112,7 +107,7 @@ class ProcessadorLogica:
 
             self._widget_ancora.after(300, lambda: self._alterar_estado_botoes("normal"))
         except Exception as e:
-            self.validar_erro(e, "TASK_RETORNO")
+            self.validador.registrar_log(e, "TASK_RETORNO")
         
         pass
     def atualizar_log(self, dados_arquivos, data_periodo):
@@ -124,18 +119,18 @@ class ProcessadorLogica:
                 return
             
             if dados_validos:
-                conteudo = f"{'ID':^3} | {'ARQUIVO':^45} | {'DATA':^10} | {'HORA':^8}\n"
-                conteudo += f"{'-' * 75}\n"
+                conteudo = f"{'ID':^3} | {'ARQUIVO':^40} | {'DATA':^10} | {'HORA':^8}\n"
+                conteudo += f"{'-' * 70}\n"
 
                 for item in dados_validos:
                     nome_arq = str(item.get('ARQUIVO', 'DESCONHECIDO'))
-                    nome_arq = nome_arq[:42] + "..." if len(nome_arq) > 41 else nome_arq
+                    nome_arq = nome_arq[:37] + "..." if len(nome_arq) > 37 else nome_arq
                     
                     id_log = item.get('CONTADOR', 0)
                     date = item.get('DATA', '--/--/----')
                     hrs = item.get('HORAS', '--:--')
                     
-                    conteudo += f"{id_log:03d} | {nome_arq:<45} | {date:<10} | {hrs:<8}\n"
+                    conteudo += f"{id_log:03d} | {nome_arq:<40} | {date:<10} | {hrs:<8}\n"
 
                 self._inserir_texto_no_widget(self.mainUI.retorno, conteudo, limpar=True)
 
@@ -144,7 +139,7 @@ class ProcessadorLogica:
                 self._inserir_texto_no_widget(self.mainUI.retorno, conteudo_dt, limpar=False)
 
         except Exception as e:
-            self.validar_erro(e, "Atualizar LOG")
+            self.validador.registrar_log(e, "Atualizar LOG")
             self.mainUI._exibir_mensagem_status(" >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
         
         pass
@@ -166,7 +161,7 @@ class ProcessadorLogica:
 
             self._inserir_texto_no_widget(self.mainUI.retorno_db, conteudo_log, limpar=True)
         except Exception as e:
-            self.validar_erro(e, "LOG-ERRO")
+            self.validador.registrar_log(e, "LOG-ERRO")
         
         pass
     def _inserir_texto_no_widget(self, widget, conteudo, limpar=True):
@@ -178,29 +173,3 @@ class ProcessadorLogica:
         widget.see("end")
         
         pass
-    def validar_erro(self, e, etapa):
-        largura = 78
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: _logic_UI.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")

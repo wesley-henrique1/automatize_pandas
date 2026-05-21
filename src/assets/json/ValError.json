@@ -1,0 +1,19 @@
+{
+    "PermissionError": "O arquivo está aberto por outro programa (como o Excel) ou você não tem permissão para acessá-lo. Feche o arquivo e tente novamente.",
+    "FileNotFoundError": "O arquivo de origem não foi encontrado no caminho especificado. Verifique se ele está na pasta correta.",
+    "EmptyDataError": "O arquivo encontrado está completamente vazio. Verifique a origem dos dados.",
+    "BadZipFile": "O arquivo Excel parece estar corrompido ou não foi baixado completamente.",
+    "KeyError": "Uma ou mais colunas obrigatórias não foram encontradas no arquivo de origem.",
+    "TypeError": "Incompatibilidade no tipo de dado detectada durante o processamento.",
+    "ValueError": "O formato de algum dado (como data ou número) está inválido ou fora do padrão esperado.",
+    "IndexError": "Tentativa de acessar uma linha ou coluna que não existe na planilha ou base de dados.",
+    "OperationalError": "Não foi possível conectar ao banco de dados. Verifique a rede ou se o servidor está ativo.",
+    "ProgrammingError": "Erro interno na estrutura da query SQL ou a tabela/coluna informada não existe.",
+    "IntegrityError": "Falha de integridade: tentativa de inserir um registro duplicado ou nulo onde não é permitido.",
+    "TclError": "Erro interno de renderização ou comportamento da interface gráfica.",
+    "NameError": "Uma variável, componente ou função interna foi chamada mas não foi definida no sistema.",
+    "ConnectionError": "Falha de conexão com a internet ou o servidor remoto recusou o acesso.",
+    "Timeout": "O servidor demorou muito para responder. A operação foi cancelada para evitar travamentos do sistema.",
+    "AttributeError": "O sistema tentou acessar uma propriedade ou função interna que não existe ou está indisponível.",
+    "Exception": "Ocorreu um erro inesperado no sistema. Entre em contato com o administrador."
+}

@@ -1,4 +1,5 @@
-from modulos._settings import Assets
+from ..lib.settings import Assets
+from ..lib import ValidarErros
 
 import tkinter as tk
 from tkinter import messagebox
@@ -6,40 +7,9 @@ import pyautogui as pag
 import pyperclip as pc
 import threading
 import time
-import datetime as dt
 from datetime import timedelta
 
 class Auxiliares:
-    def validar_erro(self, e, etapa):
-        largura = 78
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: Flow_Feeder.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-        try:
-            messagebox.showwarning(
-                "Aviso de Interrupção", 
-                "Ocorreram erros durante o processamento.\n\n"
-                "Consulte o arquivo 'log_erros.txt' para detalhes técnicos."
-            ) 
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
-
     def Lg_parar(self):
         try:
             self.em_execucao = False  
@@ -48,7 +18,7 @@ class Auxiliares:
             self.logUI.config(text=self.text_logUI)
             self.btTransferir.config(state="normal")
         except Exception as e:
-            self.validar_erro(e, "AUX: Lg_parar")
+           self.validador.registrar_log(e, "AUX: Lg_parar")
 
         return self.em_execucao    
     def Lg_transferir(self, listCod, listEnd):
@@ -101,7 +71,7 @@ class Auxiliares:
             self.CodEnd.delete("1.0", tk.END)
             threading.Thread(target= self._automact, args= (_codProd,_codEnd,TT_PROD,)).start()
         except Exception as e:
-            self.validar_erro(e, "AUX: Lg_transferir")
+           self.validador.registrar_log(e, "AUX: Lg_transferir")
 
     def _LogUI(self, fase, barramento, progresso, cod, end):
         MSG = (
@@ -124,7 +94,6 @@ class Auxiliares:
                 if not self.em_execucao:
                     break
                 progresso_anterior = int((etapa / trava) * 100)
-                print(f"etapa: {etapa} - {codprod} | {codend}")
                 self._LogUI(
                     fase= etapa
                     ,barramento= trava
@@ -190,10 +159,10 @@ class Auxiliares:
                 )
                 self.btTransferir.config(state="normal")
         except Exception as e:
-            print(f"erro: _automact\n{e}\n")
-            self.validar_erro(e, "AUX: _automact") 
+            self.validador.registrar_log(e, "AUX: _automact") 
     pass
 class FLOW_FEEDER(Auxiliares):
+    validador = ValidarErros(fonte="Flow Feeder")
     def __init__(self):
         self.fonte = ("verdana", 9,"bold") 
         self.background = "#2F4F4F"

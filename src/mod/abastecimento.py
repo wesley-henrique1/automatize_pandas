@@ -1,38 +1,10 @@
-from modulos._settings import Relatorios, OutPut
-# from _settings import Relatorios, OutPut
-import datetime as dt
+from ..lib.settings import Relatorios, OutPut
+from ..lib import ValidarErros
+
 import pandas as pd
 import numpy as np
-import warnings
-warnings.simplefilter(action='ignore', category=UserWarning)
 
 class auxiliar:
-    def validar_erro(self, e, etapa):
-        largura = 64
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: abastecimento.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
     def agrupar(self, df, col):
         df = df.copy()
 
@@ -62,6 +34,7 @@ class auxiliar:
 
         return valor
 class Abastecimento(auxiliar):
+    validador = ValidarErros(fonte="Abastecimento")
     def __init__(self):
         self.list_path = [Relatorios._8628, Relatorios._8664]
         self.rotinas_filtro = [1723,1709]
@@ -88,7 +61,7 @@ class Abastecimento(auxiliar):
                 f"8664 >> {dt_menor_64:%d/%m/%Y} -- {dt_maior_64:%d/%m/%Y}"
             )
         except Exception as e:
-            self.validar_erro(e, "Extract")
+            self.validador.registrar_log(e, "Extract")
             return False
 
         try:
@@ -111,8 +84,7 @@ class Abastecimento(auxiliar):
                 os_finalizadas28 = self.agrupar(m_atual28, ['DT_TURNO','CODFUNCOS'])
                 os_pedentes28 = self.agrupar(pendencia, ['DT_TURNO','CODFUNCGER'])
             except Exception as e:
-                self.validar_erro(e, "T_28")
-                print(f"debug T_28: {e}")
+                self.validador.registrar_log(e, "T_28")
                 return False
             try:
                 m_atual64['CODEMPILHADOR'] = m_atual64['CODEMPILHADOR'].fillna(0)  
@@ -142,7 +114,7 @@ class Abastecimento(auxiliar):
                 os_finalizadas64 = agrupamento.loc[agrupamento['CODEMPILHADOR'] != 0]
                 os_pedentes64 = agrupamento.loc[agrupamento['CODEMPILHADOR'] == 0]
             except Exception as e:
-                self.validar_erro(e, "T_64")
+                self.validador.registrar_log(e, "T_64")
                 return False
             try:
                 """Ordem de serviço pendentes"""
@@ -171,11 +143,10 @@ class Abastecimento(auxiliar):
                 
                 geral_total = grupo28.merge(grupo64, left_on='DT_TURNO', right_on= 'DT_TURNO', how= 'left').fillna(0)
             except Exception as e:
-                print(f"debug T_GERAL: {e}")
-                self.validar_erro(e, "T_GERAL")
+                self.validador.registrar_log(e, "T_GERAL")
                 return False
         except Exception as e:
-            self.validar_erro(e, "Transform")
+            self.validador.registrar_log(e, "Transform")
             return False
         try:
             with pd.ExcelWriter(OutPut.Abastecimento) as var:
@@ -184,7 +155,7 @@ class Abastecimento(auxiliar):
                 geral_total.to_excel(var, index= False, sheet_name= "OS_GERAL")
             return True, periodo
         except Exception as e:
-            self.validar_erro(e, "Load")
+            self.validador.registrar_log(e, "Load")
             return False
     def carregamento(self):
         lista_de_logs = []

@@ -1,43 +1,12 @@
-from modulos._settings import Wms, Relatorios, Gestao, Filial_18, ColNames, OutPut
-# from _settings import Wms, Relatorios, Gestao, Filial_18, ColNames, OutPut
+from ..lib.settings import Wms, Relatorios, Gestao, Filial_18, ColNames, OutPut
+from ..lib import ValidarErros
+
 import datetime as dt
 import pandas as pd
 import numpy as np
-import time
 import os
-import warnings
-warnings.simplefilter(action='ignore', category=UserWarning)
 
-import time
-
-class auxiliar:
-    def validar_erro(self, e, etapa):
-        largura = 64
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: FEFO.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
-        pass
+class __auxiliares:
     def curva_ABC(self, dataframe):
         try:
             TEMPORARIO_DF = dataframe.loc[(~dataframe["RUA"].isin(self.virtual)) & (dataframe["PRAZOVAL"] > 0)].copy()
@@ -75,11 +44,12 @@ class auxiliar:
             TEMPORARIO_DF = TEMPORARIO_DF.drop(columns= ["qt_meio", "CONCAT", "FREQ_PROD"])
             return TEMPORARIO_DF
         except Exception as e:
-            self.validar_erro(e, "AUX_Extract")
+            self.validador.registrar_log(e, "AUX_Extract")
             return False
 
     pass
-class Fefo_ABST(auxiliar):
+class FefoAbst(__auxiliares):
+    validador = ValidarErros(fonte="Fefo Abastecimento")
     def __init__(self):
         self.list_path = [Wms.endereco07, Relatorios._8628, Relatorios._8596]
         self.saida = OutPut.Fefo8628
@@ -110,7 +80,7 @@ class Fefo_ABST(auxiliar):
 
             pass
         except Exception as e:
-            self.validar_erro(e, "ABST_Extract")
+            self.validador.registrar_log(e, "ABST_Extract")
             return False
         try:
             END_1707['DT_VALIDADE'] = pd.to_datetime(END_1707['DT_VALIDADE'], dayfirst=True, errors= "coerce")
@@ -133,7 +103,7 @@ class Fefo_ABST(auxiliar):
             df_completo = df_baixa.merge(DF_PROD, on= "CODPROD", how= "left")
             pass
         except Exception as e:
-            self.validar_erro(e, "ABST_Transform")
+            self.validador.registrar_log(e, "ABST_Transform")
             return False
         try:
             COLUNAS_FEFO = [
@@ -158,7 +128,7 @@ class Fefo_ABST(auxiliar):
 
             return True
         except Exception as e:
-            self.validar_erro(e, "ABST_Load")
+            self.validador.registrar_log(e, "ABST_Load")
             return False
     def carregamento(self):
         lista_de_logs = []
@@ -178,13 +148,13 @@ class Fefo_ABST(auxiliar):
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
-            print("ok")
             dic_retorno = []
             return lista_de_logs, dic_retorno
         except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
+            self.validador.registrar_log(e, "CARREGAMENTO")
             return False
-class Fefo_curva(auxiliar):
+class FefoCurva(__auxiliares):
+    validador = ValidarErros(fonte="Fefo Curva")
     def __init__(self):
         self.list_path = [Relatorios._8668, Gestao._286, Filial_18._286, Relatorios._8596, Wms.endereco07]
         self.saida = OutPut.Fefo8668
@@ -215,7 +185,7 @@ class Fefo_curva(auxiliar):
 
             pass
         except Exception as e:  
-            self.validar_erro(e, "curva-Extract")
+            self.validador.registrar_log(e, "curva-Extract")
             return False
         try:
             cod_fefo = dados_PROD["CODPROD"].loc[dados_PROD["PRAZOVAL"] > 0]
@@ -284,11 +254,11 @@ class Fefo_curva(auxiliar):
 
                 pass
             except Exception as e:
-                self.validar_erro(e, "curva-T-calculada")
+                self.validador.registrar_log(e, "curva-T-calculada")
                 return False
             pass
         except Exception as e:
-            self.validar_erro(e, "curva-Transform")
+            self.validador.registrar_log(e, "curva-Transform")
             return False
         try:
             col_int = ["RUA", "PREDIO", "NIVEL", "APTO", "PREVI_DIF"]
@@ -341,7 +311,7 @@ class Fefo_curva(auxiliar):
 
             return True
         except Exception as e:
-            self.validar_erro(e, "curva-Load")
+            self.validador.registrar_log(e, "curva-Load")
             return False
     def carregamento(self):
         lista_de_logs = []
@@ -361,16 +331,15 @@ class Fefo_curva(auxiliar):
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
-            print("ok")
             dic_retorno = []
             return lista_de_logs, dic_retorno
         except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
+            self.validador.registrar_log(e, "CARREGAMENTO")
             return False
 
 """
     AREA DE TESTE
     clases 
-"""
 if __name__ == "__main__":
     Fefo_ABST()
+"""

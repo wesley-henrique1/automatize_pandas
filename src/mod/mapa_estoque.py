@@ -1,6 +1,5 @@
-from modulos._settings import Relatorios, Wms, ColNames, OutPut, BaseDados
-import warnings
-warnings.simplefilter(action='ignore', category=UserWarning)
+from ..lib.settings import Relatorios, Wms, ColNames, OutPut, BaseDados
+from ..lib import ValidarErros
 
 import datetime as dt
 import pandas as pd
@@ -8,35 +7,6 @@ import numpy as np
 import os
 
 class auxiliar:
-    def validar_erro(self, e, etapa):
-        largura = 64
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: Mapa_Estoque.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
-        
-        pass
     def categorizar_AE(self, Rua_AE, Rua_AP, map_dic):
         try:
             r_ae = int(Rua_AE)
@@ -53,7 +23,8 @@ class auxiliar:
         
         return "FR"
     pass
-class Mapa_Estoque(auxiliar):
+class MapaEstoque(auxiliar):
+    validador = ValidarErros(fonte="Mapa Estoque")
     def __init__(self):
         self.list_path = [Wms.geral07, Relatorios._8596, BaseDados.EndFixo]
         self.VIRTUAIS = [60, 70, 80, 100, 106, 44, 47, 40]
@@ -106,7 +77,7 @@ class Mapa_Estoque(auxiliar):
 
             pass
         except Exception as e:
-            self.validar_erro(e, "Extract")
+            self.validador.registrar_log(e, "Extract")
             return False
 
         try:
@@ -176,7 +147,7 @@ class Mapa_Estoque(auxiliar):
             )
             pass
         except Exception as e:
-            self.validar_erro(e, "Transform")
+            self.validador.registrar_log(e, "Transform")
             return False
 
         try:
@@ -211,10 +182,9 @@ class Mapa_Estoque(auxiliar):
             df_completo = df_completo[etapa_1 + etapa_2 + etapas_KPI]
             df_completo = df_completo.sort_values(by=["RUA", "PREDIO"], ascending= True)
             df_completo.to_excel(self.saida,index= False, sheet_name="Analise ae")
-            print("feito")
             return True
         except Exception as e:
-            self.validar_erro(e, "Load")
+            self.validador.registrar_log(e, "Load")
             return False
     def carregamento(self):
         lista_de_logs = []
@@ -236,13 +206,11 @@ class Mapa_Estoque(auxiliar):
                 }
                 lista_de_logs.append(dic_log)
 
-                print(lista_de_logs)
-                print(dic_retorno)
             return lista_de_logs, dic_retorno
         except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
+            self.validador.registrar_log(e, "CARREGAMENTO")
             return False
 
 
 if __name__ ==  "__main__":
-    Mapa_Estoque()
+    MapaEstoque()

@@ -1,22 +1,16 @@
-import tkinter as tk
-import datetime as dt
-from tkinter import messagebox
+from src.lib.settings import Assets
+from src.lib import ProcessadorLogica, ValidarErros
+
+from src.views import Demandas, FLOW_FEEDER, FLOW_MASTER
+from src.mod import Executar
+
 from tkinter import scrolledtext
+from tkinter import messagebox
+import datetime as dt
+import tkinter as tk
 
-from modulos import (
-    ProcessadorLogica
-    ,Assets
-    ,Abastecimento
-    ,Acuracidade
-    ,Giro_Status
-    ,Cadastro
-    ,Corte
-    ,Mapa_Estoque
-    ,Fefo_ABST, Fefo_curva
-)
-from interface import (FLOW_FEEDER, FLOW_MASTER, Demandas)
 
-class auxiliar:   
+class auxiliar:       
     def _exibir_mensagem_status(self, mensagem):
         self.retorno.config(state="normal")
         self.retorno.delete("1.0", "end")
@@ -32,7 +26,7 @@ class auxiliar:
                 return
             self.logica_UI.executar_threads(selecionados)
         except Exception as e:
-            self.validar_erro(e, "Main-start_UI")
+            self.validador.registrar_log(e, "Main-start_UI")
     def resetar_UI(self):
         for var in self.estados:
             self.estados[var].set(False)
@@ -41,35 +35,12 @@ class auxiliar:
         self.retorno_db.config(state="normal")
         self.retorno_db.delete("1.0", "end")
 
-        self.contador.config(text="PROGRESSO >> 100% || 0/0 OPERAÇÃO")
-    def validar_erro(self, e, etapa):
-        largura = 78
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: main.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
-    
+        self.contador.config(text="PROGRESSO >> 100% || 0/0 OPERAÇÃO")    
     pass
 class JanelaPrincipal(auxiliar):
+    validador = ValidarErros(fonte="main")
     def __init__(self):
+        
         self.background = "#2F4F4F"
         self.frame_color = "#F0FFFF"
         self.borda_color = "#000000"
@@ -78,50 +49,19 @@ class JanelaPrincipal(auxiliar):
 
         root = tk.Tk()
         root.title("GERENCIADOR_8000")
-        root.geometry("1005x500")
+        root.geometry("938x538")
         root.resizable(False,False)
         root.config(bg= self.background)
-        root.iconbitmap(Assets.FleshIcon)
+        root.iconbitmap(Assets.IcoPrincipal)
         
-        self.estados = {
-            "Corte": tk.BooleanVar(value=False)
+        self.scripts_map, self.mapa_relacao = Executar()
+        chaves = self.scripts_map.keys()
 
-            ,"Fefo_abst": tk.BooleanVar(value= False)
-            ,"Fefo_Curva": tk.BooleanVar(value= False)
-            ,"Mapa_end": tk.BooleanVar(value= False)
-
-            ,"Acuracidade": tk.BooleanVar(value=False)
-            ,"Validar_os": tk.BooleanVar(value=False)
-            ,"Cadastro": tk.BooleanVar(value=False)
-            ,"Giro_estatus": tk.BooleanVar(value=False)
-            ,"cheio_vazio": tk.BooleanVar(value=False)
-            ,"Abastecimento": tk.BooleanVar(value=False)
-            ,"Contagem": tk.BooleanVar(value=False)
-        }
-        self.scripts_map = {
-            "Corte": Corte
-
-            ,"Fefo_abst": Fefo_ABST
-            ,"Fefo_Curva": Fefo_curva
-
-            ,"Mapa_end": Mapa_Estoque
-            ,"Acuracidade": Acuracidade
-            ,"Cadastro": Cadastro
-            ,"Giro_estatus": Giro_Status
-            ,"Abastecimento": Abastecimento
-        }    
-        self.mapa_relacao = {
-            "Relatorio Corte": "Corte",
-            "Relatorio Acuracidade": "Acuracidade",
-            "Analitico Cadastro": "Cadastro",
-            "Relatorio Giro Status": "Giro_estatus",
-            "Relatorio de Contagem": "Contagem",
-            "Relatorio de Abastecimento": "Abastecimento",
-            "FEFO: Abastecimento": "Fefo_abst",
-            "FEFO: Curva ABC": "Fefo_Curva",
-            "Mapeamento dos Aéreos": "Mapa_end"
-        }
         self.list_check = []
+        self.estados = {}
+
+        for var in chaves:
+            self.estados[var] = tk.BooleanVar(value=False)        
 
         self.quadro_fleg(janela_principal= root)
         self.quadro_bt(janela_principal= root)
@@ -141,7 +81,7 @@ class JanelaPrincipal(auxiliar):
             ,highlightthickness= 3
         )
 
-        for texto_exibicao, chave_interna in self.mapa_relacao.items():
+        for chave_interna, texto_exibicao in self.mapa_relacao.items():
             var_estado = self.estados.get(chave_interna)
             check = tk.Checkbutton(
                 self.parte_1,
@@ -312,7 +252,7 @@ class JanelaPrincipal(auxiliar):
         janela_info.geometry("400x300")
         janela_info.resizable(False,False)
         janela_info.configure(bg=self.background)
-        janela_info.iconbitmap(Assets.FleshIcon)
+        janela_info.iconbitmap(Assets.IcoEngrenagem)
 
         self.frame_rotina = tk.Frame(
             janela_info
@@ -350,7 +290,7 @@ class JanelaPrincipal(auxiliar):
         janela_info.geometry("1020x500")
         janela_info.resizable(False,True)
         janela_info.configure(bg=self.back_2)
-        janela_info.iconbitmap(Assets.FleshIcon)
+        janela_info.iconbitmap(Assets.IcoCorte)
         janela_info.attributes("-topmost", True)
 
         self.conteudo_corte = scrolledtext.ScrolledText(
@@ -368,22 +308,22 @@ class JanelaPrincipal(auxiliar):
     
     def localizador(self):
         # QUADRO 1 FLEXBOX
-        self.parte_1.place(relx= 0.01, rely= 0.10, relwidth= 0.40, relheight= 0.50)
+        self.parte_1.place(relx= 0.005, rely= 0.01, relwidth= 0.51, relheight= 0.30)
 
         _relx_T1 = 0.01
-        _relx_T2 = 0.47
+        _relx_T2 = 0.53
 
         _rely_inicial = 0.03
-        _altura_item = 0.10
-
+        _altura_item = 0.15
+        total = round(len(self.list_check) / 2)
         for indice, item_check in enumerate(self.list_check):
-            if indice < 6:
+            if indice < total:
                 _relx = _relx_T1
                 posicao_y = _rely_inicial + (indice * _altura_item)
 
             else:
                 _relx = _relx_T2
-                posicao_y = _rely_inicial + ((indice-6) * _altura_item)
+                posicao_y = _rely_inicial + ((indice-total) * _altura_item)
 
             item_check.place(
                 relx=_relx
@@ -392,7 +332,7 @@ class JanelaPrincipal(auxiliar):
             )    
 
         # QUADRO 2 BOTÃO
-        self.parte_2.place(relx= 0.01, rely= 0.62, relwidth= 0.40, relheight= 0.36)
+        self.parte_2.place(relx= 0.520, rely= 0.01, relwidth= 0.475, relheight= 0.30)
 
         self.bt_iniciar.place(relx=0.02, rely=0.10, relwidth=0.22, relheight=0.20)
         self.bt_demanda.place(relx=0.266, rely=0.10, relwidth=0.22, relheight=0.20)
@@ -404,12 +344,13 @@ class JanelaPrincipal(auxiliar):
         self.bt_07.place(relx=0.35, rely=0.20, relwidth=0.30, relheight=0.30)
 
         # QUADRO 3 RETORNOS
-        self.parte_3.place(relx= 0.42, rely= 0.10, relwidth= 0.57, relheight= 0.88)
+        self.parte_3.place(relx= 0.005, rely= 0.32, relwidth= 0.99, relheight= 0.67)
 
-        self.contador.place(relx=0.01, rely=0.01, relwidth=0.98, relheight=0.10)
-        self.retorno.place(relx=0.01, rely=0.15, relwidth=0.98, relheight=0.45)
-        self.retorno_db.place(relx=0.01, rely=0.61, relwidth=0.50, relheight=0.38)
-        self.retorno_file.place(relx=0.52, rely=0.61, relwidth=0.47, relheight=0.38)
+        self.contador.place(relx=0.005, rely=0.01, relwidth=0.99, relheight=0.10)
+
+        self.retorno.place(relx=0.005, rely=0.15, relwidth=0.56, relheight=0.84)
+        self.retorno_db.place(relx=0.57, rely=0.15, relwidth=0.424, relheight=0.45)
+        self.retorno_file.place(relx=0.57, rely=0.61, relwidth=0.424, relheight=0.38)
         pass
     pass
 

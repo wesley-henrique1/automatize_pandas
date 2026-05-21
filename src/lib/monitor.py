@@ -1,44 +1,20 @@
-from modulos._settings import Assets
+from .settings import Assets
+from .valerros import ValidarErros
+
 from datetime import datetime as dt
 import json
 import time
 
 class MonitorETL:
+    validador = ValidarErros(fonte="MonitorETL")
     def __init__(self):
-        self.log  = Assets.LogTime
+        self.log  = Assets.JsonLogTime
         self.__notbook = {
             "Extract": [],
             "Transform": [],
             "Load": []
         }
         pass
-    def validar_erro(self, e, etapa):
-        largura = 64
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: abastecimento.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
-    
     def __FormatTime(self, time_seconds):
         hr = int(time_seconds // 3600)
         min = int((time_seconds % 3600) // 60)
@@ -64,13 +40,12 @@ class MonitorETL:
             with open(self.log , 'w', encoding='utf-8') as ws:
                 json.dump(df_JSON, ws, indent=4)
         except Exception as e:
-            self.validar_erro(e, "TimeJson")
+            self.validador.registrar_log(e, "TimeJson")
         
         pass
     
     def stageTime(self, etapa: str):
         self.__notbook[etapa].append(time.perf_counter())
-        print(self.__notbook)
 
         pass
     def conversor(self, Modulo: str):

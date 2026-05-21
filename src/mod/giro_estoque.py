@@ -1,4 +1,5 @@
-from modulos._settings import Relatorios, Gestao, Filial_18, Wms, ColNames, OutPut
+from ..lib.settings import Relatorios, Gestao, Filial_18, Wms, ColNames, OutPut
+from ..lib import ValidarErros
 
 import pandas as pd
 import numpy as np
@@ -7,34 +8,8 @@ import warnings
 import os
 warnings.simplefilter(action='ignore', category=UserWarning)
 
-class auxiliar:
-    def validar_erro(self, e, etapa):
-        largura = 64
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: giro_st.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
-class Giro_Status(auxiliar):
+class GiroEstoque:
+    validador = ValidarErros(fonte="main_logica")
     def __init__(self):
         self.hoje = dt.datetime.now()
         self.dias = 30
@@ -69,7 +44,7 @@ class Giro_Status(auxiliar):
             aux_1707 = pd.read_csv(self.list_path[4], header= None, usecols= col_1707, names=[_col_[5], _col_[13]])
             pass
         except Exception as e:
-            self.validar_erro(e, "Extract")
+            self.validador.registrar_log(e, "Extract")
             return False
         try:
             try:
@@ -153,7 +128,7 @@ class Giro_Status(auxiliar):
                 df_estoque = df_estoque.drop(columns= drop_x + drop_y)
                 pass
             except Exception as e:
-                self.validar_erro(e, "T_286")
+                self.validador.registrar_log(e, "T_286")
                 return False
 
             try:
@@ -190,7 +165,7 @@ class Giro_Status(auxiliar):
 
                 pass
             except Exception as e:
-                self.validar_erro(e, "T_8596")
+                self.validador.registrar_log(e, "T_8596")
                 return False
 
             try:
@@ -202,7 +177,7 @@ class Giro_Status(auxiliar):
 
                 pass
             except Exception as e:
-                self.validar_erro(e, "T_1707")
+                self.validador.registrar_log(e, "T_1707")
                 return False
 
             df_completo = dados_prod.merge(df_estoque, on='CODPROD', how='left')
@@ -239,7 +214,7 @@ class Giro_Status(auxiliar):
             df_FL = df_completo.loc[df_completo['OBS2'] =="FL"].copy()
             pass
         except Exception as e:
-            self.validar_erro(e, "Transform")
+            self.validador.registrar_log(e, "Transform")
             return False
         try:
             with pd.ExcelWriter(self.saida) as destino:
@@ -248,7 +223,7 @@ class Giro_Status(auxiliar):
                 df_completo.to_excel(destino, sheet_name= "COMPLETO", index= False)
             return True
         except Exception as e:
-            self.validar_erro(e, "Load")
+            self.validador.registrar_log(e, "Load")
             return False
         
     def carregamento(self):
@@ -272,8 +247,8 @@ class Giro_Status(auxiliar):
                 lista_de_logs.append(dic_log)
             return lista_de_logs, dic_retorno
         except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
+            self.validador.registrar_log(e, "CARREGAMENTO")
             return False
 
 if __name__ == "__main__":
-    Giro_Status()
+    GiroEstoque()

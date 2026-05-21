@@ -1,4 +1,6 @@
-from modulos._settings import Wms, BaseDados, ColNames, OutPut
+from ..lib.settings import Wms, BaseDados, ColNames, OutPut
+from ..lib import ValidarErros
+
 import datetime as dt
 import pandas as pd
 import glob
@@ -10,34 +12,7 @@ from sqlalchemy import create_engine, text
 import warnings
 warnings.simplefilter(action='ignore', category=UserWarning)
 
-class auxiliares:
-    def validar_erro(self, e, etapa):
-        largura = 64
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: corte.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
+class __auxiliares:
     def cosultar_db(self, consulta):
         try:
             connection_url = URL.create(
@@ -48,7 +23,7 @@ class auxiliares:
             db_dados = pd.read_sql(text(consulta), self.engine)
             return db_dados
         except Exception as e:
-            self.validar_erro(e, "Consulta_banco_dados")
+            self.validador.registrar_log(e, "Consulta_banco_dados")
             return pd.DataFrame()
     def atualizar(self, df, tabela):
         try:            
@@ -60,7 +35,7 @@ class auxiliares:
                 ,chunksize=1000
             )
         except Exception as e:
-            self.validar_erro(e, f"Load_{tabela}")
+            self.validador.registrar_log(e, f"Load_{tabela}")
             return False         
     def extrair_e_ordenar_data(self, df, data):
         var = df.copy()
@@ -90,7 +65,8 @@ class auxiliares:
                 return 0.0
         df_copia[coluna] = df_copia[coluna].apply(ajustar)
         return df_copia
-class Corte(auxiliares):
+class Corte(__auxiliares):
+    validador = ValidarErros(fonte="Corte")
     def __init__(self):
         DRIVER = BaseDados.drive
         DB_PATH = BaseDados.path_acumulado
@@ -114,7 +90,7 @@ class Corte(auxiliares):
 
             df_corte = pd.read_csv(self.list_path[0],header= None, names= ColNames._1767)
         except Exception as e:
-            self.validar_erro(e, "Extract")
+            self.validador.registrar_log(e, "Extract")
             return False
         
         try:
@@ -128,7 +104,7 @@ class Corte(auxiliares):
                     df_corte = self.ajustar_numero(df_corte, col, float)
                 df_corte = df_corte.sort_values(by="data", ascending= True, axis= 0)
             except Exception as e:
-                self.validar_erro(e, "CORTE_GERAL")
+                self.validador.registrar_log(e, "CORTE_GERAL")
                 return False
             try:
                 df_dia = df_corte.loc[df_corte['hora'].between("07:30:00", "18:00:00")].copy()
@@ -143,7 +119,7 @@ class Corte(auxiliares):
                 var_dia['vl_corte'] = var_dia['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
                 var_dia = var_dia.sort_values(by= 'data', ascending= True, axis= 0)
             except Exception as e:
-                self.validar_erro(e, "CORTE_DIA")
+                self.validador.registrar_log(e, "CORTE_DIA")
                 return False
 
             try:
@@ -161,7 +137,7 @@ class Corte(auxiliares):
                 var_noite['vl_corte'] = var_noite['vl_corte'].round(2).astype(str).str.replace('.', ',', regex= False)
                 var_noite = var_noite.sort_values(by='data_turno', ascending= True, axis= 0)
             except Exception as e:
-                self.validar_erro(e, "CORTE_NOITE")
+                self.validador.registrar_log(e, "CORTE_NOITE")
                 return False
 
             try:
@@ -193,13 +169,12 @@ class Corte(auxiliares):
                         lis_procurados.append(df_pedidos)
                     except Exception as e:
                         list_erros.append(name_file)
-                        self.validar_erro(e, f"{name_file}: P-leitura")
+                        self.validador.registrar_log(e, f"{name_file}: P-leitura")
                     try:
                         novo_caminho_completo = os.path.join(self.BaseCorte, novo_nome_arquivo)
                         os.rename(file, novo_caminho_completo)
-                        print(f"Sucesso: {name_file} -> {novo_nome_arquivo}")
                     except Exception as e:
-                        print(f"Erro ao renomear {name_file}: Verifique se o arquivo está aberto!")        
+                        self.validador.registrar_log(e, "Renomear Arquivo")      
                 if lis_procurados:
                     df_final = pd.concat(lis_procurados, ignore_index=True)
                     self.atualizar(df_final, self.NOME_TABELA)
@@ -210,7 +185,7 @@ class Corte(auxiliares):
                     query_dados = f"SELECT {'*'} FROM {self.NOME_TABELA}"
                     db_dados = self.cosultar_db(query_dados)
             except Exception as e:
-                self.validar_erro(e, "PEDIDOS")
+                self.validador.registrar_log(e, "PEDIDOS")
                 return False
             
             try:
@@ -225,10 +200,10 @@ class Corte(auxiliares):
                 var_div['data_turno'] = pd.to_datetime(var_div['data_turno'], format='%d-%m-%Y')
                 var_div = var_div.merge(db_dados, left_on= 'data_turno', right_on= 'DATA', how= 'left').drop(columns= {'NOME_ARQUIVO', 'QTDE_PROD'}).sort_values(by="data_turno", ascending= True, axis= 0)
             except Exception as e:
-                self.validar_erro(e, "DIVERGENCIAS")
+                self.validador.registrar_log(e, "DIVERGENCIAS")
                 return False
         except Exception as e:
-            self.validar_erro(e, "Transform")
+            self.validador.registrar_log(e, "Transform")
             return False
 
         try:
@@ -251,7 +226,7 @@ class Corte(auxiliares):
             self.noite = var_noite
             self.divergencia = var_div
         except Exception as e:
-            self.validar_erro(e, "Load")
+            self.validador.registrar_log(e, "Load")
             return False
     def Log_Retorno(self):
         try:
@@ -311,7 +286,7 @@ class Corte(auxiliares):
 
             return titulo + tabela
         except Exception as e:
-            self.validar_erro(e, "Log_retorno")
+            self.validador.registrar_log(e, "Log_retorno")
             return False
     def carregamento(self):
         lista_de_logs = []
@@ -340,7 +315,7 @@ class Corte(auxiliares):
             }]
             return lista_de_logs, dic_retorno
         except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
+            self.validador.registrar_log(e, "CARREGAMENTO")
             return False
 
 if __name__ == "__main__":

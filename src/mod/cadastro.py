@@ -1,42 +1,13 @@
-from modulos._settings import Relatorios, BaseDados, OutPut
-from modulos._monitor_etl import MonitorETL
+from ..lib.settings import Relatorios, BaseDados, OutPut
+from ..lib import MonitorETL, ValidarErros
 
 import datetime as dt
 import pandas as pd
 import numpy as np
-import warnings
 import os
 import re
-warnings.simplefilter(action='ignore', category=UserWarning)
 
 class auxiliar:
-    def validar_erro(self, e, etapa):
-        largura = 64
-        mapeamento = {
-            PermissionError: "Arquivo aberto ou sem permissão. Feche o Excel.",
-            FileNotFoundError: "Arquivo de origem não encontrado. Verifique a pasta 'base_dados'.",
-            KeyError: f"Coluna ou chave não encontrada: {e}",
-            TypeError: f"Incompatibilidade de tipo: {e}",
-            ValueError: f"Formato de dado inválido: {e}",
-            NameError: f"Variável ou função não definida: {e}"
-        }
-        
-        msg = mapeamento.get(type(e), f"Erro não mapeado: {e}")
-        agora = dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
-        log_conteudo = (
-            f"{'='* largura}\n"
-            f"FONTE: cadastro.py | ETAPA: {etapa} | DATA: {agora}\n"
-            f"TIPO: {type(e).__name__}\n"
-            f"MENSAGEM: {msg}\n"
-            f"{'='* largura}\n\n"
-        )
-
-        try:
-            with open("log_erros.txt", "a", encoding="utf-8") as f:
-                f.write(log_conteudo)
-        except Exception as erro_f:
-            print(f"Falha crítica ao gravar log: {erro_f}")
     def extrair_e_converter_peso(self,argumento):
         match = re.search(r'([\d\.,]+)\s*(KG|GR)', str(argumento), re.IGNORECASE)
         if match:
@@ -49,10 +20,11 @@ class auxiliar:
                 return valor     
         return None
 class Cadastro(auxiliar):
+    validador = ValidarErros(fonte="Cadastro")
     def __init__(self):
-        self.Instancia = MonitorETL()
-
         self.list_path = [Relatorios._8596, BaseDados.EndFixo]
+        self.Retorno = OutPut.Cadastro
+        print(self.Retorno)
         self.chekout = [27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
         self.list_div = ['6-PRATELEIRA','5-TERCO (0,46)','4-TERCO (0,56)']
@@ -61,7 +33,7 @@ class Cadastro(auxiliar):
         largura = 100
         comprimento = 120
         self.area_pl = (largura * comprimento) + 100
-
+        self.Instancia = MonitorETL()
         self.pipeline()
 
     def pipeline(self):
@@ -90,7 +62,7 @@ class Cadastro(auxiliar):
             endereco = pd.read_excel(self.list_path[1], sheet_name= 'STATUS', usecols= ["RUA", "TIPO_RUA", "CARACT"])
             self.Instancia.stageTime('Extract')
         except Exception as e:
-            self.validar_erro(e, "Extract")
+            self.validador.registrar_log(e, "Extract")
             return False
         try:
             self.Instancia.stageTime('Transform')
@@ -113,7 +85,7 @@ class Cadastro(auxiliar):
                 df_PRODUTO['AREA_LT'] = round((df_PRODUTO['LARGURAARM'] * df_PRODUTO['COMPRIMENTOARM']) * df_PRODUTO['LASTROPAL'],0)
                 df_PRODUTO['GRAMATURA_GR'] = df_PRODUTO["DESCRICAO"].apply(self.extrair_e_converter_peso).fillna(0)
             except Exception as e:
-                self.validar_erro(e, "T-SUPORTE")
+                self.validador.registrar_log(e, "T-SUPORTE")
             try:
                 INT = (df_PRODUTO['FREQ_PROD'] <= 2) & (df_PRODUTO['PK_END'].isin(self.list_int))
                 MEIO =(df_PRODUTO['qt_meio'] <= 2) & (df_PRODUTO['PK_END'].isin(self.list_meio))
@@ -181,12 +153,12 @@ class Cadastro(auxiliar):
                     ,"NORMAL"
                 )
             except Exception as e:
-                self.validar_erro(e, "T-KPI")
+                self.validador.registrar_log(e, "T-KPI")
                 return False
             
             self.Instancia.stageTime('Transform')
         except Exception as e:
-                self.validar_erro(e, "Transform")
+                self.validador.registrar_log(e, "Transform")
                 return False
         try:
             self.Instancia.stageTime('Load')
@@ -216,16 +188,17 @@ class Cadastro(auxiliar):
                 "UNITARIO":  [unitario, prod_unitario, porcent_un],
                 "x":         ["x", "x", "x"]
             })
+            print('with')
             df_final = df_final.sort_values(by=['RUA', 'PREDIO'], ascending= True)
-            with pd.ExcelWriter(OutPut.Cadastro) as var:
+            with pd.ExcelWriter(self.Retorno) as var:
                 df_final.to_excel(var, sheet_name= "cadastro", index= False)
                 df_amostradinho.to_excel(var, sheet_name= "demostrativo", index= False)
-
+            print('instancias')
             self.Instancia.stageTime('Load')
             self.Instancia.conversor(Modulo= "Cadastro")
             return True
         except Exception as e:
-            self.validar_erro(e, "Load")
+            self.validador.registrar_log(e, "Load")
             return False
     def carregamento(self):
         lista_de_logs = []
@@ -245,11 +218,10 @@ class Cadastro(auxiliar):
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
-            print("ok")
             dic_retorno = []
             return lista_de_logs, dic_retorno
         except Exception as e:
-            self.validar_erro(e, "CARREGAMENTO")
+            self.validador.registrar_log(e, "CARREGAMENTO")
             return False
 
         pass
