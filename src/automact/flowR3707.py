@@ -8,23 +8,29 @@ import time
 from datetime import timedelta
 
 class Flow3707:
-    validador = ValidarErros(fonte="Flow Feeder")
+    validador = ValidarErros(fonte="logica Flow 3707")
     def __init__(self, UI):
         self.ancora =  UI
+        self.text_logUI = (
+            f"{">> PROGRESSO: 0 - 0 || 100%":<}\n"
+            f"{">> Fase: PRODUTO | DESTINO"}"
+        )
+        self.time_executar = 0.001
+
         self._codProd = []
         self._codEnd = []
 
         self.AncoraCodProd = self.ancora.CodProd
         self.AncoraCodEnd = self.ancora.CodEnd
         self.AncoraLogUI = self.ancora.logUI
-        self.AncoraBtTransferir = self.btTransferir
+        self.AncoraBtTransferir = self.ancora.btTransferir
 
-    pass
+        pass    
 
     def _tratar(self, list_prod, list_end):
         if not list_prod or not list_end:
             messagebox.showerror("Erro", "Uma ou ambas as listas estão vazias!")
-            self.Lg_parar() 
+            self.PararProcesso() 
             return
 
         for var in list_prod:
@@ -33,7 +39,7 @@ class Flow3707:
                 self._codProd.append(var)
             except Exception as e:
                 self.validador.registrar_log(e, "Logica: ")
-                self.Lg_parar() 
+                self.PararProcesso() 
                 return
         for var in list_end:
             try:
@@ -41,7 +47,7 @@ class Flow3707:
                 self._codEnd.append(var)
             except Exception as e:
                 self.validador.registrar_log(e, "Logica: ")
-                self.Lg_parar() 
+                self.PararProcesso() 
                 return   
 
         TT_PROD = len(self._codProd)
@@ -50,7 +56,7 @@ class Flow3707:
         if TT_PROD != TT_end:
             mensagem = f"As listas possuem quantidades diferentes!\n\nProdutos: {TT_PROD}\nEndereços: {TT_end}"
             messagebox.showwarning("Divergência", mensagem)
-            self.Lg_parar()
+            self.PararProcesso()
             return
         return TT_PROD
     def _LogUI(self, fase, barramento, progresso, cod, end):
@@ -93,7 +99,7 @@ class Flow3707:
                 for _ in range(3):
                     pag.press('enter')
                     time.sleep(self.time_executar)      
-
+                if not self.em_execucao: break
                 progresso_atual = int(( (etapa +1) / trava) * 100)
                 self._LogUI(
                     fase= etapa + 1
@@ -146,10 +152,10 @@ class Flow3707:
             self.em_execucao = False  
             self.AncoraCodProd.delete("1.0", tk.END)
             self.AncoraCodEnd.delete("1.0", tk.END)
-            self.AncoraLogUI.config(text=self.text_logUI)
             self.AncoraBtTransferir.config(state="normal")
+            self.AncoraLogUI.config(text=self.text_logUI)
         except Exception as e:
-           self.validador.registrar_log(e, "Logica: ")
+           self.validador.registrar_log(e, "Logica: PararProcesso")
 
         return self.em_execucao    
         pass

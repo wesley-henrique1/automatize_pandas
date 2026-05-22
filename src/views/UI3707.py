@@ -4,7 +4,7 @@ from ..automact import Flow3707
 import tkinter as tk
 
 class Ui3707:
-    validador = ValidarErros(fonte="Flow Feeder")
+    validador = ValidarErros(fonte="interface flow 3707")
     def __init__(self):
         self.fonte = ("verdana", 9,"bold") 
         self.background = "#2F4F4F"
@@ -135,4 +135,4 @@ class Ui3707:
         self.logUI.place(relx= 0.02, rely= 0.46, relwidth= 0.95, relheight= 0.25)
 
         self.btTransferir.place(relx=0.19, rely=0.80, relwidth=0.30, relheight=0.15)
-        self.btParar.place(relxs=0.51, rely=0.80, relwidth=0.30, relheight=0.15)
+        self.btParar.place(relx=0.51, rely=0.80, relwidth=0.30, relheight=0.15)

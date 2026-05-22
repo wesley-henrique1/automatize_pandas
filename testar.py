@@ -1,4 +1,5 @@
-from src.views.UI1731 import Ui1731
+from src.views import Ui3707, Ui1731
 
 
-Ui1731()
+Ui3707()
+# Ui1731()

@@ -1,6 +1,5 @@
 from ..lib.settings import Assets
 from ..automact import Flow1731
-from tkinter import messagebox
 import tkinter as tk
 
 class Ui1731:
@@ -12,7 +11,6 @@ class Ui1731:
         self.back_2 = "#363636"
         self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
         
-        self.time_executar = 0.05
         self.TextLog = (
             f"{">> PROGRESSO: 0 - 0 || 100%":<}\n"
             f"{">> PRODUTO: ______":<}"
@@ -78,7 +76,7 @@ class Ui1731:
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            ,command=lambda:self.ancora.Iniciar_processo(self.entry_cod)
+            ,command=lambda:self.ancora.IniciarProcesso(self.entry_cod)
         )
         self.bt_parar = tk.Button(
             self.frame_fundo
@@ -91,7 +89,7 @@ class Ui1731:
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            ,command=lambda: self.Parar_Processo()
+            ,command=lambda: self.ancora.PararProcesso()
         )
 
         pass   

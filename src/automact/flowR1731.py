@@ -15,8 +15,11 @@ class Flow1731(Auxiliar):
     validador = ValidarErros(fonte="Flow Mater")
     def __init__(self, UI):        
         self.UImodulo = UI
-
-        self.time_executar = 0.01
+        self.TextLog = (
+            f"{">> PROGRESSO: 0 - 0 || 100%":<}\n"
+            f"{">> PRODUTO: ______":<}"
+        )
+        self.time_executar = 0.001
 
         self.ancoraIniciar = self.UImodulo.bt_iniciar
         self.ancoraContador = self.UImodulo.contador
@@ -34,7 +37,7 @@ class Flow1731(Auxiliar):
            self.validador.registrar_log(e, "logic: PararProcesso") 
 
         pass
-    def Iniciar_processo(self, _listas):
+    def IniciarProcesso(self, _listas):
         try:
             self.em_execucao = True
             self.ancoraIniciar.config(state="disabled")
