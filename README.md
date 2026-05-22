@@ -1,6 +1,6 @@
 <div align="center">
   <h1>AUTOMATIZE_PANDAS 🦥</h1>
-  <img src="Assets\flesh_completo.png" width="200" alt="Flash - O Mascote da Automação">
+  <img src="src\assets\img\FleshPerfil.png" width="200" alt="Flash - O Mascote da Automação">
   <h3>"Deixe o robô trabalhar enquanto você toma um café."</h3>
 </div>
 
