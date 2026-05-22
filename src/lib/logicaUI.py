@@ -1,8 +1,6 @@
 from tkinter import messagebox
 from .valerros import ValidarErros
 
-import time
-
 import threading
 
 class ProcessadorLogica:
@@ -57,7 +55,6 @@ class ProcessadorLogica:
 
 
     def executar_threads(self, selecionados):
-        inicioTime = time.time()
         self._alterar_estado_botoes("disabled")
         
         thread = threading.Thread(
@@ -66,12 +63,8 @@ class ProcessadorLogica:
             daemon=True
         )
         thread.start()
-        FimTime = time.time()
-        tempo_gasto = FimTime - inicioTime
-        print(f"⏱️ Tempo de execução: {tempo_gasto:.4f} segundos || executar thereads")
         pass
     def task_workflow(self, argumento):
-        inicioTime = time.time()
         lista_de_logs = []
         lista_de_file = []
         dic_log = {}
@@ -123,10 +116,6 @@ class ProcessadorLogica:
                 self._executar_na_main_thread(self.mainUI._exibir_mensagem_status, " >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt")
 
         self._processar_finalizacao(lista_de_logs, lista_de_file, dic_log, log_data, msg_corte)
-        FimTime = time.time()
-        tempo_gasto = FimTime - inicioTime
-        print(f"⏱️ Tempo de execução: {tempo_gasto:.4f} segundos || task workflow")
-
         pass
     def atualizar_log(self, dados_arquivos, data_periodo):
         try:

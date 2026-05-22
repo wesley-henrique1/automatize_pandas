@@ -1,12 +1,11 @@
 from src.lib.settings import Assets
 from src.views import Demandas, Ui1731, Ui3707, Ui1702
 from src.mod import Executar
-from src.lib import ProcessadorLogica, ValidarErros
+from src.lib import ProcessadorLogica, ValidarErros, ForjaUI
 
 from tkinter import scrolledtext, messagebox
 import tkinter as tk
 
-import time
 
 class auxiliar:       
     def _exibir_mensagem_status(self, mensagem):
@@ -17,16 +16,12 @@ class auxiliar:
         self.retorno.tag_config("alerta", **self.estilo_alerta)
         self.retorno.config(state="disabled")        
     def start_UI(self):
-        inicioTime = time.time()
         selecionados = [nome for nome, var in self.estados.items() if var.get()]
         try:
             if not selecionados:
                 messagebox.showwarning("Aviso", "Selecione ao menos uma opção!")
                 return
             self.logica_UI.executar_threads(selecionados)
-            FimTime = time.time()
-            tempo_gasto = FimTime - inicioTime
-            print(f"⏱️ Tempo de execução: {tempo_gasto:.4f} segundos || main")
         except Exception as e:
             self.validador.registrar_log(e, "Main-start_UI")
     def resetar_UI(self):
@@ -69,7 +64,9 @@ class JanelaPrincipal(auxiliar):
         self.quadro_bt(janela_principal= root)
         self.quadro_retorno(janela_principal= root)
         self.localizador()
+
         self.logica_UI = ProcessadorLogica(self)
+        self.testar = ForjaUI(self)
         root.mainloop()
         pass
 
@@ -144,7 +141,9 @@ class JanelaPrincipal(auxiliar):
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            ,command=lambda: self.tela_ROTINAS()
+            # ,command=lambda: self.tela_ROTINAS()
+            ,command=lambda: self.testar.IniciarProcesso()
+
         )
         self.bt_limpar = tk.Button(
             self.parte_2
@@ -364,9 +363,9 @@ class JanelaPrincipal(auxiliar):
 
         self.contador.place(relx=0.005, rely=0.01, relwidth=0.99, relheight=0.10)
 
-        self.retorno.place(relx=0.005, rely=0.15, relwidth=0.56, relheight=0.84)
-        self.retorno_db.place(relx=0.57, rely=0.15, relwidth=0.424, relheight=0.45)
-        self.retorno_file.place(relx=0.57, rely=0.61, relwidth=0.424, relheight=0.38)
+        self.retorno.place(relx=0.005, rely=0.15, relwidth=0.61, relheight=0.84)
+        self.retorno_db.place(relx=0.62, rely=0.15, relwidth=0.374, relheight=0.38)
+        self.retorno_file.place(relx=0.62, rely=0.55, relwidth=0.374, relheight=0.44)
         pass
     pass
 
