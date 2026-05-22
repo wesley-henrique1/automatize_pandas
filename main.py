@@ -6,6 +6,7 @@ from src.lib import ProcessadorLogica, ValidarErros
 from tkinter import scrolledtext, messagebox
 import tkinter as tk
 
+import time
 
 class auxiliar:       
     def _exibir_mensagem_status(self, mensagem):
@@ -16,12 +17,16 @@ class auxiliar:
         self.retorno.tag_config("alerta", **self.estilo_alerta)
         self.retorno.config(state="disabled")        
     def start_UI(self):
+        inicioTime = time.time()
         selecionados = [nome for nome, var in self.estados.items() if var.get()]
         try:
             if not selecionados:
                 messagebox.showwarning("Aviso", "Selecione ao menos uma opção!")
                 return
             self.logica_UI.executar_threads(selecionados)
+            FimTime = time.time()
+            tempo_gasto = FimTime - inicioTime
+            print(f"⏱️ Tempo de execução: {tempo_gasto:.4f} segundos || main")
         except Exception as e:
             self.validador.registrar_log(e, "Main-start_UI")
     def resetar_UI(self):
