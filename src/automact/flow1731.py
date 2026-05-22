@@ -2,17 +2,12 @@ import pyautogui as pag
 import pyperclip as pc
 import threading
 import time
-
 from ..lib import ValidarErros
-
 from tkinter import messagebox
 import tkinter as tk
 
-class Auxiliar():    
-
-        pass
-class Flow1731(Auxiliar):
-    validador = ValidarErros(fonte="Flow Mater")
+class Flow1731:
+    validador = ValidarErros(fonte="Flow 1731")
     def __init__(self, UI):        
         self.UImodulo = UI
         self.TextLog = (
