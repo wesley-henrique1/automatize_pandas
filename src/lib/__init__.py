@@ -1,4 +1,3 @@
-from .logicaUI import ProcessadorLogica
+from .logicaUI import Processador
 from .monitor import MonitorETL
 from .valerros import ValidarErros
-from .constructor import ForjaUI

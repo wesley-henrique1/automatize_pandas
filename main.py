@@ -1,7 +1,7 @@
 from src.lib.settings import Assets
 from src.views import Demandas, Ui1731, Ui3707, Ui1702
 from src.mod import Executar
-from src.lib import ProcessadorLogica, ValidarErros, ForjaUI
+from src.lib import Processador, ValidarErros
 
 from tkinter import scrolledtext, messagebox
 import tkinter as tk
@@ -65,8 +65,7 @@ class JanelaPrincipal(auxiliar):
         self.quadro_retorno(janela_principal= root)
         self.localizador()
 
-        self.logica_UI = ProcessadorLogica(self)
-        self.testar = ForjaUI(self)
+        self.logica_UI = Processador(self)
         root.mainloop()
         pass
 
