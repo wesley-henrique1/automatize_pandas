@@ -1,5 +1,5 @@
 from ..lib.settings import Wms, BaseDados, ColNames, OutPut
-from ..lib import ValidarErros
+from ..lib import ValidarErros, MonitorETL
 
 import datetime as dt
 import pandas as pd
@@ -78,10 +78,11 @@ class Corte(__auxiliares):
         self.saida = OutPut.Corte
         self.ano = dt.datetime.now().year
 
-        self.pipeline()
+        self.Instancia = MonitorETL()
 
     def pipeline(self):
         try:
+            self.Instancia.stageTime('Extract')
             files_pedidos = glob.glob(os.path.join(self.BaseCorte, '*.xls*'))
 
             query_select = f"SELECT {'NOME_ARQUIVO'} FROM {self.NOME_TABELA}"
@@ -89,11 +90,13 @@ class Corte(__auxiliares):
             arquivos_processados = set(names_db['NOME_ARQUIVO'].str.strip().tolist())
 
             df_corte = pd.read_csv(self.list_path[0],header= None, names= ColNames._1767)
+            self.Instancia.stageTime('Extract')
         except Exception as e:
             self.validador.registrar_log(e, "Extract")
             return False
         
         try:
+            self.Instancia.stageTime('Transform')
             try:
                 df_corte['hora'] = df_corte['hr'].astype(str) + ':' + df_corte['min'].astype(str)
                 df_corte['data'] = pd.to_datetime(df_corte['data'], format= '%d/%m/%y').sort_index(axis= 0, ascending= True)
@@ -121,7 +124,6 @@ class Corte(__auxiliares):
             except Exception as e:
                 self.validador.registrar_log(e, "CORTE_DIA")
                 return False
-
             try:
                 df_noite = df_corte.loc[~df_corte['hora'].between("07:30:00", "18:00:00")].copy()
 
@@ -139,7 +141,6 @@ class Corte(__auxiliares):
             except Exception as e:
                 self.validador.registrar_log(e, "CORTE_NOITE")
                 return False
-
             try:
                 list_achados = []
                 lis_procurados = []
@@ -186,8 +187,7 @@ class Corte(__auxiliares):
                     db_dados = self.cosultar_db(query_dados)
             except Exception as e:
                 self.validador.registrar_log(e, "PEDIDOS")
-                return False
-            
+                return False          
             try:
                 df_div = df_corte[['data','desc','hora', 'n_ped']].copy()
                 df_div['data'] = pd.to_datetime(df_div['data'], format= '%d/%m/%Y')
@@ -202,11 +202,13 @@ class Corte(__auxiliares):
             except Exception as e:
                 self.validador.registrar_log(e, "DIVERGENCIAS")
                 return False
+            self.Instancia.stageTime('Transform')
         except Exception as e:
             self.validador.registrar_log(e, "Transform")
             return False
 
         try:
+            self.Instancia.stageTime('Load')
             max_ex_dia= df_dia['data'].max() 
             max_ex_noite = df_noite['data_turno'].max()
 
@@ -225,6 +227,8 @@ class Corte(__auxiliares):
             self.dia = var_dia
             self.noite = var_noite
             self.divergencia = var_div
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "Corte")
         except Exception as e:
             self.validador.registrar_log(e, "Load")
             return False
@@ -317,6 +321,3 @@ class Corte(__auxiliares):
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
             return False
-
-if __name__ == "__main__":
-    Corte()

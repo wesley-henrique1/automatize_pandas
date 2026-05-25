@@ -1,5 +1,5 @@
 from ..lib.settings import Relatorios, ColNames, Wms, Outros, Output
-from ..lib import ValidarErros
+from ..lib import ValidarErros, MonitorETL
 
 import datetime as dt
 import pandas as pd
@@ -34,18 +34,22 @@ class OSCheck(auxiliar):
         hoje = dt.datetime.now()
         self.ontem =hoje - dt.timedelta(days=1)
         self.ontem = self.ontem.date()
+        self.Instancia = MonitorETL()
 
     def pipeline(self):
         try:
+            self.Instancia.stageTime('Extract')
             col_28 = ['DATA','NUMOS','CODPROD', 'DESCRICAO', 'ENDERECO_ORIG', 'RUA', 'PREDIO', 'NIVEL', 'APTO','RUA_1', 'PREDIO_1','NIVEL_1', 'APTO_1', 'QT', 'POSICAO', 'CODFUNCOS', 'CODFUNCESTORNO', 'Tipo O.S.', 'FUNCOSFIM','FUNCGER']
 
             df_func = pd.read_excel(self.list_path[0], sheet_name= 'ATIVOS', usecols= ['ID_FUNC', 'TIPO_ABST'])
             df_aereo = pd.read_csv(self.list_path[1], header= None, names= ColNames.col_end)
             df_28 = pd.read_excel(self.list_path[2], usecols= col_28)
+            self.Instancia.stageTime('Extract')
         except Exception as e:
             self.validador.registrar_log(e, "Extract")
             return False
         try:
+            self.Instancia.stageTime('Transform')
             df_28['DATA'] = pd.to_datetime(df_28['DATA'], dayfirst= True)
             df_28 = df_28.loc[df_28['DATA'].dt.date == self.ontem]
             
@@ -95,10 +99,12 @@ class OSCheck(auxiliar):
             df_fim["FUNCOSFIM"] = nome_.str[0] + " " + nome_.str[-1]
             df_fim = df_fim[['NUMOS','CODPROD','DESCRICAO','RUA','PREDIO','APTO','RUA_1','PREDIO_1','APTO_1','FUNCOSFIM','CATEGORIA','COD']]
             df_fim = df_fim.sort_values(by=['RUA', 'PREDIO'], ascending= True, axis= 0)
+            self.Instancia.stageTime('Transform')
         except Exception as e:
             self.validador.registrar_log(e, "Transform")
             return False
         try:
+            self.Instancia.stageTime('Load')
             with pd.ExcelWriter(Output.rel_os) as destino:
                 df_pd.to_excel(
                     destino
@@ -110,6 +116,8 @@ class OSCheck(auxiliar):
                     ,index= False
                     ,sheet_name= 'FIM_MESA'
                 )
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "OScheck")
             return True
         except Exception as e:
             self.validador.registrar_log(e, "Load")

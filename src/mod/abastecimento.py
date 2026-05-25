@@ -1,5 +1,5 @@
 from ..lib.settings import Relatorios, OutPut
-from ..lib import ValidarErros
+from ..lib import ValidarErros, MonitorETL
 
 import pandas as pd
 import numpy as np
@@ -40,10 +40,12 @@ class Abastecimento(auxiliar):
         self.rotinas_filtro = [1723,1709]
         self.hr_AM = "06:30:00"
         self.hr_PM = "18:00:00"
-        self.pipeline()
+
+        self.Instancia = MonitorETL()
 
     def pipeline(self):
         try:
+            self.Instancia.stageTime('Extract')
             cols_28 = ['NUMOS', 'DATA','HORA', 'CODROTINA', 'POSICAO', 'CODFUNCGER', 'FUNCGER', 
             'DTFIMOS', 'CODFUNCOS', 'FUNCOSFIM', 'Tipo O.S.', 'TIPOABAST']
             cols_64 = ['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR', 'EMPILHADOR']
@@ -60,11 +62,13 @@ class Abastecimento(auxiliar):
                 f"\n8628 >> {dt_menor_28:%d/%m/%Y} -- {dt_maior_28:%d/%m/%Y}\n"
                 f"8664 >> {dt_menor_64:%d/%m/%Y} -- {dt_maior_64:%d/%m/%Y}"
             )
+            self.Instancia.stageTime('Extract')
         except Exception as e:
             self.validador.registrar_log(e, "Extract")
             return False
 
         try:
+            self.Instancia.stageTime('Transform')
             try:
                 m_atual28['DATA'] = pd.to_datetime(m_atual28['DATA'], dayfirst= True).dt.normalize()
                 m_atual28['MES'] = m_atual28['DATA'].dt.month
@@ -145,14 +149,18 @@ class Abastecimento(auxiliar):
             except Exception as e:
                 self.validador.registrar_log(e, "T_GERAL")
                 return False
+            self.Instancia.stageTime('Transform')
         except Exception as e:
             self.validador.registrar_log(e, "Transform")
             return False
         try:
+            self.Instancia.stageTime('Load')
             with pd.ExcelWriter(OutPut.Abastecimento) as var:
                 pd_total.to_excel(var, index= False, sheet_name= "OS_PD")
                 fim_total.to_excel(var, index= False, sheet_name= "OS_FIM")
                 geral_total.to_excel(var, index= False, sheet_name= "OS_GERAL")
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "Abastecimento")
             return True, periodo
         except Exception as e:
             self.validador.registrar_log(e, "Load")
@@ -161,6 +169,3 @@ class Abastecimento(auxiliar):
         lista_de_logs = []
         dic_retorno = []
         return lista_de_logs, dic_retorno
-
-if __name__ == "__main__":
-    Abastecimento()

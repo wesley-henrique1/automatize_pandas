@@ -1,6 +1,8 @@
 from ..lib.settings import Relatorios, BaseDados, OutPut
 from ..lib import MonitorETL, ValidarErros
 
+import time
+
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -34,7 +36,6 @@ class Cadastro(auxiliar):
         comprimento = 120
         self.area_pl = (largura * comprimento) + 100
         self.Instancia = MonitorETL()
-        self.pipeline()
 
     def pipeline(self):
         try:
@@ -155,7 +156,6 @@ class Cadastro(auxiliar):
             except Exception as e:
                 self.validador.registrar_log(e, "T-KPI")
                 return False
-            
             self.Instancia.stageTime('Transform')
         except Exception as e:
                 self.validador.registrar_log(e, "Transform")
@@ -188,12 +188,11 @@ class Cadastro(auxiliar):
                 "UNITARIO":  [unitario, prod_unitario, porcent_un],
                 "x":         ["x", "x", "x"]
             })
-            print('with')
             df_final = df_final.sort_values(by=['RUA', 'PREDIO'], ascending= True)
             with pd.ExcelWriter(self.Retorno) as var:
                 df_final.to_excel(var, sheet_name= "cadastro", index= False)
                 df_amostradinho.to_excel(var, sheet_name= "demostrativo", index= False)
-            print('instancias')
+
             self.Instancia.stageTime('Load')
             self.Instancia.conversor(Modulo= "Cadastro")
             return True
@@ -225,6 +224,3 @@ class Cadastro(auxiliar):
             return False
 
         pass
-
-if __name__ == "__main__":
-    Cadastro()

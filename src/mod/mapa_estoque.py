@@ -1,5 +1,5 @@
 from ..lib.settings import Relatorios, Wms, ColNames, OutPut, BaseDados
-from ..lib import ValidarErros
+from ..lib import ValidarErros, MonitorETL
 
 import datetime as dt
 import pandas as pd
@@ -56,11 +56,13 @@ class MapaEstoque(auxiliar):
             ,39: [33,34,35,36,37,38]
         }
         self.saida = OutPut.MapaEstoque
-        self.pipeline()
+
+        self.Instancia = MonitorETL()
         pass
 
     def pipeline(self):
         try:
+            self.Instancia.stageTime('Extract')
             indices = [0, 1, 2, 3, 4, 6, 7, 9, 10, 11, 12, 16, 17, 18, 19, 20]
             base_geral = pd.read_csv(
                 self.list_path[0]
@@ -75,12 +77,12 @@ class MapaEstoque(auxiliar):
             )
             end_parado = pd.read_excel(self.list_path[2], sheet_name= 'AE', usecols= ['COD_END','TIPO'])
 
-            pass
+            self.Instancia.stageTime('Extract')
         except Exception as e:
             self.validador.registrar_log(e, "Extract")
             return False
-
         try:
+            self.Instancia.stageTime('Transform')
             aereos_1707 = base_geral.loc[(base_geral['TIPO_END'] == "AE") & (~base_geral['RUA'].isin(self.VIRTUAIS))].copy()
             R_8596 = R_8596.loc[~R_8596['RUA'].isin(self.VIRTUAIS)]
             prod = R_8596.rename(columns= {
@@ -145,12 +147,13 @@ class MapaEstoque(auxiliar):
                 lambda x: self.categorizar_AE(x['RUA'], x['RUA_AP'], self.map_ruas), 
                 axis= 1
             )
-            pass
+
+            self.Instancia.stageTime('Transform')
         except Exception as e:
             self.validador.registrar_log(e, "Transform")
             return False
-
         try:
+            self.Instancia.stageTime('Load')
             etapa_1 = [
                 'CODPROD'
                 ,'DESCRICAO'
@@ -182,6 +185,8 @@ class MapaEstoque(auxiliar):
             df_completo = df_completo[etapa_1 + etapa_2 + etapas_KPI]
             df_completo = df_completo.sort_values(by=["RUA", "PREDIO"], ascending= True)
             df_completo.to_excel(self.saida,index= False, sheet_name="Analise ae")
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "Mapa Estoque")
             return True
         except Exception as e:
             self.validador.registrar_log(e, "Load")
@@ -210,7 +215,3 @@ class MapaEstoque(auxiliar):
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
             return False
-
-
-if __name__ ==  "__main__":
-    MapaEstoque()

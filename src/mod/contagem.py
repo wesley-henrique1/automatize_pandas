@@ -1,5 +1,5 @@
 from ..lib.settings import BaseDados, Gestao
-from ..lib import ValidarErros
+from ..lib import ValidarErros, MonitorETL
 
 import pandas as pd
 import glob
@@ -46,8 +46,11 @@ class ContagemINV(__aux):
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH};")
         self.list_direct = [Gestao.dir_PROD, Gestao.invCont]
 
+        self.Instancia = MonitorETL()
+
     def pipeline(self):
         try:
+            self.Instancia.stageTime('Extract')
             inv_prod = glob.glob(os.path.join(self.list_direct[0], "*.xls*"))
             inv_cont = glob.glob(os.path.join(self.list_direct[1], "*.xls*"))
 
@@ -57,11 +60,12 @@ class ContagemINV(__aux):
             db_cont =self.cosultar_db(f"SELECT COD_INV FROM {self.TABELA_CONT}")
             dados_cont = set(db_cont['COD_INV'].tolist())
             msg_db = []
+            self.Instancia.stageTime('Extract')
         except Exception as e:
             self.validador.registrar_log(e, "Extract")
-            return False
-        
+            return False  
         try:
+            self.Instancia.stageTime('Transform')
             try:
                 BOOL_PROD = False
                 listagem_prod = []
@@ -162,11 +166,12 @@ class ContagemINV(__aux):
                     msg_db.append(retorno_bd)
             except Exception as e:
                 self.validador.registrar_log(e, "T-INV_CONT")
+            self.Instancia.stageTime('Transform')
         except Exception as e:
             self.validador.registrar_log(e, "Transform")
-            return False
-        
+            return False      
         try:
+            self.Instancia.stageTime('Load')
             if BOOL_PROD:
                 self.atualizar(df_PROD, self.TABELA_PROD)
                 
@@ -185,6 +190,8 @@ class ContagemINV(__aux):
                 ,"ERROS": len(erros_cont)
                 ,"LEITURA": len(inv_cont)
             }
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "ContagemINV")
             return True
         except Exception as e:
             self.validador.registrar_log(e, "Load")
@@ -199,4 +206,3 @@ class ContagemINV(__aux):
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
             return False
-

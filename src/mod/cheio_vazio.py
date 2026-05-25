@@ -1,5 +1,5 @@
 from ..lib.settings import BaseDados, Gestao
-from ..lib import ValidarErros
+from ..lib import ValidarErros, MonitorETL
 
 import pandas as pd
 import glob
@@ -42,8 +42,11 @@ class CheioVazio(auxiliar):
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH };")
         self.list_dados = [Gestao.CheioVazio]
 
+        self.Instancia = MonitorETL()
+
     def pipeline(self):
         try:  # EXTRAÇÃO DOS DADOS
+            self.Instancia.stageTime('Extract')
             names_db = self.cosultar_db(
                 f"SELECT {'NOME_RELATORIO'} FROM {self.NOME_TABELA}"
             )
@@ -53,10 +56,12 @@ class CheioVazio(auxiliar):
             list_processado = []
             list_files_db = []
             list_erros = []
+            self.Instancia.stageTime('Extract')
         except Exception as e:
             self.validador.registrar_log(e, "Extract")
             return False
         try: # TRATAMENTO DOS DADOS
+            self.Instancia.stageTime('Transform')
             for file in pasta_files:
                 NAME_FILE = os.path.basename(file)
                 if NAME_FILE in arquivos_processados:
@@ -91,14 +96,22 @@ class CheioVazio(auxiliar):
                     df_consolidado[col] = df_consolidado[col].fillna(0).astype(int)
                 except Exception as e:
                     self.validador.registrar_log(e, f"{col} - tratamento_int")
-
+            self.Instancia.stageTime('Transform')
+        except Exception as e:
+            self.validador.registrar_log(e, "Transform")
+            return False
+        try:
+            self.Instancia.stageTime('Load')
             self.atualizar(df_consolidado, self.NOME_TABELA)
             self.qt_files = len(list_processado)
             self.qt_erros = len(list_erros)
             self.qtde = len(list_files_db)
+
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "CheioVazio")
             return True
         except Exception as e:
-            self.validador.registrar_log(e, "Transform")
+            self.validador.registrar_log(e, "Load")
             return False
     def carregamento(self):
         lista_de_logs = []

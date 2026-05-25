@@ -1,5 +1,5 @@
 from ..lib.settings import Relatorios, Gestao, Filial_18, Wms, ColNames, OutPut
-from ..lib import ValidarErros
+from ..lib import ValidarErros, MonitorETL
 
 import pandas as pd
 import numpy as np
@@ -21,10 +21,11 @@ class GiroEstoque:
             ,Wms.endereco07
         ]
         self.saida = OutPut.GiroStatus
-        self.pipeline()
+        self.Instancia = MonitorETL()
         pass
     def pipeline(self):
         try:
+            self.Instancia.stageTime('Extract')
             col_8596 = [
                 'DTULTENT', 'DTULTSAIDA', 'CODPROD', 'DESCRICAO', 'OBS2', 'QTUNITCX', 'RUA', 'PREDIO', 'NIVEL', 'APTO','QTESTGER'
             ]
@@ -42,11 +43,13 @@ class GiroEstoque:
             aux_286_F18 = pd.read_excel(self.list_path[3], usecols= col_286)
 
             aux_1707 = pd.read_csv(self.list_path[4], header= None, usecols= col_1707, names=[_col_[5], _col_[13]])
-            pass
+            
+            self.Instancia.stageTime('Extract')
         except Exception as e:
             self.validador.registrar_log(e, "Extract")
             return False
         try:
+            self.Instancia.stageTime('Transform')
             try:
                 df_estoque = aux_286_F11.merge(aux_286_F18, on= 'Código', how= 'outer').fillna(0)
                 df_estoque = df_estoque.rename(columns={'Código': "CODPROD"})
@@ -130,7 +133,6 @@ class GiroEstoque:
             except Exception as e:
                 self.validador.registrar_log(e, "T_286")
                 return False
-
             try:
                 virtual_prod = dados_F11.loc[(dados_F11['RUA'].isin(self.VIRTUAIS))].copy()
                 dados_F11 = dados_F11.loc[(~dados_F11['RUA'].isin(self.VIRTUAIS))].copy()
@@ -167,7 +169,6 @@ class GiroEstoque:
             except Exception as e:
                 self.validador.registrar_log(e, "T_8596")
                 return False
-
             try:
                 aux = aux_1707.loc[aux_1707['TIPO_PK'] == 'AE']
                 grupo_AE = aux.groupby("COD").agg(
@@ -212,15 +213,20 @@ class GiroEstoque:
 
             df_ativos = df_completo.loc[df_completo['OBS2'] =="ATIVO"].copy()
             df_FL = df_completo.loc[df_completo['OBS2'] =="FL"].copy()
-            pass
+            
+            self.Instancia.stageTime('Transform')
         except Exception as e:
             self.validador.registrar_log(e, "Transform")
             return False
         try:
+            self.Instancia.stageTime('Load')
             with pd.ExcelWriter(self.saida) as destino:
                 df_ativos.to_excel(destino, sheet_name= "ATIVOS", index= False)
                 df_FL.to_excel(destino, sheet_name= "FLs", index= False)
                 df_completo.to_excel(destino, sheet_name= "COMPLETO", index= False)
+
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "Giro Estoque")
             return True
         except Exception as e:
             self.validador.registrar_log(e, "Load")
@@ -249,6 +255,3 @@ class GiroEstoque:
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
             return False
-
-if __name__ == "__main__":
-    GiroEstoque()

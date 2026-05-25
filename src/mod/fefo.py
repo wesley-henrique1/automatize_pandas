@@ -1,5 +1,5 @@
 from ..lib.settings import Wms, Relatorios, Gestao, Filial_18, ColNames, OutPut
-from ..lib import ValidarErros
+from ..lib import ValidarErros, MonitorETL
 
 import datetime as dt
 import pandas as pd
@@ -59,11 +59,12 @@ class FefoAbst(__auxiliares):
         self.list_meio = ['3-MEDIO (0,80)', '7-MEIO PALETE']
         self.virtual = [60,70,80,100,102,106]
 
-        self.pipeline()
+        self.Instancia = MonitorETL()
         pass
     
     def pipeline(self):
         try:
+            self.Instancia.stageTime('Extract')
             col_8628 = ['DATA', "CODPROD", "DESCRICAO","NIVEL","ENDERECO_DEST", "RUA_1", "PREDIO_1", "NIVEL_1", "APTO_1","POSICAO"]
             col_8596 = ["CODPROD", "PRAZOVAL","RUA","PREDIO","APTO","PK_END"]
             indices_desejados = [0, 5, 8, 13]
@@ -78,11 +79,12 @@ class FefoAbst(__auxiliares):
             baixa = pd.read_excel(self.list_path[1], usecols= col_8628)
             prod_dados = pd.read_excel(self.list_path[2], usecols= col_8596)
 
-            pass
+            self.Instancia.stageTime('Extract')
         except Exception as e:
             self.validador.registrar_log(e, "ABST_Extract")
             return False
         try:
+            self.Instancia.stageTime('Transform')
             END_1707['DT_VALIDADE'] = pd.to_datetime(END_1707['DT_VALIDADE'], dayfirst=True, errors= "coerce")
 
             grupo = prod_dados['CODPROD'].loc[(prod_dados["PRAZOVAL"] > 0) & (~prod_dados['RUA'].isin(self.virtual))]
@@ -101,11 +103,12 @@ class FefoAbst(__auxiliares):
             
             df_baixa = df_baixa.merge(END_1707, left_on="ENDERECO_DEST", right_on= "COD_END", how= "left")
             df_completo = df_baixa.merge(DF_PROD, on= "CODPROD", how= "left")
-            pass
+            self.Instancia.stageTime('Transform')
         except Exception as e:
             self.validador.registrar_log(e, "ABST_Transform")
             return False
         try:
+            self.Instancia.stageTime('Load')
             COLUNAS_FEFO = [
                 "DATA"
                 , "CODPROD"
@@ -125,7 +128,8 @@ class FefoAbst(__auxiliares):
 
             df_final = df_completo[COLUNAS_FEFO]
             df_final.to_excel(self.saida, index= False,sheet_name= "FEFO")
-
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "Fefo abst")
             return True
         except Exception as e:
             self.validador.registrar_log(e, "ABST_Load")
@@ -167,11 +171,12 @@ class FefoCurva(__auxiliares):
         self.list_time = []
         self.dt_hoje = dt.datetime.now()
 
-        self.pipeline()
+        self.Instancia = MonitorETL()
         pass
     
     def pipeline(self):
         try:
+            self.Instancia.stageTime('Extract')
             col_est = ["Código", "Giro dia", "Est. dia"]
             col_prod = ["CODPROD","RUA","PREDIO","APTO","PK_END", "DTULTENT","PRAZOVAL", "FORNECEDOR"]
             indices_desejados = [0, 5, 8, 13]
@@ -182,12 +187,13 @@ class FefoCurva(__auxiliares):
             est_F18 = pd.read_excel(self.list_path[2], usecols= col_est)
             dados_PROD = pd.read_excel(self.list_path[3], usecols= col_prod)
             end_1707 = pd.read_csv(self.list_path[4], header= None, usecols= indices_desejados, names= col_07)
-
+            self.Instancia.stageTime('Extract')
             pass
         except Exception as e:  
             self.validador.registrar_log(e, "curva-Extract")
             return False
         try:
+            self.Instancia.stageTime('Transform')
             cod_fefo = dados_PROD["CODPROD"].loc[dados_PROD["PRAZOVAL"] > 0]
 
             """>> Tratamento da base 8668"""
@@ -256,11 +262,12 @@ class FefoCurva(__auxiliares):
             except Exception as e:
                 self.validador.registrar_log(e, "curva-T-calculada")
                 return False
-            pass
+            self.Instancia.stageTime('Transform')
         except Exception as e:
             self.validador.registrar_log(e, "curva-Transform")
             return False
         try:
+            self.Instancia.stageTime('Load')
             col_int = ["RUA", "PREDIO", "NIVEL", "APTO", "PREVI_DIF"]
             for col in  col_int:
                 df_completo[col] = pd.to_numeric(df_completo[col], errors= 'coerce').fillna(0).astype(int)
@@ -308,7 +315,8 @@ class FefoCurva(__auxiliares):
 
             df_completo = df_completo[col_base + col_calculadas + col_final]
             df_completo.to_excel(self.saida, index= False, sheet_name= "Fefo")
-
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "Fefo Curvas")
             return True
         except Exception as e:
             self.validador.registrar_log(e, "curva-Load")
@@ -336,10 +344,3 @@ class FefoCurva(__auxiliares):
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
             return False
-
-"""
-    AREA DE TESTE
-    clases 
-if __name__ == "__main__":
-    Fefo_ABST()
-"""

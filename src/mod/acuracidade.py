@@ -1,5 +1,5 @@
 from ..lib.settings import Relatorios, Gestao, Wms, OutPut, ColNames
-from ..lib import ValidarErros
+from ..lib import ValidarErros, MonitorETL
 
 import datetime as dt
 import pandas as pd
@@ -78,18 +78,21 @@ class Acuracidade(auxiliar):
     def __init__(self):
         self.list_path = [Gestao._286, Wms.gerencial07,Wms.endereco07,Relatorios._8596]
 
-        self.pipeline()
+        self.Instancia = MonitorETL()
 
     def pipeline(self):
         try:
+            self.Instancia.stageTime('Extract')
             df_bloq = pd.read_excel(self.list_path[0], usecols=['Código', 'Bloqueado(Qt.Bloq.-Qt.Avaria)','Qt.Avaria'])
             end_ger = pd.read_csv(self.list_path[1], header= None, names= ColNames.Gerencial)  
             df_end = pd.read_csv(self.list_path[2], header= None, names= ColNames.Endereco)
             df_prod = pd.read_excel(self.list_path[3], usecols= ['CODPROD', 'QTUNITCX','QTTOTPAL'])
+            self.Instancia.stageTime('Extract')
         except Exception as e:
             self.validador.registrar_log(e, "Extract")
             return False
         try:
+            self.Instancia.stageTime('Transform')
             dic_end_ger = {'COD' : "CODPROD"}
             end_ger = end_ger.rename(columns= dic_end_ger)
             end_ger['RUA'] = end_ger['RUA'].fillna(0).astype(int)
@@ -128,13 +131,11 @@ class Acuracidade(auxiliar):
             for col in col_ajuste:
                 df = self.ajustar_numero(df, col, float)
 
-
             df['DIF_UN'] = df['ENDERECO'] - df['GERENCIAL']
             df['DIF_CX'] = round(df['DIF_UN'] / df['QTUNITCX'], 1)
             df['ENDERECO'] = df['ENDERECO'] + df['ENTRADA']
             df['CAP_CONVERTIDA'] = df['CAP'] * df['QTUNITCX']
             df["STG_DISP"] =  df['GERENCIAL'] - df['BLOQUEADOS']
-            
 
             for col in ['PICKING', 'CAP_CONVERTIDA', 'DIF_CX', 'DIF_UN','RUA', 'PREDIO', 'STG_DISP']:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
@@ -187,13 +188,17 @@ class Acuracidade(auxiliar):
             
             df_prod = df_prod.drop_duplicates(subset=None, keep='first')
             df = df.sort_values(by=['RUA', 'PREDIO'], ascending= True)
+            self.Instancia.stageTime('Transform')
         except Exception as e:
             self.validador.registrar_log(e, "Transform")
             return False
         try:
+            self.Instancia.stageTime('Load')
             with pd.ExcelWriter(OutPut.Acuracidade) as var:
                 df.to_excel(var, index= False, sheet_name= 'DIVERGENCIA')
                 df_prod.to_excel(var, index= False, sheet_name= 'DIM_PROD')
+            self.Instancia.stageTime('Load')
+            self.Instancia.conversor(Modulo= "Acuracidade")
             return True
         except Exception as e:
             self.validador.registrar_log(e, "Load")
@@ -222,6 +227,3 @@ class Acuracidade(auxiliar):
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
             return False
-
-if __name__ == "__main__":
-    Acuracidade()
