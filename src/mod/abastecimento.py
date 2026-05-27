@@ -1,3 +1,4 @@
+
 from ..lib.settings import Relatorios, OutPut
 from ..lib import ValidarErros, MonitorETL
 
@@ -92,7 +93,7 @@ class Abastecimento(auxiliar):
                 return False
             try:
                 m_atual64['CODEMPILHADOR'] = m_atual64['CODEMPILHADOR'].fillna(0)  
-                m_atual64['DATAGERACAO'] = pd.to_datetime(m_atual64['DATAGERACAO'], dayfirst= True).dt.normalize()
+                m_atual64['DATAGERACAO'] = pd.to_datetime(m_atual64['DATAGERACAO'], dayfirst= True)
                 m_atual64['MES'] = m_atual64['DATAGERACAO'].dt.month
                 m_atual64 = m_atual64[['DATAGERACAO', 'DTLANC', 'NUMBONUS', 'NUMOS', 'CODEMPILHADOR','EMPILHADOR', 'MES']].copy()
                 m_atual64 = m_atual64.drop_duplicates(subset=['NUMOS'])
@@ -100,6 +101,7 @@ class Abastecimento(auxiliar):
                 m_atual64['DATA'] = pd.to_datetime(m_atual64['DATAGERACAO'].dt.date)
                 m_atual64['HORA'] = m_atual64['DATAGERACAO'].dt.time
                 m_atual64['HORA'] = m_atual64["HORA"].apply(self.corrigir_hr)
+                
                 cond_turno = (
                     (m_atual64['HORA'] >= self.hr_AM)  & (m_atual64['HORA'] <= self.hr_PM)
                     ,(m_atual64['HORA'] >= self.hr_PM) | (m_atual64['HORA'] < self.hr_AM)
@@ -109,7 +111,7 @@ class Abastecimento(auxiliar):
                     ,m_atual64['DATA'] - pd.Timedelta(days= 1)
                 )
                 m_atual64['DT_TURNO'] = np.select(cond_turno, result_turno, default=m_atual64['DATA'])
-                
+
                 agrupamento = m_atual64.groupby(['DT_TURNO', 'CODEMPILHADOR']).agg(
                     OS_RECEB = ("NUMOS", 'nunique')
                 ).reset_index().fillna(0)
