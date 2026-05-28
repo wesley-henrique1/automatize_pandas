@@ -79,7 +79,7 @@ class Processador:
         if not dados_modulos:
             return      
         try:
-            titulos = f"{'MODULO':^15} | {'ARQUIVOS':^8} | {'ERROS':^5} | {'LEITURAS':^9}"
+            titulos = f"{'MODULO':^15} | {'ARQUIVOS':^8} | {'ERROS':^5} | {'LEITURAS':^9}\n"
             linha = f"{"-" * 45}\n"
             conteudo = titulos + linha
             
@@ -107,7 +107,7 @@ class Processador:
                 date = var.get('DATA', '--/--/----')
                 hrs = var.get('HORA', '--:--')
 
-                conteudo += f"{modulo:^24} | {date:^10} | {hrs:^8}"
+                conteudo += f"{modulo:<24} | {date:^10} | {hrs:^8}\n"
 
             self._inserir_texto_no_widget(self._widget_ancora.retorno_file, conteudo, limpar=False)
         except Exception as e:

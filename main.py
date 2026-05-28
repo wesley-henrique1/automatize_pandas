@@ -31,6 +31,12 @@ class auxiliar:
         self._exibir_mensagem_status("Aguardando proximo processo...")
         self.retorno_db.config(state="normal")
         self.retorno_db.delete("1.0", "end")
+        self.retorno_db.config(state="disabled")
+
+        self.retorno_file.config(state="normal")
+        self.retorno_file.delete("1.0", "end")
+        self.retorno_file.config(state="disabled")
+
 
         self.contador.config(text="PROGRESSO >> 100% || 0/0 OPERAÇÃO")    
     pass
@@ -42,7 +48,7 @@ class JanelaPrincipal(auxiliar):
         self.frame_color = "#F0FFFF"
         self.borda_color = "#000000"
         self.back_2 = "#363636"
-        self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 12, "bold")}
+        self.estilo_alerta = {"foreground": "#FF640A", "font": ("Consolas", 16, "bold"), "justify": "center"}
 
         root = tk.Tk()
         root.title("GERENCIADOR_8000")
