@@ -15,7 +15,7 @@ class Flow3707:
             f"{">> PROGRESSO: 0 - 0 || 100%":<}\n"
             f"{">> Fase: PRODUTO | DESTINO"}"
         )
-        self.time_executar = 0.001
+        self.time_executar = 1
 
         self._codProd = []
         self._codEnd = []
@@ -70,47 +70,89 @@ class Flow3707:
         inicio_processo = time.time()
         try:
             lista_bool = []
-            pag.keyDown('alt')
-            pag.press('tab')
-            pag.keyUp('alt')
-            pag.sleep(0.5)
+            for segundos_restantes in range(5, 0, -1):
+                self._LogUI(
+                    fase=6 - segundos_restantes
+                    ,barramento=5
+                    ,progresso=f""
+                    ,cod=""
+                    ,end="CLIQUE NA JANELA"
+                )
+                pag.sleep(1.0)
+
 
             for etapa, (codprod, codend) in enumerate(zip(listCod, listEnd)):
+
+                print(f"\netapa: {etapa} | cod: {codprod} | end: {codend}")
+                
                 if not self.em_execucao:
                     break
+                    
                 progresso_anterior = int((etapa / trava) * 100)
                 self._LogUI(
-                    fase= etapa
-                    ,barramento= trava
-                    ,progresso= progresso_anterior
-                    ,cod= codprod
-                    ,end= codend
+                    fase=etapa
+                    ,barramento=trava
+                    ,progresso=progresso_anterior
+                    ,cod=codprod
+                    ,end=codend
                 )
 
+                print('inicio')
                 if not self.em_execucao: break
                 pc.copy(codprod)
+                pag.sleep(0.02)
+                
+                tentativas_prod = 0
+                while pc.paste() != str(codprod) and tentativas_prod < 5:
+                    print('Refazendo cópia do codprod no clipboard...')
+                    pag.sleep(0.1)
+                    pc.copy(codprod)
+                    tentativas_prod += 1
+                    
                 pag.hotkey("ctrl", "v")
+                pag.sleep(0.02)
+
+                print(f"Colado codprod: {codprod}")
+                conteudo_do_colar = pc.paste()
+                print(f"[VALIDAÇÃO] O Windows tentou colar isso agora: {conteudo_do_colar}\n")
+
                 pag.press('enter')
-                time.sleep(self.time_executar)
+                pag.sleep(1)
                 
                 if not self.em_execucao: break
                 pc.copy(codend)
+                pag.sleep(0.05)
+                
+                tentativas_end = 0
+                while pc.paste() != str(codend) and tentativas_end < 5:
+                    print('Refazendo cópia do codend no clipboard...')
+                    pag.sleep(0.1)
+                    pc.copy(codend)
+                    tentativas_end += 1
+                    
                 pag.hotkey("ctrl", "v")
-                for _ in range(3):
-                    pag.press('enter')
-                    time.sleep(self.time_executar)      
-                if not self.em_execucao: break
-                progresso_atual = int(( (etapa +1) / trava) * 100)
-                self._LogUI(
-                    fase= etapa + 1
-                    ,barramento= trava
-                    ,progresso= progresso_atual
-                    ,cod= codprod
-                    ,end= codend
-                )
-                if not self.em_execucao: break
-                lista_bool.append(codprod)
+                print(f"Colado codend: {codend}")
+                conteudo_do_colar = pc.paste()
+                print(f"[VALIDAÇÃO] O Windows tentou colar isso agora: {conteudo_do_colar}\n")
 
+                pag.sleep(0.02)
+
+                for _ in range(3):
+                    pag.sleep(0.02)  
+                    pag.press('enter')
+                
+                if not self.em_execucao: break
+                progresso_atual = int(( (etapa + 1) / trava) * 100)
+                self._LogUI(
+                    fase=etapa + 1
+                    ,barramento=trava
+                    ,progresso=progresso_atual
+                    ,cod=codprod
+                    ,end=codend
+                )
+                pag.sleep(0.5)  
+                lista_bool.append(codprod)
+                pass
             total_bool = len(lista_bool)
             total_sku = len(listCod)
 
@@ -144,6 +186,7 @@ class Flow3707:
                 )
                 self.AncoraBtTransferir.config(state="normal")
         except Exception as e:
+            self.PararProcesso()
             self.validador.registrar_log(e, "Logica: _automact") 
         pass
     

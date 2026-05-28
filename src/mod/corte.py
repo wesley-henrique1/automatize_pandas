@@ -206,6 +206,8 @@ class Corte(__auxiliares):
             self.validador.registrar_log(e, "Transform")
             return False
         try:
+            print("validação load corte")
+
             self.Instancia.stageTime('Load')
             max_ex_dia= df_dia['data'].max() 
             max_ex_noite = df_noite['data_turno'].max()
@@ -213,12 +215,15 @@ class Corte(__auxiliares):
             ex_dia = df_dia.loc[df_dia['data'] == max_ex_dia].copy()
             ex_noite = df_noite.loc[df_noite['data_turno'] == max_ex_noite].copy()
             
+            print("Inicio do save")
 
             with pd.ExcelWriter(self.Retorno[0]) as destino_corte:
                 df_corte.to_excel(destino_corte, sheet_name='extrato', index= False)
                 ex_dia.to_excel(destino_corte, sheet_name= 'ex_dia', index= False)
                 ex_noite.to_excel(destino_corte, sheet_name= 'ex_noite', index= False)
-            
+
+            print("separação dos dados")
+
             self.qt_files = len(lis_procurados)
             self.qt_erros = len(list_erros)
             self.qtde = len(list_achados)
@@ -227,9 +232,12 @@ class Corte(__auxiliares):
             self.divergencia = var_div
             self.Instancia.stageTime('Load')
             self.Instancia.conversor(Modulo= "Corte")
+            print("Fim do modulo")
+            return True
         except Exception as e:
             self.validador.registrar_log(e, "Load")
             return False
+        
     def Log_Retorno(self):
         try:
             self.dia['data'] = pd.to_datetime(self.dia['data'], format='%d-%m-%Y')
@@ -292,6 +300,7 @@ class Corte(__auxiliares):
             return False
     def carregamento(self, validar):
         lista_de_logs = []
+        dicRetorno = []
         try:
             if not validar:
                 return
@@ -311,13 +320,14 @@ class Corte(__auxiliares):
                 }
                 lista_de_logs.append(dic_log)
             
-            dic_retorno = [{
+            dic = {
                 "MODULO": "Corte"
                 ,"ARQUIVOS": self.qt_files
                 ,"ERROS": self.qt_erros
                 ,"LEITURA": self.qtde 
-            }]
-            return lista_de_logs, dic_retorno
+            }
+            dicRetorno.append(dic)
+            return lista_de_logs, dicRetorno
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
             return False

@@ -220,7 +220,7 @@ class GiroEstoque:
             return False
         try:
             self.Instancia.stageTime('Load')
-            with pd.ExcelWriter(self.Retorno) as destino:
+            with pd.ExcelWriter(self.Retorno[0]) as destino:
                 df_ativos.to_excel(destino, sheet_name= "ATIVOS", index= False)
                 df_FL.to_excel(destino, sheet_name= "FLs", index= False)
                 df_completo.to_excel(destino, sheet_name= "COMPLETO", index= False)
