@@ -109,7 +109,7 @@ class Processador:
 
                 conteudo += f"{modulo:<24} | {date:^10} | {hrs:^8}\n"
 
-            self._inserir_texto_no_widget(self._widget_ancora.retorno_file, conteudo, limpar=False)
+            self._inserir_texto_no_widget(self._widget_ancora.retorno_file, conteudo, limpar=True)
         except Exception as e:
             self.validador.registrar_log(e, "Atualizar Output Dados")
 
