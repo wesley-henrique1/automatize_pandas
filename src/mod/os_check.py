@@ -30,7 +30,7 @@ class OSCheck(auxiliar):
     validador = ValidarErros(fonte="OSCheck")
     def __init__(self):
         self.list_path = [Outros.ou_func, Wms.wms_07_end, Relatorios.rel_28]
-
+        self.Retorno = [Output.rel_os]
         hoje = dt.datetime.now()
         self.ontem =hoje - dt.timedelta(days=1)
         self.ontem = self.ontem.date()
@@ -105,7 +105,7 @@ class OSCheck(auxiliar):
             return False
         try:
             self.Instancia.stageTime('Load')
-            with pd.ExcelWriter(Output.rel_os) as destino:
+            with pd.ExcelWriter(self.Retorno[0]) as destino:
                 df_pd.to_excel(
                     destino
                     ,index= False
@@ -122,10 +122,11 @@ class OSCheck(auxiliar):
         except Exception as e:
             self.validador.registrar_log(e, "Load")
             return False
-    def carregamento(self):
+    def carregamento(self, validar):
         lista_de_logs = []
-        dic_retorno = []
         try:
+            if not validar:
+                return
             for contador, path in enumerate(self.list_path, 1):
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
@@ -141,7 +142,31 @@ class OSCheck(auxiliar):
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
+            dic_retorno = []
             return lista_de_logs, dic_retorno
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
+            return False
+    def outputLog(self, validar):
+        ListaOutPut = []
+        try:
+            if not validar:
+                return
+            for path in self.Retorno:
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                Dicionario = {
+                    "ARQUIVO": nome_file,
+                    "DATA": data_formatada,
+                    "HORA": horas_formatada
+                }
+                ListaOutPut.append(Dicionario)
+            return ListaOutPut
+        except Exception as e:
+            self.validador.registrar_log(e, "output")
             return False

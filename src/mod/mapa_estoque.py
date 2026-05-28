@@ -27,6 +27,7 @@ class MapaEstoque(auxiliar):
     validador = ValidarErros(fonte="Mapa Estoque")
     def __init__(self):
         self.list_path = [Wms.geral07, Relatorios._8596, BaseDados.EndFixo]
+        self.Retorno = [OutPut.MapaEstoque]
         self.VIRTUAIS = [60, 70, 80, 100, 106, 44, 47, 40]
         self.estruturas = {
             "INTEIRO (2,55)": [255, "INT_255"]
@@ -55,7 +56,7 @@ class MapaEstoque(auxiliar):
             ,38: [33,34,35,36,37,39]
             ,39: [33,34,35,36,37,38]
         }
-        self.saida = OutPut.MapaEstoque
+        
 
         self.Instancia = MonitorETL()
         pass
@@ -184,17 +185,18 @@ class MapaEstoque(auxiliar):
             ]
             df_completo = df_completo[etapa_1 + etapa_2 + etapas_KPI]
             df_completo = df_completo.sort_values(by=["RUA", "PREDIO"], ascending= True)
-            df_completo.to_excel(self.saida,index= False, sheet_name="Analise ae")
+            df_completo.to_excel(self.Retorno[0],index= False, sheet_name="Analise ae")
             self.Instancia.stageTime('Load')
             self.Instancia.conversor(Modulo= "Mapa Estoque")
             return True
         except Exception as e:
             self.validador.registrar_log(e, "Load")
             return False
-    def carregamento(self):
+    def carregamento(self, validar):
         lista_de_logs = []
-        dic_retorno = []
         try:
+            if not validar:
+                return
             for contador, path in enumerate(self.list_path, 1):
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
@@ -210,8 +212,31 @@ class MapaEstoque(auxiliar):
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
-
+            dic_retorno = []
             return lista_de_logs, dic_retorno
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
+            return False
+    def outputLog(self, validar):
+        ListaOutPut = []
+        try:
+            if not validar:
+                return
+            for path in self.Retorno:
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                Dicionario = {
+                    "ARQUIVO": nome_file,
+                    "DATA": data_formatada,
+                    "HORA": horas_formatada
+                }
+                ListaOutPut.append(Dicionario)
+            return ListaOutPut
+        except Exception as e:
+            self.validador.registrar_log(e, "output")
             return False

@@ -77,7 +77,7 @@ class Acuracidade(auxiliar):
     validador = ValidarErros(fonte="Acuracidade")
     def __init__(self):
         self.list_path = [Gestao._286, Wms.gerencial07,Wms.endereco07,Relatorios._8596]
-
+        self.Retorno = [OutPut.Acuracidade]
         self.Instancia = MonitorETL()
 
     def pipeline(self):
@@ -194,7 +194,7 @@ class Acuracidade(auxiliar):
             return False
         try:
             self.Instancia.stageTime('Load')
-            with pd.ExcelWriter(OutPut.Acuracidade) as var:
+            with pd.ExcelWriter(self.Retorno[0]) as var:
                 df.to_excel(var, index= False, sheet_name= 'DIVERGENCIA')
                 df_prod.to_excel(var, index= False, sheet_name= 'DIM_PROD')
             self.Instancia.stageTime('Load')
@@ -203,9 +203,11 @@ class Acuracidade(auxiliar):
         except Exception as e:
             self.validador.registrar_log(e, "Load")
             return False
-    def carregamento(self):
+    def carregamento(self, validar):
         lista_de_logs = []
         try:
+            if not validar:
+                return
             for contador, path in enumerate(self.list_path, 1):
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
@@ -221,9 +223,31 @@ class Acuracidade(auxiliar):
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
-            
             dic_retorno = []
             return lista_de_logs, dic_retorno
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
+            return False
+    def outputLog(self, validar):
+        ListaOutPut = []
+        try:
+            if not validar:
+                return
+            for path in self.Retorno:
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                Dicionario = {
+                    "ARQUIVO": nome_file,
+                    "DATA": data_formatada,
+                    "HORA": horas_formatada
+                }
+                ListaOutPut.append(Dicionario)
+            return ListaOutPut
+        except Exception as e:
+            self.validador.registrar_log(e, "output")
             return False

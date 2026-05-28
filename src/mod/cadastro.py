@@ -25,7 +25,7 @@ class Cadastro(auxiliar):
     validador = ValidarErros(fonte="Cadastro")
     def __init__(self):
         self.list_path = [Relatorios._8596, BaseDados.EndFixo]
-        self.Retorno = OutPut.Cadastro
+        self.Retorno = [OutPut.Cadastro]
         print(self.Retorno)
         self.chekout = [27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
@@ -189,7 +189,7 @@ class Cadastro(auxiliar):
                 "x":         ["x", "x", "x"]
             })
             df_final = df_final.sort_values(by=['RUA', 'PREDIO'], ascending= True)
-            with pd.ExcelWriter(self.Retorno) as var:
+            with pd.ExcelWriter(self.Retorno[0]) as var:
                 df_final.to_excel(var, sheet_name= "cadastro", index= False)
                 df_amostradinho.to_excel(var, sheet_name= "demostrativo", index= False)
 
@@ -199,9 +199,12 @@ class Cadastro(auxiliar):
         except Exception as e:
             self.validador.registrar_log(e, "Load")
             return False
-    def carregamento(self):
+        
+    def carregamento(self, validar):
         lista_de_logs = []
         try:
+            if not validar:
+                return
             for contador, path in enumerate(self.list_path, 1):
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
@@ -222,5 +225,26 @@ class Cadastro(auxiliar):
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
             return False
+    def outputLog(self, validar):
+        ListaOutPut = []
+        try:
+            if not validar:
+                return
+            for path in self.Retorno:
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
 
-        pass
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                Dicionario = {
+                    "ARQUIVO": nome_file,
+                    "DATA": data_formatada,
+                    "HORA": horas_formatada
+                }
+                ListaOutPut.append(Dicionario)
+            return ListaOutPut
+        except Exception as e:
+            self.validador.registrar_log(e, "output")
+            return False

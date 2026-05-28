@@ -74,8 +74,8 @@ class Corte(__auxiliares):
         self.ODBC_CONN_STR = (f"DRIVER={DRIVER};" f"DBQ={DB_PATH};")
 
         self.list_path = [Wms._1767]
+        self.Retorno = [OutPut.Corte]
         self.BaseCorte = BaseDados._8041
-        self.saida = OutPut.Corte
         self.ano = dt.datetime.now().year
 
         self.Instancia = MonitorETL()
@@ -94,7 +94,6 @@ class Corte(__auxiliares):
         except Exception as e:
             self.validador.registrar_log(e, "Extract")
             return False
-        
         try:
             self.Instancia.stageTime('Transform')
             try:
@@ -206,7 +205,6 @@ class Corte(__auxiliares):
         except Exception as e:
             self.validador.registrar_log(e, "Transform")
             return False
-
         try:
             self.Instancia.stageTime('Load')
             max_ex_dia= df_dia['data'].max() 
@@ -216,7 +214,7 @@ class Corte(__auxiliares):
             ex_noite = df_noite.loc[df_noite['data_turno'] == max_ex_noite].copy()
             
 
-            with pd.ExcelWriter(self.saida) as destino_corte:
+            with pd.ExcelWriter(self.Retorno[0]) as destino_corte:
                 df_corte.to_excel(destino_corte, sheet_name='extrato', index= False)
                 ex_dia.to_excel(destino_corte, sheet_name= 'ex_dia', index= False)
                 ex_noite.to_excel(destino_corte, sheet_name= 'ex_noite', index= False)
@@ -292,9 +290,11 @@ class Corte(__auxiliares):
         except Exception as e:
             self.validador.registrar_log(e, "Log_retorno")
             return False
-    def carregamento(self):
+    def carregamento(self, validar):
         lista_de_logs = []
         try:
+            if not validar:
+                return
             for contador, path in enumerate(self.list_path, 1):
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
@@ -320,4 +320,27 @@ class Corte(__auxiliares):
             return lista_de_logs, dic_retorno
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
+            return False
+    def outputLog(self, validar):
+        ListaOutPut = []
+        try:
+            if not validar:
+                return
+            for path in self.Retorno:
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                Dicionario = {
+                    "ARQUIVO": nome_file,
+                    "DATA": data_formatada,
+                    "HORA": horas_formatada
+                }
+                ListaOutPut.append(Dicionario)
+            return ListaOutPut
+        except Exception as e:
+            self.validador.registrar_log(e, "output")
             return False

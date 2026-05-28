@@ -196,13 +196,24 @@ class ContagemINV(__aux):
         except Exception as e:
             self.validador.registrar_log(e, "Load")
             return False
-    def carregamento(self):
+    def carregamento(self, validar):
         lista_de_logs = []
         dic_retorno = []
         try:
+            if not validar:
+                return
             dic_retorno.append(self.dic_prod)
             dic_retorno.append(self.dic_count)
             return lista_de_logs, dic_retorno
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
+            return False
+    def outputLog(self, validar):
+        ListaOutPut = []
+        try:
+            if not validar:
+                return
+            return ListaOutPut
+        except Exception as e:
+            self.validador.registrar_log(e, "output")
             return False

@@ -52,7 +52,7 @@ class FefoAbst(__auxiliares):
     validador = ValidarErros(fonte="Fefo Abastecimento")
     def __init__(self):
         self.list_path = [Wms.endereco07, Relatorios._8628, Relatorios._8596]
-        self.saida = OutPut.Fefo8628
+        self.Retorno = [OutPut.Fefo8628]
 
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
         self.list_div = ['6-PRATELEIRA','5-TERCO (0,46)','4-TERCO (0,56)']
@@ -127,16 +127,18 @@ class FefoAbst(__auxiliares):
             ]
 
             df_final = df_completo[COLUNAS_FEFO]
-            df_final.to_excel(self.saida, index= False,sheet_name= "FEFO")
+            df_final.to_excel(self.Retorno[0], index= False,sheet_name= "FEFO")
             self.Instancia.stageTime('Load')
             self.Instancia.conversor(Modulo= "Fefo abst")
             return True
         except Exception as e:
             self.validador.registrar_log(e, "ABST_Load")
             return False
-    def carregamento(self):
+    def carregamento(self, validar):
         lista_de_logs = []
         try:
+            if not validar:
+                return
             for contador, path in enumerate(self.list_path, 1):
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
@@ -157,11 +159,34 @@ class FefoAbst(__auxiliares):
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
             return False
+    def outputLog(self, validar):
+        ListaOutPut = []
+        try:
+            if not validar:
+                return
+            for path in self.Retorno:
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                Dicionario = {
+                    "ARQUIVO": nome_file,
+                    "DATA": data_formatada,
+                    "HORA": horas_formatada
+                }
+                ListaOutPut.append(Dicionario)
+            return ListaOutPut
+        except Exception as e:
+            self.validador.registrar_log(e, "output")
+            return False
 class FefoCurva(__auxiliares):
     validador = ValidarErros(fonte="Fefo Curva")
     def __init__(self):
         self.list_path = [Relatorios._8668, Gestao._286, Filial_18._286, Relatorios._8596, Wms.endereco07]
-        self.saida = OutPut.Fefo8668
+        self.Retorno = [OutPut.Fefo8668]
 
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
         self.list_div = ['6-PRATELEIRA','5-TERCO (0,46)','4-TERCO (0,56)']
@@ -314,16 +339,18 @@ class FefoCurva(__auxiliares):
             ]
 
             df_completo = df_completo[col_base + col_calculadas + col_final]
-            df_completo.to_excel(self.saida, index= False, sheet_name= "Fefo")
+            df_completo.to_excel(self.Retorno[0], index= False, sheet_name= "Fefo")
             self.Instancia.stageTime('Load')
             self.Instancia.conversor(Modulo= "Fefo Curvas")
             return True
         except Exception as e:
             self.validador.registrar_log(e, "curva-Load")
             return False
-    def carregamento(self):
+    def carregamento(self, validar):
         lista_de_logs = []
         try:
+            if not validar:
+                return
             for contador, path in enumerate(self.list_path, 1):
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
@@ -343,4 +370,27 @@ class FefoCurva(__auxiliares):
             return lista_de_logs, dic_retorno
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
+            return False
+    def outputLog(self, validar):
+        ListaOutPut = []
+        try:
+            if not validar:
+                return
+            for path in self.Retorno:
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                Dicionario = {
+                    "ARQUIVO": nome_file,
+                    "DATA": data_formatada,
+                    "HORA": horas_formatada
+                }
+                ListaOutPut.append(Dicionario)
+            return ListaOutPut
+        except Exception as e:
+            self.validador.registrar_log(e, "output")
             return False

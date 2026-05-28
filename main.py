@@ -140,8 +140,7 @@ class JanelaPrincipal(auxiliar):
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            # ,command=lambda: self.tela_ROTINAS()
-            ,command=lambda: self.testar.IniciarProcesso()
+            ,command=lambda: self.tela_ROTINAS()
 
         )
         self.bt_limpar = tk.Button(
@@ -362,9 +361,9 @@ class JanelaPrincipal(auxiliar):
 
         self.contador.place(relx=0.005, rely=0.01, relwidth=0.99, relheight=0.10)
 
-        self.retorno.place(relx=0.005, rely=0.15, relwidth=0.61, relheight=0.84)
-        self.retorno_db.place(relx=0.62, rely=0.15, relwidth=0.374, relheight=0.38)
-        self.retorno_file.place(relx=0.62, rely=0.55, relwidth=0.374, relheight=0.44)
+        self.retorno.place(relx=0.005, rely=0.15, relwidth=0.59, relheight=0.84)
+        self.retorno_db.place(relx=0.60, rely=0.15, relwidth=0.394, relheight=0.38)
+        self.retorno_file.place(relx=0.60, rely=0.55, relwidth=0.394, relheight=0.44)
         pass
     pass
 

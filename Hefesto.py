@@ -1,6 +1,3 @@
-
-
-
 class forja:
     def __init__(self, Interface):
         self.modular = Interface

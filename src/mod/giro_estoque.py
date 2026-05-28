@@ -20,7 +20,7 @@ class GiroEstoque:
             ,Filial_18._8596, Filial_18._286
             ,Wms.endereco07
         ]
-        self.saida = OutPut.GiroStatus
+        self.Retorno = [OutPut.GiroStatus]
         self.Instancia = MonitorETL()
         pass
     def pipeline(self):
@@ -220,7 +220,7 @@ class GiroEstoque:
             return False
         try:
             self.Instancia.stageTime('Load')
-            with pd.ExcelWriter(self.saida) as destino:
+            with pd.ExcelWriter(self.Retorno) as destino:
                 df_ativos.to_excel(destino, sheet_name= "ATIVOS", index= False)
                 df_FL.to_excel(destino, sheet_name= "FLs", index= False)
                 df_completo.to_excel(destino, sheet_name= "COMPLETO", index= False)
@@ -232,10 +232,11 @@ class GiroEstoque:
             self.validador.registrar_log(e, "Load")
             return False
         
-    def carregamento(self):
+    def carregamento(self, validar):
         lista_de_logs = []
-        dic_retorno = []
         try:
+            if not validar:
+                return
             for contador, path in enumerate(self.list_path, 1):
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
@@ -251,7 +252,31 @@ class GiroEstoque:
                     ,"HORAS" : horas_formatada
                 }
                 lista_de_logs.append(dic_log)
+            dic_retorno = []
             return lista_de_logs, dic_retorno
         except Exception as e:
             self.validador.registrar_log(e, "CARREGAMENTO")
+            return False
+    def outputLog(self, validar):
+        ListaOutPut = []
+        try:
+            if not validar:
+                return
+            for path in self.Retorno:
+                data_file = os.path.getmtime(path)
+                nome_file = os.path.basename(path)
+
+                data_modificacao = dt.datetime.fromtimestamp(data_file)
+                data_formatada = data_modificacao.strftime('%d/%m/%Y')
+                horas_formatada = data_modificacao.strftime('%H:%M:%S')
+
+                Dicionario = {
+                    "ARQUIVO": nome_file,
+                    "DATA": data_formatada,
+                    "HORA": horas_formatada
+                }
+                ListaOutPut.append(Dicionario)
+            return ListaOutPut
+        except Exception as e:
+            self.validador.registrar_log(e, "output")
             return False
