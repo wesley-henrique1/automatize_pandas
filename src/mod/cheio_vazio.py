@@ -134,7 +134,7 @@ class CheioVazio(auxiliar):
         try:
             if not validar:
                 return
-            return ListaOutPut
+            return ListaOutPut, path
         except Exception as e:
             self.validador.registrar_log(e, "output")
             return False

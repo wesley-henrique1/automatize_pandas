@@ -26,7 +26,6 @@ class Cadastro(auxiliar):
     def __init__(self):
         self.list_path = [Relatorios._8596, BaseDados.EndFixo]
         self.Retorno = [OutPut.Cadastro]
-        print(self.Retorno)
         self.chekout = [27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44]
         self.list_int = ['2-INTEIRO(1,90)', '1-INTEIRO (2,55)']
         self.list_div = ['6-PRATELEIRA','5-TERCO (0,46)','4-TERCO (0,56)']
@@ -233,6 +232,7 @@ class Cadastro(auxiliar):
             for path in self.Retorno:
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
+                print(path)
 
                 data_modificacao = dt.datetime.fromtimestamp(data_file)
                 data_formatada = data_modificacao.strftime('%d/%m/%Y')
@@ -244,7 +244,7 @@ class Cadastro(auxiliar):
                     "HORA": horas_formatada
                 }
                 ListaOutPut.append(Dicionario)
-            return ListaOutPut
+            return ListaOutPut, path
         except Exception as e:
             self.validador.registrar_log(e, "output")
             return False

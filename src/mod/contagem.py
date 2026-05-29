@@ -213,7 +213,7 @@ class ContagemINV(__aux):
         try:
             if not validar:
                 return
-            return ListaOutPut
+            return ListaOutPut, path, path
         except Exception as e:
             self.validador.registrar_log(e, "output")
             return False

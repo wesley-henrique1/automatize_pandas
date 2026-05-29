@@ -1,4 +1,3 @@
-from tkinter import messagebox
 import threading
 from .valerros import ValidarErros
 
@@ -32,14 +31,12 @@ class Processador:
             logs_file = list({log['MODULO']: log for log in lista_de_file if isinstance(log, dict)}.values())
             logs_saida = list({log['ARQUIVO']: log for log in listaSaida if isinstance(log, dict)}.values())
             
-            resumo = "\n".join([f"{modulo}: {status}" for modulo, status in dic_log.items()])
-
             def acoes_finais_ui():
                 self._atualizar_logs(logs_unicos)
                 self._atualizar_db(logs_file)
                 self._atualizar_output(logs_saida)
                 
-                messagebox.showinfo("Resumo da Operação", resumo)
+                self._widget_ancora.teste(dic_log)
                 
                 if msg_corte is not None:
                     self._widget_ancora.tela_CORTE("Relatório de Corte", msg_corte)
@@ -121,6 +118,7 @@ class Processador:
         lista_de_file = []
         listaSaida = []
         dic_log = {}
+        dicFilanizar = {}
         
         total_scripts = len(argumento)
 
@@ -144,13 +142,17 @@ class Processador:
                     status_pipeline = instancia.pipeline()
                 
                 log_arquivo, log_db = instancia.carregamento(status_pipeline)
-                logOut = instancia.outputLog(status_pipeline)
-
+                logOut, path = instancia.outputLog(status_pipeline)
+                dados_arquivo = logOut[0]
                 
                 if nome == "CorteKeys" and status_pipeline is not False:
                     msg_corte = instancia.Log_Retorno()
 
-                dic_log[nome] = "Executado" if status_pipeline else "Travado (Erro Interno)"
+                dicFilanizar[nome] = {
+                    "estado": "Executado" if status_pipeline else "Travado (Erro Interno)"
+                    ,"nomeclatura": dados_arquivo["ARQUIVO"]
+                    ,"path": path
+                }
 
                 if log_arquivo:
                     lista_de_logs.extend(log_arquivo if isinstance(log_arquivo, list) else [log_arquivo])
@@ -165,7 +167,6 @@ class Processador:
 
             except Exception as e:
                 print("erro")
-                dic_log[nome] = "Falha Crítica"
                 self.validador.registrar_log(e, f"Módulo: {nome}")
                 self._executar_na_main_thread(self._widget_ancora._exibir_mensagem_status," >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt"
                 )
@@ -174,7 +175,7 @@ class Processador:
             lista_de_logs= lista_de_logs
             ,lista_de_file= lista_de_file
             ,listaSaida= listaSaida
-            ,dic_log= dic_log
+            ,dic_log= dicFilanizar
             ,log_data=log_data
             ,msg_corte= msg_corte
         )

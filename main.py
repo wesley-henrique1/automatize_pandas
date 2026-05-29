@@ -1,5 +1,5 @@
 from src.lib.settings import Assets
-from src.views import Demandas, Ui1731, Ui3707, Ui1702
+from src.views import Demandas, Ui1731, Ui3707, Ui1702, PainelLog
 from src.mod import Executar
 from src.lib import Processador, ValidarErros
 
@@ -323,7 +323,8 @@ class JanelaPrincipal(auxiliar):
 
         self.conteudo_corte.place(relx= 0.01, rely= 0.01, relheight= 0.98, relwidth= 0.98)
         pass
-    
+    def teste(self, var):
+        PainelLog(var)
     def localizador(self):
         # QUADRO 1 FLEXBOX
         self.parte_1.place(relx= 0.005, rely= 0.01, relwidth= 0.51, relheight= 0.30)

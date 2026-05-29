@@ -276,7 +276,7 @@ class GiroEstoque:
                     "HORA": horas_formatada
                 }
                 ListaOutPut.append(Dicionario)
-            return ListaOutPut
+            return ListaOutPut, path
         except Exception as e:
             self.validador.registrar_log(e, "output")
             return False
