@@ -232,7 +232,6 @@ class Cadastro(auxiliar):
             for path in self.Retorno:
                 data_file = os.path.getmtime(path)
                 nome_file = os.path.basename(path)
-                print(path)
 
                 data_modificacao = dt.datetime.fromtimestamp(data_file)
                 data_formatada = data_modificacao.strftime('%d/%m/%Y')

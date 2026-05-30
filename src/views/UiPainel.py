@@ -55,19 +55,17 @@ class PainelLog:
 
             for var in selecionados:
                 caminho = self.path[var]
-                print(f"{var}= {caminho}")
 
                 processo = subprocess.Popen(caminho, shell= True)
                 if processo.poll() is None:
-                    print(f"Sucesso: O programa foi aberto e está rodando (PID: {processo.pid})")
+                    print(f"\nSucesso: O programa foi aberto e está rodando (PID: {processo.pid})")
                 else:
-                    print("Aviso: O programa tentou abrir, mas fechou logo em seguida.")
+                    print("\nAviso: O programa tentou abrir, mas fechou logo em seguida.")
                 time.sleep(1)
                 os.startfile(caminho)
         except Exception as e:
             self.validador.registrar_log(e, "Painel-start_UI")
 
-        print(selecionados)
         pass
     def executaveis(self):
         for chave_interna, texto_exibicao in self.mapa_relacao.items():

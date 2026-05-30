@@ -165,12 +165,10 @@ class Processador:
                 self._executar_na_main_thread(self._atualizar_contador, txt_final)
 
             except Exception as e:
-                print("erro")
                 self.validador.registrar_log(e, f"Módulo: {nome}")
                 self._executar_na_main_thread(self._widget_ancora._exibir_mensagem_status," >>> ERRO AO GERAR LOG. VERIFIQUE log_erros.txt"
                 )
 
-        print(dicFilanizar)
         self._processar_finalizacao(
             lista_de_logs= lista_de_logs
             ,lista_de_file= lista_de_file
