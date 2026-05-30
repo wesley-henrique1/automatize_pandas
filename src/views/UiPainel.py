@@ -63,7 +63,7 @@ class PainelLog:
                 else:
                     print("Aviso: O programa tentou abrir, mas fechou logo em seguida.")
                 time.sleep(1)
-                # os.startfile(caminho)
+                os.startfile(caminho)
         except Exception as e:
             self.validador.registrar_log(e, "Painel-start_UI")
 

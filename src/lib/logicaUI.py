@@ -36,7 +36,7 @@ class Processador:
                 self._atualizar_db(logs_file)
                 self._atualizar_output(logs_saida)
                 
-                self._widget_ancora.teste(dic_log)
+                self._widget_ancora.ancoragemPanel(dic_log)
                 
                 if msg_corte is not None:
                     self._widget_ancora.tela_CORTE("Relatório de Corte", msg_corte)

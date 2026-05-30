@@ -43,51 +43,6 @@ class auxiliar:
 class JanelaPrincipal(auxiliar):
     validador = ValidarErros(fonte="main")
     def __init__(self):
-        """campo para testar"""
-        self.dicionarioTeste = {
-            'abstKeys': {
-                'estado': 'Executado', 
-                'nomeclatura': 'BI_ABASTECIMENTO.xlsx', 
-                'path': 'c:\\Users\\wesley.oliveira\\WS_OLIVEIRA\\SCRIPTS\\output\\BI_ABASTECIMENTO.xlsx'
-            }, 
-            'AcuracidadeKeys': {
-                'estado': 'Executado', 
-                'nomeclatura': 'BI_Acuracidade.xlsx', 
-                'path': 'c:\\Users\\wesley.oliveira\\WS_OLIVEIRA\\SCRIPTS\\output\\BI_Acuracidade.xlsx'
-            }, 
-            'CadastroKeys': {
-                'estado': 'Executado', 
-                'nomeclatura': 'Analitico cadastro.xlsx', 
-                'path': 'c:\\Users\\wesley.oliveira\\WS_OLIVEIRA\\SCRIPTS\\output\\Analitico cadastro.xlsx'
-            }, 
-            'CorteKeys': {
-                'estado': 'Executado', 
-                'nomeclatura': 'Analitico corte.xlsx', 
-                'path': 'c:\\Users\\wesley.oliveira\\WS_OLIVEIRA\\SCRIPTS\\output\\Analitico corte.xlsx'
-            }, 
-            'FefoAbstKeys': {
-                'estado': 'Executado', 
-                'nomeclatura': 'FEFO_8628.xlsx', 
-                'path': 'z:\\1 - CD Dia\\4 - Equipe PCL\\6.6 - Recuperação e Indenizado\\6.6.3 - FEFO Validade\\Curva A-B-C-D\\Auditoria\\FEFO_8628.xlsx'
-            }, 
-            'FefoABCKeys': {
-                'estado': 'Executado', 
-                'nomeclatura': 'FEFO_8668.xlsx', 
-                'path': 'z:\\1 - CD Dia\\4 - Equipe PCL\\6.6 - Recuperação e Indenizado\\6.6.3 - FEFO Validade\\Curva A-B-C-D\\Auditoria\\FEFO_8668.xlsx'
-            }, 
-            'GiroEstoqueKeys': {
-                'estado': 'Executado', 
-                'nomeclatura': 'Giro_Status.xlsx', 
-                'path': 'c:\\Users\\wesley.oliveira\\WS_OLIVEIRA\\SCRIPTS\\output\\Giro_Status.xlsx'
-            }, 
-            'MapaEstoqueKeys': {
-                'estado': 'Executado', 
-                'nomeclatura': 'mapa_estoque.xlsx', 
-                'path': 'c:\\Users\\wesley.oliveira\\WS_OLIVEIRA\\SCRIPTS\\output\\mapa_estoque.xlsx'
-            }
-        }
-        
-        "Inicio"
         self.background = "#2F4F4F"
         self.frame_color = "#F0FFFF"
         self.borda_color = "#000000"
@@ -177,8 +132,7 @@ class JanelaPrincipal(auxiliar):
             ,bg=self.frame_color
             ,fg=self.borda_color
             ,highlightbackground=self.borda_color
-            ,command = lambda: self.teste(self.dicionarioTeste)
-            # ,command=lambda: Demandas()
+            ,command=lambda: Demandas()
         )
         self.bt_info = tk.Button(
             self.parte_2
@@ -368,7 +322,7 @@ class JanelaPrincipal(auxiliar):
 
         self.conteudo_corte.place(relx= 0.01, rely= 0.01, relheight= 0.98, relwidth= 0.98)
         pass
-    def teste(self, var):
+    def ancoragemPanel(self, var):
         PainelLog(var)
     def localizador(self):
         # QUADRO 1 FLEXBOX
