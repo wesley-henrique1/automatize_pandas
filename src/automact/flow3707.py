@@ -115,7 +115,8 @@ class Flow3707:
                 if not self.em_execucao: break
                 
                 pass
-            for etapa, (codprod, codend) in enumerate(zip(listCod, listEnd)):                
+            for etapa, (codprod, codend) in enumerate(zip(listCod, listEnd)):  
+                print(f"etapa inicial: {etapa} - {codprod} | {codend}")             
                 if not self.em_execucao: break
                 progresso_anterior = int((etapa / trava) * 100)
                 self._LogUI(
@@ -134,6 +135,7 @@ class Flow3707:
                     pc.copy(codprod)
                     tentativas_prod += 1
                 if not self.em_execucao: break
+                print(f"Copia do SKU: {codprod}")
 
                 pag.hotkey("ctrl", "v")
                 pag.press('enter')
@@ -148,6 +150,8 @@ class Flow3707:
                     pc.copy(codend)
                     tentativas_end += 1
                 if not self.em_execucao: break
+                print(f"Copia do SKU: {codend}")
+
 
                 pag.hotkey("ctrl", "v")
                 pag.sleep(0.02)
@@ -179,6 +183,9 @@ class Flow3707:
     def PararProcesso(self):
         try:
             self.em_execucao = False  
+            self._codProd.clear()
+            self._codEnd.clear()            
+
             self.AncoraCodProd.delete("1.0", tk.END)
             self.AncoraCodEnd.delete("1.0", tk.END)
             self.AncoraBtTransferir.config(state="normal")
@@ -191,6 +198,8 @@ class Flow3707:
     def IniciarProcesso(self, listCod, listEnd):
         try:
             self.em_execucao = True
+            self._codProd.clear()
+            self._codEnd.clear()            
             list_prod = listCod.get("1.0", tk.END).strip().splitlines()
             list_end = listEnd.get("1.0", tk.END).strip().splitlines()
 

@@ -11,6 +11,11 @@ import tkinter as tk
 
     interface: a UI vai ter um componente para capturar os codigos, duas fleg para informar se vai ser master ou venda, botão de iniciar e parar, registro de progresso,
 
+    sequencias do teclado: 
+
+    ctrl + v,  3 * tab, seta para cima,  4 * tab, enter, ceta para esquerda, enter, enter, tab, shift + tab, 2 * tab.
+    
+
 """
 
 
